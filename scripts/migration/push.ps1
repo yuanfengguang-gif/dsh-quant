@@ -55,6 +55,7 @@ if ($cur -and ($cur.Trim() -ne $NewRepoUrl.Trim())) {
 
 Write-Host ""
 Write-Host "=== 2) point origin to new repo ===" -ForegroundColor Yellow
+$remotes = Get-RemoteNames   # re-query: previous step may have renamed origin to upstream
 if ($remotes -contains "origin") {
     Invoke-Git "git remote set-url origin `"$NewRepoUrl`""
 } else {
