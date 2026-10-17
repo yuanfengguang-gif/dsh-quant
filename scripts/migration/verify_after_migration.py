@@ -69,23 +69,30 @@ def check_tree():
 
 def check_dbs():
     print("\n3) 核心数据库（行数 + 最新日期）")
-    inv = ROOT / "output" / "migration" / "data_inventory.json"
+    # 优先读随代码提交的 scripts/migration/data_inventory.json（output/ 不进 Git）
+    inv = ROOT / "scripts" / "migration" / "data_inventory.json"
+    if not inv.exists():
+        inv = ROOT / "output" / "migration" / "data_inventory.json"
     if not inv.exists():
         warn("data_inventory.json 缺失，跳过行数比对")
         return
     exp = {r["file"]: r for r in json.loads(inv.read_text(encoding="utf-8"))}
-    # 表 → 日期列
+    # 表 → 日期列（★表名以实际库为准：tdx_base 是 daily/tables，tdx_capital 是 capital_daily）
     DATE_COL = {"bars.db": ("daily_bar", "date"), "valuation.db": ("valuation", "date"),
                 "hist_mv.db": ("hist_mv", "month"), "finance.db": ("finance_report", "period"),
                 "tdx_finance.db": ("fin_tdx", "period"), "rzrq.db": ("rzrq", "date"),
                 "lhb.db": ("lhb_detail", "date"), "st_history.db": ("is_st_v2", "date"),
-                "tdx_base.db": ("daily_bar", "date"), "tdx_capital.db": ("capital", "date")}
+                "tdx_base.db": ("daily", "date"), "tdx_capital.db": ("capital_daily", "date")}
     for name, meta in exp.items():
         if meta.get("tier") == "archive":
             continue
         p = CACHE / name
         if not p.exists():
-            (bad if meta.get("tier") == "essential" else warn)(f"{name} 缺失")
+            # 原机上本就不存在的库（如 policy.db）只警告，不判失败
+            if not meta.get("exists", True):
+                warn(f"{name} 缺失（原机也不存在，无需迁移）")
+            else:
+                (bad if meta.get("tier") == "essential" else warn)(f"{name} 缺失")
             continue
         size_mb = round(p.stat().st_size / 1024 / 1024, 1)
         drift = abs(size_mb - meta.get("size_mb", 0)) / max(meta.get("size_mb", 1), 1)
