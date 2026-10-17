@@ -34,7 +34,9 @@ data/parquet/
 
 # ---- 运行产物 ----
 logs/
-output/
+# output/ 下只有「分析报告 .md」入库（结论依据要随代码走），回测 JSON 等大产物仍忽略
+output/*
+!output/*.md
 report/
 deck/dashboard_*_20*.html
 deck/*.json
