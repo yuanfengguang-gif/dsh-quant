@@ -27,7 +27,7 @@ import pandas as pd
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE))
 
-from factors.formula_miner import FEATURE_BUILDERS, validate, execute
+from factors.formula_miner import FEATURE_BUILDERS, validate, execute, to_prefix, FEATURES
 from factors.import_qf_pool import load_panel, forward_returns
 
 # ---- 18 个论文公式（逆波兰式，来自 FACTOR_VERIFICATION_BACKLOG_20261015.md）----
@@ -51,6 +51,13 @@ PAPERS = [
     ("D5_sue_rev",     "SUE TS_RANK20 RET5 GATE",                    "SUE 门控反转"),
     ("D5_amihud_rev",  "AMIHUD TS_RANK20 REV_YOY GATE",              "流动性门控反转"),
 ]
+
+# ---- 铁律 1：禁挖比对（FACTOR_FALSIFICATION_LOG §5.1 / §5.4）----
+# 与已证伪因子同逻辑的论文公式不重复验证，只登记跳过原因。
+EXCLUDED = {
+    "B1_q-factor":  "REV_YOY+SUE = c_factor/sue 同族；两者均在 §5.1 禁挖（holdout 三段未同号）",
+    "B1_accel+sue": "ACCEL+SUE = accel_factor/sue 同逻辑；且 accel↔sue 收益 ρ=0.904（§5.3 重复组）",
+}
 
 
 def ic_stats(sig: pd.Series, fwd: pd.Series) -> dict:
@@ -98,14 +105,24 @@ def main() -> int:
     fwd = forward_returns(panel)
     rows = []
     for name, formula, mech in PAPERS:
+        # 铁律 1：先查禁挖清单（FACTOR_FALSIFICATION_LOG §5.1/§5.4），同逻辑不重复挖
+        if name in EXCLUDED:
+            rows.append({"因子": name, "机制": mech, "公式": formula, "跳过": EXCLUDED[name]})
+            print(f"  {name:<18s} [禁挖跳过] {EXCLUDED[name]}", flush=True)
+            continue
         toks = formula.split()
-        bad = [t for t in toks if t not in feat and t not in
-               ("ADD", "SUB", "MUL", "DIV", "NEG", "ABS", "SIGN", "GATE", "JUMP", "DECAY",
-                "DELAY1", "MAX3", "DELTA5", "MA20", "STD20", "TS_RANK20")]
         try:
-            validate(toks)
-            sig = execute(toks, feat, panel.index)
-            sig = pd.Series(sig).reindex(panel.index) if not isinstance(sig, pd.Series) else sig.reindex(panel.index)
+            if not validate(toks):
+                raise RuntimeError("语法非法（token 栈不平衡，检查操作数个数）")
+            sig, err = execute(toks, feat, panel.index)
+            if err:
+                raise RuntimeError(err)
+            if not isinstance(sig, pd.Series):
+                raise RuntimeError("execute 未返回 Series")
+            sig = sig.reindex(panel.index)
+            # 覆盖率双报：最终信号覆盖 + 原始特征叶子最小覆盖（防止 ADD 的 fillna(0) 抬高名义覆盖）
+            leaves = [t for t in toks if t in FEATURES]
+            leaf_cov = min((float(feat[t].notna().mean()) for t in leaves), default=None)
             cov = float(sig.notna().mean())
             st = ic_stats(sig, fwd)
             # 截面退化
@@ -114,11 +131,14 @@ def main() -> int:
                 dead = [str(int(y)) for y, r in yb.iterrows() if (r["std"] or 0) == 0 or (r["nunique"] or 0) <= 1]
             except Exception:
                 dead = []
-            rows.append({"因子": name, "机制": mech, "公式": formula, "覆盖率": round(cov, 4),
+            rows.append({"因子": name, "机制": mech, "公式": formula, "前缀": to_prefix(toks),
+                         "覆盖率": round(cov, 4),
+                         "叶子最小覆盖": (round(leaf_cov, 4) if leaf_cov is not None else None),
                          **{k: (round(v, 4) if isinstance(v, float) else v) for k, v in st.items()},
                          "退化年份": dead})
             ic20 = st["icir_20"]
-            print(f"  {name:<18s} cov={cov:>5.1%} icir20={ic20 if ic20 is None else round(ic20,3)} "
+            print(f"  {name:<18s} cov={cov:>5.1%} leaf_cov={(f'{leaf_cov:.1%}' if leaf_cov is not None else 'n/a'):>6s} "
+                  f"icir20={ic20 if ic20 is None else round(ic20,3)} "
                   f"ic_mean={st['ic_mean'] if st['ic_mean'] is None else round(st['ic_mean'],4)} "
                   f"ic_win={st['ic_win'] if st['ic_win'] is None else round(st['ic_win'],3)}", flush=True)
         except Exception as e:

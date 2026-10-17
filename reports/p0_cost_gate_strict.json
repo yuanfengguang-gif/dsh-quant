@@ -1,0 +1,368 @@
+{
+  "generated_at": "2026-10-17 23:49:02",
+  "locked_standard": {
+    "topn": 20,
+    "rebalance": 20,
+    "neutral": true,
+    "adv_gate": 0.5,
+    "cost_multiplier": 1.0
+  },
+  "cost_definition": {
+    "source": "D:\\Programs\\DSH Projects\\DSH Quant\\config\\costs.yaml",
+    "basis": "按成交金额加权（不是按票数）",
+    "sides": "买卖分开计价：买入=佣金+过户费+滑点；卖出=买入+印花税",
+    "commission": 0.00026,
+    "transfer_fee": 1e-05,
+    "slippage": 0.001,
+    "min_commission": 5.0,
+    "min_commission_note": "逐笔 5 元最低佣金未在回测中模拟（无逐笔金额），仅对极小资金有影响",
+    "stamp_schedule": [
+      {
+        "until": "2023-08-27",
+        "rate": 0.001
+      },
+      {
+        "since": "2023-08-28",
+        "rate": 0.0005
+      }
+    ],
+    "round_trip_2026": 0.00304,
+    "round_trip_2020": 0.00354,
+    "example": {
+      "full_turnover_2026_pct": 0.304,
+      "full_turnover_2020_pct": 0.354,
+      "old_code_0_352_pct_note": "旧口径 0.176% 单边×2=0.352%：2023-08 前真实 0.354%（巧合接近），2023-08 后真实 0.304%（高估 0.048pp）"
+    }
+  },
+  "runs": {
+    "bp_value@2010": {
+      "name": "bp_value",
+      "fingerprint": {
+        "engine": "strict_validate/v1",
+        "topn": 20,
+        "rebalance": 20,
+        "neutral": true,
+        "adv_gate": 0.5,
+        "cost": {
+          "source": "config/costs.yaml",
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304,
+          "multiplier": 1.0,
+          "stamp_schedule": [
+            {
+              "until": "2023-08-27",
+              "rate": 0.001
+            },
+            {
+              "since": "2023-08-28",
+              "rate": 0.0005
+            }
+          ]
+        },
+        "window": {
+          "start": "2010-01-01",
+          "end": "2026-10-16"
+        },
+        "universe": "bars.db qfq 全A（ST 剔除；流动性闸门 ADV≥0.50）"
+      },
+      "metrics": {
+        "annual_return": 0.1346,
+        "excess_annual": 0.0675,
+        "sharpe": 0.574,
+        "max_drawdown": -0.5068,
+        "calmar": 0.266,
+        "dd_days_max": 1415,
+        "turnover_per_period": 0.508,
+        "adv_pct": 0.553,
+        "periods_per_year": 12.43,
+        "n_days": 4074,
+        "seg_2010_2015": 0.3465911000963713,
+        "seg_2016_2020": 0.005017277220658922,
+        "seg_2021_2026": 0.07003702995276995,
+        "annual_0x_cost": 0.1587,
+        "annual_1x_cost": 0.1346,
+        "annual_2x_cost": 0.1111,
+        "cost_theory_1x": 0.0218,
+        "cost_measured_1x": 0.0241
+      },
+      "gate_audit": {
+        "days": 201,
+        "candidate_min": 889,
+        "candidate_median": 1572.0,
+        "candidate_max": 3195,
+        "holdings_min": 20,
+        "holdings_max": 20,
+        "full_holdings_days": 201,
+        "candidate_ok_days": 110,
+        "passed": false
+      },
+      "cost": {
+        "total_1x": 0.3522,
+        "per_year_1x": 0.0218,
+        "theoretical_1x": 0.0218,
+        "rates": {
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304
+        }
+      }
+    },
+    "bp_value@2016": {
+      "name": "bp_value",
+      "fingerprint": {
+        "engine": "strict_validate/v1",
+        "topn": 20,
+        "rebalance": 20,
+        "neutral": true,
+        "adv_gate": 0.5,
+        "cost": {
+          "source": "config/costs.yaml",
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304,
+          "multiplier": 1.0,
+          "stamp_schedule": [
+            {
+              "until": "2023-08-27",
+              "rate": 0.001
+            },
+            {
+              "since": "2023-08-28",
+              "rate": 0.0005
+            }
+          ]
+        },
+        "window": {
+          "start": "2016-01-01",
+          "end": "2026-10-16"
+        },
+        "universe": "bars.db qfq 全A（ST 剔除；流动性闸门 ADV≥0.50）"
+      },
+      "metrics": {
+        "annual_return": 0.0436,
+        "excess_annual": -0.0159,
+        "sharpe": 0.293,
+        "max_drawdown": -0.5451,
+        "calmar": 0.08,
+        "dd_days_max": 955,
+        "turnover_per_period": 0.47,
+        "adv_pct": 0.577,
+        "periods_per_year": 12.32,
+        "n_days": 2618,
+        "seg_2010_2015": null,
+        "seg_2016_2020": 0.05574140603902644,
+        "seg_2021_2026": 0.036193150230341864,
+        "annual_0x_cost": 0.0635,
+        "annual_1x_cost": 0.0436,
+        "annual_2x_cost": 0.024,
+        "cost_theory_1x": 0.0196,
+        "cost_measured_1x": 0.0199
+      },
+      "gate_audit": {
+        "days": 128,
+        "candidate_min": 1187,
+        "candidate_median": 2071.5,
+        "candidate_max": 3205,
+        "holdings_min": 20,
+        "holdings_max": 20,
+        "full_holdings_days": 128,
+        "candidate_ok_days": 108,
+        "passed": false
+      },
+      "cost": {
+        "total_1x": 0.2041,
+        "per_year_1x": 0.0196,
+        "theoretical_1x": 0.0196,
+        "rates": {
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304
+        }
+      }
+    },
+    "combo_z@2010": {
+      "name": "combo_z",
+      "fingerprint": {
+        "engine": "strict_validate/v1",
+        "topn": 20,
+        "rebalance": 20,
+        "neutral": true,
+        "adv_gate": 0.5,
+        "cost": {
+          "source": "config/costs.yaml",
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304,
+          "multiplier": 1.0,
+          "stamp_schedule": [
+            {
+              "until": "2023-08-27",
+              "rate": 0.001
+            },
+            {
+              "since": "2023-08-28",
+              "rate": 0.0005
+            }
+          ]
+        },
+        "window": {
+          "start": "2010-01-01",
+          "end": "2026-10-16"
+        },
+        "universe": "bars.db qfq 全A（ST 剔除；流动性闸门 ADV≥0.50）"
+      },
+      "metrics": {
+        "annual_return": 0.1776,
+        "excess_annual": 0.1104,
+        "sharpe": 0.714,
+        "max_drawdown": -0.4924,
+        "calmar": 0.361,
+        "dd_days_max": 907,
+        "turnover_per_period": 0.616,
+        "adv_pct": 0.498,
+        "periods_per_year": 12.43,
+        "n_days": 4074,
+        "seg_2010_2015": 0.4037037030769217,
+        "seg_2016_2020": 0.049901104474434854,
+        "seg_2021_2026": 0.1036544896200986,
+        "annual_0x_cost": 0.2078,
+        "annual_1x_cost": 0.1776,
+        "annual_2x_cost": 0.148,
+        "cost_theory_1x": 0.0264,
+        "cost_measured_1x": 0.0303
+      },
+      "gate_audit": {
+        "days": 201,
+        "candidate_min": 885,
+        "candidate_median": 1572.0,
+        "candidate_max": 3195,
+        "holdings_min": 20,
+        "holdings_max": 20,
+        "full_holdings_days": 201,
+        "candidate_ok_days": 110,
+        "passed": false
+      },
+      "cost": {
+        "total_1x": 0.4264,
+        "per_year_1x": 0.0264,
+        "theoretical_1x": 0.0264,
+        "rates": {
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304
+        }
+      }
+    },
+    "combo_z@2016": {
+      "name": "combo_z",
+      "fingerprint": {
+        "engine": "strict_validate/v1",
+        "topn": 20,
+        "rebalance": 20,
+        "neutral": true,
+        "adv_gate": 0.5,
+        "cost": {
+          "source": "config/costs.yaml",
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304,
+          "multiplier": 1.0,
+          "stamp_schedule": [
+            {
+              "until": "2023-08-27",
+              "rate": 0.001
+            },
+            {
+              "since": "2023-08-28",
+              "rate": 0.0005
+            }
+          ]
+        },
+        "window": {
+          "start": "2016-01-01",
+          "end": "2026-10-16"
+        },
+        "universe": "bars.db qfq 全A（ST 剔除；流动性闸门 ADV≥0.50）"
+      },
+      "metrics": {
+        "annual_return": 0.0766,
+        "excess_annual": 0.0172,
+        "sharpe": 0.418,
+        "max_drawdown": -0.4032,
+        "calmar": 0.19,
+        "dd_days_max": 720,
+        "turnover_per_period": 0.576,
+        "adv_pct": 0.525,
+        "periods_per_year": 12.32,
+        "n_days": 2618,
+        "seg_2010_2015": null,
+        "seg_2016_2020": 0.06845414425616347,
+        "seg_2021_2026": 0.08935655508304063,
+        "annual_0x_cost": 0.1019,
+        "annual_1x_cost": 0.0766,
+        "annual_2x_cost": 0.0519,
+        "cost_theory_1x": 0.0241,
+        "cost_measured_1x": 0.0253
+      },
+      "gate_audit": {
+        "days": 128,
+        "candidate_min": 1185,
+        "candidate_median": 2071.5,
+        "candidate_max": 3205,
+        "holdings_min": 20,
+        "holdings_max": 20,
+        "full_holdings_days": 128,
+        "candidate_ok_days": 108,
+        "passed": false
+      },
+      "cost": {
+        "total_1x": 0.2503,
+        "per_year_1x": 0.0241,
+        "theoretical_1x": 0.0241,
+        "rates": {
+          "buy": 0.00127,
+          "sell": 0.00177,
+          "round_trip": 0.00304
+        }
+      }
+    }
+  },
+  "cost_audit": {
+    "bp_value@2010": {
+      "measured_1x_pp": 2.41,
+      "theory_1x_pp": 2.18,
+      "abs_err_pp": 0.23,
+      "passed": true
+    },
+    "bp_value@2016": {
+      "measured_1x_pp": 1.99,
+      "theory_1x_pp": 1.96,
+      "abs_err_pp": 0.03,
+      "passed": true
+    },
+    "combo_z@2010": {
+      "measured_1x_pp": 3.02,
+      "theory_1x_pp": 2.64,
+      "abs_err_pp": 0.38,
+      "passed": true
+    },
+    "combo_z@2016": {
+      "measured_1x_pp": 2.53,
+      "theory_1x_pp": 2.41,
+      "abs_err_pp": 0.12,
+      "passed": true
+    }
+  },
+  "p0_pass": {
+    "task1_cost": true,
+    "task2_gate": false,
+    "task3_fingerprint": true,
+    "task4_2016_reported": true
+  },
+  "notes": [
+    "成本口径：买卖分边；印花税按成交日分段（2023-08-28 前 0.1%，之后 0.05%）",
+    "旧口径 COST=0.176% 单边×2=0.352%：2023-08 前真实 0.354%（巧合接近），2023-08 后真实 0.304%（高估 0.048pp）",
+    "流动性闸门为池内重选：先屏蔽 ADV<0.5 与 ST，再在合格池打分选 TopN"
+  ]
+}

@@ -37,10 +37,13 @@ except Exception:
     pass
 
 from factors.import_qf_pool import load_panel, _run_factor, cross_sectional_ics, forward_returns
+from factors.cost_model import period_cost
 from backtest.bt_runner import _period_backtest
 from backtest.bt_report import archive, compute_metrics
 
-# 成本模型（backtest-acceptance 默认）：佣金万2.6 + 卖出印花税0.05% + 滑点0.1%
+# 成本模型（★2026-10-17 P0 改口径）：不再用「单边 COST × 2」，
+#   改为 factors/cost_model.py 的买卖分边费率 + 分段印花税（config/costs.yaml）。
+#   COST 常量仅保留给历史脚本兼容，**新代码不要再用它**。
 COST = 0.00026 + 0.0005 + 0.001
 
 DEFAULT_TOPN = 20
@@ -170,7 +173,8 @@ def combo_validate_sig(name, sig, panel, topn=DEFAULT_TOPN, rebalance=DEFAULT_RE
     rdates = _rebalance_dates(score.index, rebalance)
     turnover = _turnover(score, topn, rdates)
     n_periods = len(rdates) or 1
-    cost_total = COST * 2 * turnover * n_periods
+    # ★2026-10-17：买卖分边 + 分段印花税（config/costs.yaml）
+    cost_total = period_cost(turnover, dates=[d for d in rdates if d in net_ret.index])
     net_ret = ret - cost_total / max(len(ret), 1)
 
     # 5) 指标 + 基准 + 超额
