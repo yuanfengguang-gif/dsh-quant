@@ -1,0 +1,6 @@
+# 上游 IIcodehub/AI-Quant-Factor-Miner 未提供 requirements.txt
+# 以下由依赖扫描得出（2026-10-17）
+pandas>=2.0
+python-dotenv>=1.0
+openai>=1.30
+google-generativeai>=0.8

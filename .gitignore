@@ -5,6 +5,13 @@ __pycache__/
 *.pyc
 *.pyo
 
+# ---- 子项目 mining/（2026-10-17 并入 AI-Quant-Factor-Miner） ----
+# 上游的 _QF-LLM-assets 是 puppeteer 的 node_modules（678.7 MB / 2,541 文件），绝不入库
+node_modules/
+**/_QF-LLM-assets/
+mining/**/*.parquet
+mining/**/data/*.csv
+
 # ---- 本地配置（含真实密钥，勿提交） ----
 config/params.yaml
 harness/home/.credentials.yaml
