@@ -6,7 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant")
+BASE = Path(r"D:\Programs\DSH Projects\DSH Quant")
 CACHE = BASE / "data" / "cache"
 
 # ---- 1. 扫描所有 py 的数据库引用 ----

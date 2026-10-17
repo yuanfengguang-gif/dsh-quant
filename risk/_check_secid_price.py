@@ -6,7 +6,7 @@ import urllib.request
 import yaml
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant"
+BASE = r"D:\Programs\DSH Projects\DSH Quant"
 cfg = yaml.safe_load(open(BASE + r"\config\params.yaml", encoding="utf-8"))
 H = {"Authorization": f"Bearer {cfg['data']['datayes_token']}", "Accept": "application/json"}
 

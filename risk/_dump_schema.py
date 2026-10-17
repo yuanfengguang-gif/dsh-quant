@@ -1,5 +1,5 @@
 import sqlite3, os
-sys_path = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache"
+sys_path = r"D:\Programs\DSH Projects\DSH Quant\data\cache"
 dbs = ["bars.db", "finance.db", "hist_mv.db", "stock_basic.db"]
 for db in dbs:
     p = os.path.join(sys_path, db)

@@ -2,7 +2,7 @@ import sqlite3
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-C = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache"
+C = r"D:\Programs\DSH Projects\DSH Quant\data\cache"
 
 c_mv = sqlite3.connect(C + r"\hist_mv.db")
 c_tdx = sqlite3.connect(C + r"\bars_tdx_test.db")

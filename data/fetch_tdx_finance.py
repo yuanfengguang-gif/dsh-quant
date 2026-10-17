@@ -24,8 +24,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Users\Administrator\.dsh\skills\tdx-aidata")
-sys.path.insert(0, r"C:\Users\Administrator\.dsh\skills\tdx-aidata\lib")
+sys.path.insert(0, r"C:\Users\Lenovo\.dsh\skills\tdx-aidata")
+sys.path.insert(0, r"C:\Users\Lenovo\.dsh\skills\tdx-aidata\lib")
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 

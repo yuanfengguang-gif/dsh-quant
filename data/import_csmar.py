@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 SRC = Path(r"D:\BaiduNetdiskDownload\A股上市公司财务数据（1990-2026.3.31）")
-DB = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache\finance_csmar.db")
+DB = Path(r"D:\Programs\DSH Projects\DSH Quant\data\cache\finance_csmar.db")
 
 # 中文列名 → 英文列名（核心字段）
 MAP = {

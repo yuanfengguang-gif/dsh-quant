@@ -9,7 +9,7 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File <本脚本绝对路径>
 
 $ErrorActionPreference = "Continue"
-$BASE = "C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant"
+$BASE = "D:\Programs\DSH Projects\DSH Quant"
 $LOG_DIR = Join-Path $BASE "logs"
 $PY = "python"
 

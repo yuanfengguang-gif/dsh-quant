@@ -59,7 +59,7 @@ def main() -> int:
     ap.add_argument("--root", default=None, help="项目根目录，默认本脚本上两级")
     ap.add_argument("--old-project", required=True)
     ap.add_argument("--new-project", required=True)
-    ap.add_argument("--old-home", default=r"C:\Users\Administrator")
+    ap.add_argument("--old-home", default=r"C:\Users\Lenovo")
     ap.add_argument("--new-home", default=None)
     ap.add_argument("--only-daily", action="store_true")
     ap.add_argument("--rewrite-tasks", action="store_true")

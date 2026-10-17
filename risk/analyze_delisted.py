@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-C = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache"
+C = r"D:\Programs\DSH Projects\DSH Quant\data\cache"
 
 con = sqlite3.connect(C + r"\datayes_basic.db")
 df = pd.read_sql("SELECT * FROM sec_delisted", con)

@@ -124,7 +124,7 @@ def check_dbs():
 
 def check_external():
     print("\n4) 项目外依赖")
-    home = Path(os.environ.get("USERPROFILE", r"C:\Users\Administrator"))
+    home = Path(os.environ.get("USERPROFILE", r"C:\Users\Lenovo"))
     skill = home / ".dsh" / "skills" / "tdx-aidata"
     if skill.is_dir():
         dlls = list(skill.rglob("*.dll"))

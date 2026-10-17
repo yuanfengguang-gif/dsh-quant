@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-C = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache"
+C = r"D:\Programs\DSH Projects\DSH Quant\data\cache"
 
 codes = ["000001.SZ", "600519.SH", "000002.SZ", "600036.SH"]
 start = "2010-01-01"

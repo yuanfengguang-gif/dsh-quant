@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-DB = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache\bars_tdx.db"
+DB = r"D:\Programs\DSH Projects\DSH Quant\data\cache\bars_tdx.db"
 con = sqlite3.connect(DB)
 
 print("=" * 64)

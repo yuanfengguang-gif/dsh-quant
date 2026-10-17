@@ -79,10 +79,19 @@ def _open_browsers():
         pass
 
 
+def _resolve_data_dir(base: Path) -> Path:
+    """数据目录：源码版库在 data/cache/，EXE 版（PyInstaller）库直接放 data/。
+    优先 data/cache/bars.db，其次 data/bars.db，都没有则按 EXE 口径返回 data/。"""
+    cache_dir = base / "data" / "cache"
+    if (cache_dir / "bars.db").exists():
+        return cache_dir
+    return base / "data"
+
+
 def main():
     base = base_dir()
     if not os.environ.get("LWQUANT_CACHE_DIR"):
-        os.environ["LWQUANT_CACHE_DIR"] = str(base / "data")
+        os.environ["LWQUANT_CACHE_DIR"] = str(_resolve_data_dir(base))
     data_dir = os.environ["LWQUANT_CACHE_DIR"]
     print(f"[QuantDeck] 数据目录: {data_dir}")
     if not (Path(data_dir) / "bars.db").exists():

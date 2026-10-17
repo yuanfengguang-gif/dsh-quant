@@ -30,8 +30,8 @@ param(
     [string]$ProjectDir = "D:\Programs\DSH Projects\DSH Quant",
     [string]$PackageDir = "E:\DSH量化项目数据",
     [string]$NewHome = "$env:USERPROFILE",
-    [string]$OldProject = "C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant",
-    [string]$OldHome = "C:\Users\Administrator",
+    [string]$OldProject = "D:\Programs\DSH Projects\DSH Quant",
+    [string]$OldHome = "C:\Users\Lenovo",
     [switch]$SkipData,
     [switch]$DryRun
 )

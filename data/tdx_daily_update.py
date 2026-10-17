@@ -28,7 +28,7 @@ try:
 except Exception:
     pass
 
-BASE = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant")
+BASE = Path(r"D:\Programs\DSH Projects\DSH Quant")
 DB = BASE / "data" / "cache" / "bars_tdx.db"        # 行情主库
 META_DB = BASE / "data" / "cache" / "tdx_meta.db"    # 元数据库
 TABLE = "daily_bar"

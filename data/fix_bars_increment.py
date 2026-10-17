@@ -17,7 +17,7 @@ try:
 except Exception:
     pass
 
-CACHE = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache")
+CACHE = Path(r"D:\Programs\DSH Projects\DSH Quant\data\cache")
 BARS = CACHE / "bars.db"
 TDX = CACHE / "bars_tdx.db"
 t0 = time.time()

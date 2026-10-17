@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-C = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache")
+C = Path(r"D:\Programs\DSH Projects\DSH Quant\data\cache")
 
 
 def main():

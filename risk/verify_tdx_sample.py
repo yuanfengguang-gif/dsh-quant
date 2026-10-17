@@ -8,11 +8,11 @@ import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-A = Path(r"C:\Users\Administrator\.dsh\attachments\v1\files")
+A = Path(r"C:\Users\Lenovo\.dsh\attachments\v1\files")
 DAILY = A / "e7" / "e7b92f19c3820dc9b23917978e4090a1a19335d54166aaee570b7e58d80d95fc" / "日频样本.csv"
 QFQ = A / "e0" / "e037e9440a15bc75ab808810025e860191a6ef9498d40a521f25739e35316807" / "前复权因子样本.csv"
 HFQ = A / "61" / "6184d5507cd4dfd6b8dc56f99549b176975515e8d0fe0ccae93e86ef27a10112" / "后复权因子样本.csv"
-BASE = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant")
+BASE = Path(r"D:\Programs\DSH Projects\DSH Quant")
 BARS = BASE / "data" / "cache" / "bars.db"
 
 print("=" * 70)

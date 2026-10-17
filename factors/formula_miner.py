@@ -41,7 +41,7 @@ from factors.combo_validate import combo_validate_sig, DEFAULT_TOPN, DEFAULT_REB
 from factors.reproduce_factors import bp_value, sue, f_score, turn_mid_prox, limup_ex_5, _limup_flag
 from factors.validate_all_factors import amihud, reversal_20, mom_120, near_high_250, sentiment
 
-ENV_FILE = r"C:\Users\Administrator\dsh-desktop\.env"
+ENV_FILE = r"C:\Users\Lenovo\dsh-desktop\.env"
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 
 MAX_FORMULA_LEN = 8          # 短公式优先，防过拟合

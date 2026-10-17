@@ -7,7 +7,7 @@ import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-A = Path(r"C:\Users\Administrator\.dsh\attachments\v1\files")
+A = Path(r"C:\Users\Lenovo\.dsh\attachments\v1\files")
 QFQ = A / "e0" / "e037e9440a15bc75ab808810025e860191a6ef9498d40a521f25739e35316807" / "前复权因子样本.csv"
 HFQ = A / "61" / "6184d5507cd4dfd6b8dc56f99549b176975515e8d0fe0ccae93e86ef27a10112" / "后复权因子样本.csv"
 

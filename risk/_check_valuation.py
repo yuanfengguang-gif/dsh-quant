@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-C = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache"
+C = r"D:\Programs\DSH Projects\DSH Quant\data\cache"
 con = sqlite3.connect(C + r"\valuation.db")
 print("valuation 表结构:", [r[1] for r in con.execute("PRAGMA table_info(valuation)")])
 print("行数:", con.execute("SELECT COUNT(*) FROM valuation").fetchone()[0])

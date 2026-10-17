@@ -1,5 +1,5 @@
 import yaml, json, urllib.request
-BASE = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant"
+BASE = r"D:\Programs\DSH Projects\DSH Quant"
 cfg = yaml.safe_load(open(BASE + r"\config\params.yaml", encoding="utf-8"))
 t = cfg["data"]["datayes_token"]
 print("我用的 token 指纹：", t[:8] + "..." + t[-8:], f"（长度 {len(t)}）")

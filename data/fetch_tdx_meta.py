@@ -25,7 +25,7 @@ try:
 except Exception:
     pass
 
-DB = Path(r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache\tdx_meta.db")
+DB = Path(r"D:\Programs\DSH Projects\DSH Quant\data\cache\tdx_meta.db")
 
 MAIN_INDEX = {
     "000016.SH": "上证50",

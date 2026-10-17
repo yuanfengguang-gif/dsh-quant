@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-DB = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant\data\cache\bars_tdx_test.db"
+DB = r"D:\Programs\DSH Projects\DSH Quant\data\cache\bars_tdx_test.db"
 con = sqlite3.connect(DB)
 print("表:", [r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")])
 print("列:", [r[1] for r in con.execute("PRAGMA table_info(daily_bar)")])

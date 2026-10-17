@@ -1,7 +1,7 @@
 import json, os, sys, urllib.parse, urllib.request, yaml
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-BASE = r"C:\Users\Administrator\ DSH 量化交易系统\deepseek-harness-quant"
+BASE = r"D:\Programs\DSH Projects\DSH Quant"
 cfg = yaml.safe_load(open(os.path.join(BASE, "config", "params.yaml"), encoding="utf-8"))
 token = cfg["data"]["datayes_token"]
 H = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
