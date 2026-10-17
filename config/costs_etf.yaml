@@ -1,0 +1,14 @@
+# ETF 交易成本（与个股 config/costs.yaml 完全分开，禁止混用）
+#
+# 依据：docs/ETF择时策略设计.md §1.4
+#   · 买卖均：佣金 万2.6 + 滑点 0.01% = 0.036%
+#   · **无印花税**（ETF 免）
+#   · 无过户费
+#   · 往返 = 0.072%
+# 最低佣金 5 元/笔：回测不逐笔模拟，仅披露；资金小时需另算
+
+commission: 0.00026
+slippage: 0.0001
+stamp_duty: 0.0
+transfer_fee: 0.0
+min_commission: 5.0

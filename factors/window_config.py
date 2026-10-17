@@ -72,6 +72,28 @@ def get_filters() -> dict:
     return f
 
 
+STRICT_DEFAULTS = {
+    "start": "2016-01-01",
+    "end": "2026-10-16",
+    "topn": 20,
+    "rebalance": 20,
+    "neutral": True,
+    "adv_gate": 0.5,
+    "min_candidates": 800,
+    "min_candidate_ratio": 0.40,
+}
+
+
+def get_strict() -> dict:
+    """P0 锁定口径（config/backtest_window.yaml → strict:）；缺字段回落默认。"""
+    s = dict(STRICT_DEFAULTS)
+    raw = (_load().get("strict") or {})
+    for k, v in raw.items():
+        if k in s and v is not None:
+            s[k] = v
+    return s
+
+
 if __name__ == "__main__":
     import json
     print("config:", _CFG_PATH, "存在" if _CFG_PATH.exists() else "缺失（用默认值）")

@@ -39,4 +39,19 @@ filters:
   # 北交所处理：low_liquidity（降权）/ exclude（剔除）/ keep
   bj_handling: "keep"
 
+# ============================================================
+# P0 锁定口径（2026-10-18 用户裁决：A 方案，样本起点 2016-01-01）
+# 所有因子/组合默认走 factors/strict_validate.py，不再各写一套
+# ============================================================
+strict:
+  start: "2016-01-01"
+  end: "2026-10-16"
+  topn: 20
+  rebalance: 20
+  neutral: true
+  adv_gate: 0.5
+  # 候选池门槛：绝对下限 + 相对下限（占当日可打分股票比例）
+  min_candidates: 800
+  min_candidate_ratio: 0.40
+
 

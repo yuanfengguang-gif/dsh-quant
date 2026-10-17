@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-10-18 00:50:23",
+  "standard": {
+    "start": "2016-01-01",
+    "end": "2026-10-16",
+    "topn": 20,
+    "rebalance": 20,
+    "neutral": true,
+    "adv_gate": 0.5,
+    "min_candidates": 800,
+    "min_candidate_ratio": 0.4,
+    "cost_multiplier": 1.0
+  },
+  "rows": [
+    {
+      "因子": "B4_BP*accel+rev",
+      "公式": "BP ACCEL MUL REV_YOY ADD TS_RANK20",
+      "结论": "无效",
+      "年化": -0.0719,
+      "净超额": -0.1314,
+      "夏普": -0.161,
+      "回撤": -0.6434,
+      "Calmar": -0.112,
+      "回撤天数": 2480,
+      "2016-2020": -0.11613857680496253,
+      "2021-2026": -0.036808084143383324,
+      "闸门": "PASS",
+      "候选池min": 1197,
+      "归档": "D:\\Programs\\DSH Projects\\DSH Quant\\output\\backtest_archive\\B4_BP_accel_rev_strict_t20_20261018_005023.json"
+    }
+  ]
+}

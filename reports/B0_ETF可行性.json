@@ -1,0 +1,177 @@
+{
+  "generated_at": "2026-10-18 00:15:16",
+  "etf": {
+    "510300.SH": {
+      "name": "沪深300ETF",
+      "ok": true,
+      "rows": 3495,
+      "start": "2012-05-28",
+      "end": "2026-10-16",
+      "sample": [
+        {
+          "date": "2026-10-15",
+          "close": 4.242,
+          "volume": 1578769536.0
+        },
+        {
+          "date": "2026-10-16",
+          "close": 4.236,
+          "volume": 3799508480.0
+        }
+      ]
+    },
+    "510500.SH": {
+      "name": "中证500ETF",
+      "ok": true,
+      "rows": 3299,
+      "start": "2013-03-15",
+      "end": "2026-10-16",
+      "sample": [
+        {
+          "date": "2026-10-15",
+          "close": 6.802,
+          "volume": 462000640.0
+        },
+        {
+          "date": "2026-10-16",
+          "close": 6.809,
+          "volume": 492356448.0
+        }
+      ]
+    },
+    "511990.SH": {
+      "name": "货币ETF",
+      "ok": true,
+      "rows": 3329,
+      "start": "2013-01-28",
+      "end": "2026-10-16",
+      "sample": [
+        {
+          "date": "2026-10-15",
+          "close": 100.006,
+          "volume": 105434864.0
+        },
+        {
+          "date": "2026-10-16",
+          "close": 100.014,
+          "volume": 163389568.0
+        }
+      ]
+    },
+    "518880.SH": {
+      "name": "黄金ETF",
+      "ok": true,
+      "rows": 3212,
+      "start": "2013-07-29",
+      "end": "2026-10-16",
+      "sample": [
+        {
+          "date": "2026-10-15",
+          "close": 8.472,
+          "volume": 341175328.0
+        },
+        {
+          "date": "2026-10-16",
+          "close": 8.554,
+          "volume": 333568512.0
+        }
+      ]
+    }
+  },
+  "dividends": {
+    "510300.SH": {
+      "rows": 15,
+      "columns": [
+        "Type",
+        "Bonus",
+        "AllotPrice",
+        "ShareBonus",
+        "Allotment"
+      ],
+      "sample": [
+        {
+          "Date": "2025-06-18",
+          "Type": "1",
+          "Bonus": "0.88",
+          "AllotPrice": "0.0",
+          "ShareBonus": "0.0",
+          "Allotment": "0.0"
+        },
+        {
+          "Date": "2026-01-19",
+          "Type": "1",
+          "Bonus": "1.23",
+          "AllotPrice": "0.0",
+          "ShareBonus": "0.0",
+          "Allotment": "0.0"
+        }
+      ]
+    },
+    "510500.SH": {
+      "rows": 6,
+      "columns": [
+        "Type",
+        "Bonus",
+        "AllotPrice",
+        "ShareBonus",
+        "Allotment"
+      ],
+      "sample": [
+        {
+          "Date": "2026-01-16",
+          "Type": "1",
+          "Bonus": "0.62",
+          "AllotPrice": "0.0",
+          "ShareBonus": "0.0",
+          "Allotment": "0.0"
+        },
+        {
+          "Date": "2026-07-15",
+          "Type": "1",
+          "Bonus": "1.49",
+          "AllotPrice": "0.0",
+          "ShareBonus": "0.0",
+          "Allotment": "0.0"
+        }
+      ]
+    }
+  },
+  "index": {
+    "399006.SZ": {
+      "ok": true,
+      "rows": 3975,
+      "start": "2010-06-01",
+      "end": "2026-10-16"
+    },
+    "000922.CSI": {
+      "ok": true,
+      "rows": 3490,
+      "start": "2012-05-24",
+      "end": "2026-10-16"
+    },
+    "000922.SH": {
+      "ok": false
+    },
+    "000300.SH": {
+      "ok": true,
+      "rows": 5289,
+      "start": "2005-01-04",
+      "end": "2026-10-16"
+    },
+    "000905.SH": {
+      "ok": true,
+      "rows": 5289,
+      "start": "2005-01-04",
+      "end": "2026-10-16"
+    },
+    "000852.SH": {
+      "ok": true,
+      "rows": 5289,
+      "start": "2005-01-04",
+      "end": "2026-10-16"
+    }
+  },
+  "parquet_index": {
+    "missing": true
+  }
+}
