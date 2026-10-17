@@ -145,7 +145,7 @@ if __name__ == "__main__":
     con.close()
     panel = {}
     for code in codes:
-        df = cache.get_daily(code, start="2020-01-01", end="2025-12-31", adjust="qfq")
+        df = cache.get_daily(code, start="2010-01-01", end="2026-10-16", adjust="qfq")
         if df is None or len(df) < 1000:
             continue
         panel[code] = df.set_index("date").sort_index()["close"]

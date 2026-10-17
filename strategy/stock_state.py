@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     print("\n=== 真实数据抽查（茅台 600519）===")
     cache = DailyCache()
-    d = cache.get_daily("600519.SH", start="2020-01-01", end="2025-12-31", adjust="qfq")
+    d = cache.get_daily("600519.SH", start="2010-01-01", end="2026-10-16", adjust="qfq")
     st = classify_series(d.set_index("date").sort_index()["close"])
     from collections import Counter
     print(f"  状态分布: {dict(Counter(st))}")

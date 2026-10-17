@@ -36,7 +36,7 @@ HIST_DB = Path(r"data\cache\hist_mv.db")
 # ★分表（2026-08-07）：hist_mv = 反推版（build_hist_mv.py，主用，PIT 验收已用）
 #                    hist_mv_ts = Tushare 精确版（本脚本，长期慢慢补齐，完成后交叉验证）
 TS_TABLE = "hist_mv_ts"
-START_DEFAULT = "2020-01-01"
+START_DEFAULT = "2010-01-01"
 END_DEFAULT = "2025-12-31"
 
 

@@ -33,7 +33,7 @@ OUT = BASE / "logs" / "pv_consensus_winrates.json"
 
 FIVE = ["turn_mid_prox", "sentiment", "turnover", "reversal20", "lowvol"]
 HIT_GE = 4          # 五强命中 ≥4 才算共识（与 load_external_signals 一致）
-START = "2020-01-01"
+START = "2010-01-01"
 
 
 def load_bars() -> pd.DataFrame:

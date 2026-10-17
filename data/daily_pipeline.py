@@ -102,14 +102,23 @@ def health_check():
                 pass
     except Exception:
         pass
-    bs = con.execute("SELECT COUNT(DISTINCT code) FROM daily_bar WHERE date=? AND adjust='qfq' AND (code LIKE 'sh.%' OR code LIKE 'sz.%')", (latest,)).fetchone()[0]
+    # ★2026-10-17（DS-01 / 9.12-2 修复）：新库代码格式是 600000.SH / 000001.SZ；
+    #   旧 baostock 格式是 sh.600000。原断言只数旧格式残留 → 在新数据下恒为 0，等于失去完整性检查能力。
+    _old_fmt = con.execute(
+        "SELECT COUNT(*) FROM daily_bar WHERE date=? AND adjust='qfq' "
+        "AND (code LIKE 'sh.%' OR code LIKE 'sz.%')", (latest,)).fetchone()[0]
+    _new_fmt = con.execute(
+        "SELECT COUNT(DISTINCT code) FROM daily_bar WHERE date=? AND adjust='qfq' "
+        "AND (code LIKE '%.SH' OR code LIKE '%.SZ' OR code LIKE '%.BJ')", (latest,)).fetchone()[0]
     con.close()
-    log(f"  [巡检] bars.db 重复={dup} | 最新={latest}（双库合并） | 残留baostock格式={bs}")
-    if bs > 0:
-        log(f"  ⚠️ 发现 {bs} 行 baostock 格式残留（需清理）")
+    log(f"  [巡检] bars.db 重复={dup} | 最新={latest}（双库合并） | 新格式股票数={_new_fmt} | 旧baostock残留={_old_fmt}")
+    if _new_fmt < 4000:
+        log(f"  ⚠️ 最新交易日仅 {_new_fmt} 只新格式股票（<4000 完整性门槛），当日数据可能不全")
+    if _old_fmt > 0:
+        log(f"  ⚠️ 发现 {_old_fmt} 行 baostock 格式残留（需清理）")
     if dup > 0:
         log(f"  ⚠️ 发现 {dup} 行重复（需清理）")
-    return dup == 0 and bs == 0
+    return dup == 0 and _old_fmt == 0 and _new_fmt >= 4000
 
 
 def main():
@@ -141,26 +150,28 @@ def main():
     # 1) 分钟 7z 增量 → parquet（★2026-08-09 切换：minute.db 被系统锁 → 走 parquet 绕行方案，
     #    convert_7z_to_parquet.py 输出到 incr_parquet/，minute_reader fallback 读取；旧 ingest_minute_7z 保留待锁释放）
     run_step("分钟 7z 增量 → parquet", [PY, str(BASE / "data" / "convert_7z_to_parquet.py")], timeout=7200)
-    # 2) 日线增量 ★2026-08-10 双通道：Tushare 主服务器优先（按日全市场 0.8s，quantdata888 实测可用），
-    #    baostock 半挂起（单只 40s）降级为兜底；Tushare 盘后数据未出（17:00 前）时自动跳过不卡链
+    # 2) 日线增量 ★2026-10-17（DS-01 / 9.12-1 修复）：改用通达信链路
+    #    原实现调 incremental_daily_tushare.py —— 但 config/params.yaml 的 tushare token 是占位符，
+    #    该步必然失败。而 scan / pitch_v2 / pitch_track / daily_signal 都在其后 →
+    #    「opp_pool / pitch_track_pool / daily_signal 长期缺失、stop_monitor 监测 0 只」的根因就是这里。
+    #    现改为：先看 bars.db 最新日期，落后才补跑「通达信 API → bars_tdx → 转 qfq 合并进 bars.db」。
+    #    17:30 计划任务 DSHQuant-TDX-DailyUpdate 已负责主增量，这里只是幂等兜底。
+    _bars_db = BASE / "data" / "cache" / "bars.db"
     try:
-        # ★2026-08-14 超时 120→300s：incremental_daily_tushare 含 trade_cal+daily+adj_factor×2+daily_basic
-        #   多次全市场调用 + 代理服务器 间歇超时重试，120s 常超 → 误走 baostock 慢兜底（几小时）
-        _rt = subprocess.run(
-            [PY, "-X", "utf8", str(BASE / "data" / "incremental_daily_tushare.py")],
-            capture_output=True, text=True, timeout=300, encoding="utf-8", errors="replace")
-        _tushare_ok = _rt.returncode == 0 and ("已入库" in (_rt.stdout or ""))
-        log(f"日线增量(Tushare): {(_rt.stdout or '').strip().splitlines()[-1] if (_rt.stdout or '').strip() else '无输出'}")
-    except subprocess.TimeoutExpired:
-        _tushare_ok = False
-        log("  ⚠ Tushare 日线增量超时")
+        _c0 = sqlite3.connect(f"file:{_bars_db.as_posix()}?mode=ro&immutable=1", uri=True, timeout=5)
+        _max_qfq = _c0.execute("SELECT MAX(date) FROM daily_bar WHERE adjust='qfq'").fetchone()[0]
+        _c0.close()
     except Exception:
-        _tushare_ok = False
-    if not _tushare_ok:
-        # ★2026-08-14 移除 baostock 全市场兜底（原 timeout=7200 几小时，Tushare 偶发失败就卡住整链）
-        #   → 失败即跳过，数据保持 bars.db 现有；17:30 TushareInc / 次日链会自动重试。
-        #   baostock 仍用于历史补拉（backfill_hist_bars.py 独立任务），不在此处做每日兜底。
-        log("  ⚠ Tushare 日线增量失败（已重试）→ 跳过当日增量（数据保持 bars.db 现有；17:30/次日链自动重试）")
+        _max_qfq = None
+    _today = _dt.date.today().strftime("%Y-%m-%d")
+    if _max_qfq and _max_qfq >= _today:
+        log(f"日线增量(通达信): 已是最新（bars.db 最新 {_max_qfq}）")
+    else:
+        log(f"日线增量(通达信): bars.db 最新 {_max_qfq} < 今日 {_today} → 补跑")
+        run_step("通达信增量（API → bars_tdx）",
+                 [PY, str(BASE / "data" / "tdx_daily_update.py")], timeout=1800)
+        run_step("unadj → qfq 合并进 bars.db",
+                 [PY, str(BASE / "data" / "fix_bars_increment.py")], timeout=1800)
     # 2.5) ★2026-08-14 沪深300 指数刷新（baostock 单指数，秒级）——保证红绿灯数据实时性（收盘后拿到当日指数）
     run_step("沪深300指数刷新", [PY, "-X", "utf8", str(BASE / "data" / "fetch_index_daily.py")], timeout=120)
     # 2.6) ★2026-08-14 择时红绿灯（均线金叉6/12，依赖 bars.db 沪深300 日线，纯本地毫秒级）

@@ -249,7 +249,7 @@ def load_archive(path) -> dict:
 if __name__ == "__main__":
     # 自测：随机收益序列 → 存档 + 列表
     np.random.seed(1)
-    idx = pd.date_range("2020-01-01", periods=1000, freq="B")
+    idx = pd.date_range("2010-01-01", periods=1000, freq="B")
     rets = pd.Series(np.random.randn(1000) * 0.01 + 0.0004, index=idx)
     bench = pd.Series(np.random.randn(1000) * 0.008 + 0.0002, index=idx)
     res = archive(rets, params={"name": "自测策略", "topn": 5}, benchmark=bench, name="selftest")

@@ -85,7 +85,7 @@ def monthly_top5_backtest(closes, score, topn=5):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stocks", type=int, default=300)
-    ap.add_argument("--start", default="2020-01-01")
+    ap.add_argument("--start", default="2010-01-01")
     ap.add_argument("--end", default="2025-12-31")
     ap.add_argument("--topn", type=int, default=5)
     ap.add_argument("--archive", type=lambda x: x.lower() in ("1", "true", "yes"),

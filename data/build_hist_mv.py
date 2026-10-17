@@ -73,7 +73,7 @@ def build_month(con_bars, ym: str, md: str) -> int:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start", default="2020-01")
+    ap.add_argument("--start", default="2010-01")
     ap.add_argument("--end", default="2026-12")
     args = ap.parse_args()
 

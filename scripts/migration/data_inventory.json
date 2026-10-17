@@ -1,0 +1,333 @@
+[
+  {
+    "file": "bars.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 3302.9,
+    "tables": 4,
+    "row_check": {
+      "daily_bar": 16378467,
+      "qfq_suspect": 710,
+      "bar_meta": 0
+    }
+  },
+  {
+    "file": "valuation.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 1954.7,
+    "tables": 2,
+    "row_check": {
+      "valuation": 16345318,
+      "meta": 6
+    }
+  },
+  {
+    "file": "hist_mv.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 69.1,
+    "tables": 2,
+    "row_check": {
+      "hist_mv": 826697,
+      "meta": 4
+    }
+  },
+  {
+    "file": "finance.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 50.8,
+    "tables": 1,
+    "row_check": {
+      "finance_report": 297118
+    }
+  },
+  {
+    "file": "finance_quality.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 48.3,
+    "tables": 1,
+    "row_check": {
+      "quality": 325903
+    }
+  },
+  {
+    "file": "tdx_finance.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 38.3,
+    "tables": 2,
+    "row_check": {
+      "fin_tdx": 297118,
+      "fetch_log": 5581
+    }
+  },
+  {
+    "file": "tdx_capital.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 44.2,
+    "tables": 2,
+    "row_check": {
+      "capital_daily": 642274,
+      "fetch_log": 92
+    }
+  },
+  {
+    "file": "stock_basic.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.4,
+    "tables": 1,
+    "row_check": {
+      "stock_basic": 5918
+    }
+  },
+  {
+    "file": "tdx_snapshot.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 11.6,
+    "tables": 3,
+    "row_check": {
+      "relation": 84056,
+      "fetch_log": 5581,
+      "more_info": 5581
+    }
+  },
+  {
+    "file": "name_history.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.7,
+    "tables": 2,
+    "row_check": {
+      "name_change": 6703,
+      "fetch_log": 5581
+    }
+  },
+  {
+    "file": "rzrq.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 544.2,
+    "tables": 1,
+    "row_check": {
+      "rzrq": 6189638
+    }
+  },
+  {
+    "file": "lhb.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 32.6,
+    "tables": 3,
+    "row_check": {
+      "lhb_detail": 139662,
+      "lhb_inst": 63352,
+      "lhb_jg_snap": 292
+    }
+  },
+  {
+    "file": "limitup.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.2,
+    "tables": 3,
+    "row_check": {
+      "zt_pool": 882,
+      "zbgc_pool": 280,
+      "dtgc_pool": 202
+    }
+  },
+  {
+    "file": "consensus.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.6,
+    "tables": 1,
+    "row_check": {
+      "consensus": 8419
+    }
+  },
+  {
+    "file": "st_history.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 1381.7,
+    "tables": 2,
+    "row_check": {
+      "is_st_v2": 16373178,
+      "is_st_changed": 560863
+    }
+  },
+  {
+    "file": "industry.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.0,
+    "tables": 1,
+    "row_check": {
+      "sw_index": 162
+    }
+  },
+  {
+    "file": "policy.db",
+    "tier": "essential",
+    "exists": false
+  },
+  {
+    "file": "bars_incr.db",
+    "tier": "essential",
+    "exists": true,
+    "size_mb": 0.0,
+    "tables": 2,
+    "row_check": {
+      "daily_bar": 0,
+      "bar_meta": 0
+    }
+  },
+  {
+    "file": "tdx_base.db",
+    "tier": "source",
+    "exists": true,
+    "size_mb": 4789.5,
+    "tables": 2,
+    "row_check": {
+      "daily": 16345318,
+      "import_log": 27
+    }
+  },
+  {
+    "file": "bars_tdx.db",
+    "tier": "source",
+    "exists": true,
+    "size_mb": 7329.5,
+    "tables": 4,
+    "row_check": {
+      "daily_bar": 16373223,
+      "adj_factor": 18481691,
+      "stock_info": 6035
+    }
+  },
+  {
+    "file": "finance_csmar.db",
+    "tier": "source",
+    "exists": true,
+    "size_mb": 147.2,
+    "tables": 2,
+    "row_check": {
+      "fin_core": 95435,
+      "fin_core_q": 325903
+    }
+  },
+  {
+    "file": "bars_before_qfq_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 4998.9,
+    "tables": 5,
+    "row_check": {
+      "daily_bar_legacy": 13420609,
+      "bar_meta_prev": 5224,
+      "_wprobe": 0
+    }
+  },
+  {
+    "file": "bars_hfactor_20261017_150028.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 3296.5,
+    "tables": 3,
+    "row_check": {
+      "daily_bar": 16373178,
+      "qfq_negative_factor": 65,
+      "bar_meta": 0
+    }
+  },
+  {
+    "file": "bars_legacy_backup_20261016.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 2713.0,
+    "tables": 3,
+    "row_check": {
+      "daily_bar": 13420609,
+      "bar_meta": 5224,
+      "_wprobe": 0
+    }
+  },
+  {
+    "file": "valuation_before_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 460.6,
+    "tables": 1,
+    "row_check": {
+      "valuation": 5196708
+    }
+  },
+  {
+    "file": "finance_before_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 41.0,
+    "tables": 1,
+    "row_check": {
+      "finance_report": 319089
+    }
+  },
+  {
+    "file": "finance_quality_before_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 1.6,
+    "tables": 1,
+    "row_check": {
+      "quality": 12375
+    }
+  },
+  {
+    "file": "stock_basic_before_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 0.5,
+    "tables": 1,
+    "row_check": {
+      "stock_basic": 5561
+    }
+  },
+  {
+    "file": "hist_mv_before_switch_20261017.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 23.2,
+    "tables": 1,
+    "row_check": {
+      "hist_mv": 381456
+    }
+  },
+  {
+    "file": "bars_tdx_test.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 63.1,
+    "tables": 2,
+    "row_check": {
+      "daily_bar": 131473,
+      "adj_factor": 6964
+    }
+  },
+  {
+    "file": "finance_new.db",
+    "tier": "archive",
+    "exists": true,
+    "size_mb": 39.8,
+    "tables": 1,
+    "row_check": {
+      "finance_report": 325903
+    }
+  }
+]

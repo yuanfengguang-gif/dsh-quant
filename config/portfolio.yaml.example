@@ -1,0 +1,50 @@
+# ============================================================
+# 组合构建配置模板（开源版）
+# 复制为 portfolio.yaml 后填写；字段说明见 portfolio.yaml。
+# 前向模拟盘/holdout 验证期间参数冻结，改参 = 失去样本外意义。
+# ============================================================
+factors:
+  - {name: bp_value,      direction: +1, family: 价值}
+  - {name: turn_mid_prox, direction: +1, family: 量价}
+  - {name: kdj_j,         direction: -1, family: 反转}
+  - {name: amihud,        direction: +1, family: 量价}
+  - {name: f_score,       direction: +1, family: 质量}
+  - {name: pead_factor,   direction: +1, family: 成长}
+  - {name: a_factor,      direction: +1, family: 成长}
+  - {name: ma200_trend,   direction: -1, family: 量价}
+
+portfolio:
+  topn: 15
+  rebalance: 40
+  factor_weighting: eq     # eq | rp
+  pos_weighting: eq        # eq | rp
+  neutral: true
+  regime_on: true
+  hard_filter_on: true
+  cost: 0.00176
+
+regime:
+  ma_window: 200
+  bear_exposure: 0.5
+
+hard_filter:
+  illiquid_pct: 0.05
+  min_list_days: 60
+
+backtest:
+  start: 2020-06-01
+  end: 2025-12-31
+
+forward:
+  start: 2026-01-02
+
+holdout:
+  splits: [2022-12-31, 2023-12-31, 2024-06-30]
+
+risk:
+  drawdown_warn: 0.10
+  drawdown_half: 0.15
+  drawdown_liquidate: 0.20
+  factor_icir_fail: 0.0
+
+capital: 1000000

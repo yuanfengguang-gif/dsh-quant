@@ -47,10 +47,23 @@ def _ensure_login():
     global _BAOSTOCK_LOGINED
     if not _BAOSTOCK_LOGINED:
         import baostock as bs
-        lg = bs.login()
-        if lg.error_code != "0":
-            raise RuntimeError(f"Baostock 登录失败: {lg.error_code} {lg.error_msg}")
-        _BAOSTOCK_LOGINED = True
+        last_err = None
+        old_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(60)  # 登录放宽到 60s（模块级 15s 对登录太激进，实测 login 被 15s 掐断）
+        try:
+            for attempt in range(3):
+                try:
+                    lg = bs.login()
+                    if lg.error_code == "0":
+                        _BAOSTOCK_LOGINED = True
+                        return
+                    last_err = f"{lg.error_code} {lg.error_msg}"
+                except Exception as e:
+                    last_err = str(e)[:80]
+                time.sleep(2.0 * (2 ** attempt))  # 退避 2/4s
+        finally:
+            socket.setdefaulttimeout(old_timeout)
+        raise RuntimeError(f"Baostock 登录失败: {last_err}")
 
 
 def _rate_limit():

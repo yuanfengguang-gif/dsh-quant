@@ -1,0 +1,63 @@
+# ============================================================
+# 组合构建冻结配置（前向模拟盘 + 分年度 holdout 验证用）
+# 生成：2026-10-14，由 factor_subset.py 选出的 8 因子子集 + portfolio_builder.py 六环节
+# 铁律：前向模拟盘/样本外验证期间，本文件参数一律冻结，改参 = 失去样本外意义。
+# ============================================================
+
+# 8 因子子集（factor_subset 相关去冗余 + 正交化边际贡献选出，跨 6 族）
+# direction 冻结自训练段（2019-2025）截面 RankIC 符号，前向验证禁止再判向
+factors:
+  - {name: bp_value,      direction: +1, family: 价值}
+  - {name: turn_mid_prox, direction: +1, family: 量价}
+  - {name: kdj_j,         direction: -1, family: 反转}
+  - {name: amihud,        direction: +1, family: 量价}
+  - {name: f_score,       direction: +1, family: 质量}
+  - {name: pead_factor,   direction: +1, family: 成长}
+  - {name: a_factor,      direction: +1, family: 成长}
+  - {name: ma200_trend,   direction: -1, family: 量价}
+
+# 六环节参数
+portfolio:
+  topn: 15                 # 决策 #1：持仓 15 只
+  rebalance: 40            # 40 交易日调仓（turn_low 实证口径）
+  factor_weighting: eq     # L1 因子合成：eq=等权(首选) | rp=风险平价
+  pos_weighting: eq        # L3 仓位：eq=等权(首选) | rp=逆波动率
+  neutral: true            # L4 行业×市值中性
+  regime_on: true          # L6 Regime 择时
+  hard_filter_on: true     # L5 ST/退市/次新/流动性过滤
+  cost: 0.00176            # 佣金万2.6 + 印花税0.05% + 滑点0.1%
+
+# Regime 择时（L6）：等权全市场指数 vs MA200
+regime:
+  ma_window: 200
+  bear_exposure: 0.5       # 空头态仓位减半
+
+# 硬过滤（L5）
+hard_filter:
+  illiquid_pct: 0.05       # 20 日均额截面后 5% 剔除
+  min_list_days: 60        # 次新上市 60 日内剔除
+
+# 回测窗口
+backtest:
+  start: 2020-06-01        # 训练/回测起点（hist_mv/turn 覆盖边界）
+  end: 2025-12-31          # 训练/回测终点
+
+# 前向模拟盘（样本外，参数冻结后）
+forward:
+  start: 2026-01-02        # 前向起点
+  # end: null = 数据最新交易日（自动）
+
+# 分年度 holdout 切分点（train=[backtest.start, split]，val=[split, backtest.end]）
+holdout:
+  splits: [2022-12-31, 2023-12-31, 2024-06-30]
+
+# 三级回撤控制（主系统 config/params.yaml risk.drawdown_levels，第15课《风险控制与资金管理》）
+risk:
+  drawdown_warning: 0.05   # 警戒 5%：降低新开仓规模
+  drawdown_control: 0.10   # 控制 10%：停止新开仓、开始减仓
+  drawdown_circuit: 0.15   # 熔断 15%：减至 30% 仓位 + 冷静期
+  circuit_position: 0.30   # 熔断后保留仓位 30%
+  factor_icir_fail: 0.0    # 滚动 20 日 ICIR 连续转负 → 因子失效预警
+
+# 资金假设（容量/冲击成本用）
+capital: 1000000           # 100 万人民币

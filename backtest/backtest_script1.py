@@ -77,7 +77,7 @@ def compute_beta(closes, window=60):
 def load_market_cap(codes):
     """月末流通市值（亿元）→ DataFrame(index=month, columns=code)"""
     ph = ",".join("?" * len(codes))
-    rows = _q(f"SELECT month, code, circ_mv FROM hist_mv WHERE code IN ({ph}) AND month>='2020-06'",
+    rows = _q(f"SELECT month, code, circ_mv FROM hist_mv WHERE code IN ({ph}) AND month>='2010-01'",
               f"{CACHE}/hist_mv.db", codes)
     df = pd.DataFrame(rows, columns=["month", "code", "circ_mv"])
     return df.pivot_table(index="month", columns="code", values="circ_mv")
@@ -118,7 +118,7 @@ def main():
     t0 = time.time()
     codes = load_pool(args.stocks)
     print(f"股票池（HS300 代理）: {len(codes)} 只（Top 大市值）")
-    closes = load_closes(codes, "2020-06-01", args.end)
+    closes = load_closes(codes, "2010-01-01", args.end)
     print(f"价格面板: {closes.shape[0]} 天 × {closes.shape[1]} 只（加载 {time.time()-t0:.1f}s）")
 
     # 因子

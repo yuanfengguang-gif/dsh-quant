@@ -85,6 +85,6 @@ def get_factor(name: str, start: str = "2015-01", end: str = None) -> pd.Series:
 
 
 if __name__ == "__main__":
-    df = build_epu_factors(start="2020-01")
+    df = build_epu_factors(start="2010-01")
     print(f"EPU 因子族: {df.shape[0]} 个月 × {df.shape[1]} 个因子")
     print(df.tail(4).round(1).to_string())

@@ -122,7 +122,7 @@ def _redundancy(factor: pd.Series, regime_cash: pd.Series = None) -> float:
     return float(df["f"].corr(df["c"], method="spearman"))
 
 
-def regime_cash_series(start="2020-01") -> pd.Series:
+def regime_cash_series(start="2010-01") -> pd.Series:
     """现有 Regime 现金比例月度序列（供冗余度检验；实现取自 validation/test_regime_classified）"""
     try:
         from validation.test_regime_classified import load_index, regime_cash_at

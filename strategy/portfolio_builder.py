@@ -29,7 +29,7 @@ import sqlite3
 from data.cache import DailyCache
 from strategy.ranking import rank_market
 
-START, END = "2020-01-01", "2025-12-31"
+START, END = "2010-01-01", "2026-10-16"
 COST = 0.00026 + 0.0005 + 0.001
 
 

@@ -51,7 +51,7 @@ COST = 0.00026 + 0.0005 + 0.001
 class BtEngine:
     """全链路回测引擎（向量化简化版，聚焦策略逻辑验证）"""
 
-    def __init__(self, topn: int = 10, cash: float = 1_000_000, start: str = "2020-01-01",
+    def __init__(self, topn: int = 10, cash: float = 1_000_000, start: str = "2010-01-01",
                  end: str = "2025-12-31"):
         self.topn = topn
         self.cash = cash
@@ -361,7 +361,7 @@ class BtEngine:
 
 def main():
     ap = argparse.ArgumentParser(description="M5 回测引擎（全链路）")
-    ap.add_argument("--start", default="2020-01-01")
+    ap.add_argument("--start", default="2010-01-01")
     ap.add_argument("--end", default="2025-12-31")
     ap.add_argument("--topn", type=int, default=10)
     ap.add_argument("--limit", type=int, default=200)

@@ -1,0 +1,42 @@
+# 回测/验证窗口配置（Backtest Window）
+#
+# 为什么要有这个文件：
+#   窗口起点原先写死在 9 个代码文件里（portfolio_builder / combo_validate / bt_engine /
+#   bt_runner / backtest_script1 / benchmark_speed / build_hist_mv / fetcher_hist_mv），
+#   违反「全部模块动态化」铁律，且改一次要动 9 处。
+#
+# 口径依据（详见 output\TRUST_WINDOW_20261017.md 与 CORE_ISSUE_TRACKER 9.19）：
+#   · 2000-04~2009：价格/换手/估值/市值/PIT 全部达标，但**退市股覆盖仅 82%~90%**
+#     → 幸存者偏差 10-18%，不可用于长期持有/退市类研究
+#   · 2010-01 起：退市覆盖 ≥90.5% 且逐年上升（2025 达 99.5%），其余指标全达标
+#   · ST 剔除：重建后误判 2.1%（2020-06 前为推断），影响 0.14pp/年
+#   · 跨停牌样本：5 日窗 0.34% / 20 日窗 1.34% → 建议剔除
+#   · qfq_suspect（bars.db 内表，710 行）：疑似漏报送转 → 建议剔除
+
+window:
+  # 主回测窗口起点（用户 2026-10-17 确认：选 A = 2010-01）
+  start: "2010-01-01"
+  end: "2026-10-16"
+
+  # 面板加载起点（必须比 start 早 ≥365 天，供长周期因子预热：
+  #   ma200_trend 需 200 交易日、mom_120 需 120 日）
+  #   ⚠️ 若把 start 改成 2010-01-01，这里要同步改成 2008-12-01 之类，否则因子前段全 NaN
+  panel_load_start: "2008-12-01"
+
+  # 稳健性窗口（可选，用于双窗口对比）
+  robustness:
+    enabled: false
+    start: "2010-01-01"
+    end: "2025-12-31"
+
+filters:
+  # 剔除「跨停牌」样本（V3：5 日窗 0.34% / 20 日窗 1.34%）
+  exclude_suspension: true
+  # 剔除 bars.db.qfq_suspect 中的可疑除权行（V2：710 行）
+  exclude_qfq_suspect: true
+  # 剔除 ST（用重建后的 is_st；2020-06 前误判 2.1%）
+  exclude_st: true
+  # 北交所处理：low_liquidity（降权）/ exclude（剔除）/ keep
+  bj_handling: "keep"
+
+

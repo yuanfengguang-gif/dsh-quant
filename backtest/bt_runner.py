@@ -126,7 +126,7 @@ def _load_pool(stocks):
     codes = [r[0] for r in top]
     ph = ",".join("?" * len(codes))
     ok = set(r[0] for r in _q(
-        f"SELECT code FROM daily_bar WHERE code IN ({ph}) AND date>='2020-06-01' AND date<='2025-12-31' "
+        f"SELECT code FROM daily_bar WHERE code IN ({ph}) AND date>='2010-01-01' AND date<='2025-12-31' "
         "GROUP BY code HAVING COUNT(*)>=1000", f"{CACHE}/bars.db", codes))
     return [c for c in codes if c in ok][:stocks]
 
@@ -134,7 +134,7 @@ def _load_pool(stocks):
 def _load_prices(codes, start, end):
     """加载 close/open/high 面板（T+1 open 执行 + 涨停过滤用）"""
     cache = DailyCache()
-    batch = cache.get_daily_batch(codes, start="2020-06-01", end=end, adjust="qfq",
+    batch = cache.get_daily_batch(codes, start="2010-01-01", end=end, adjust="qfq",
                                   fields=["close", "open", "high"])
     close_s, open_s, high_s = {}, {}, {}
     for c, df in batch.items():
@@ -145,7 +145,7 @@ def _load_prices(codes, start, end):
         open_s[c] = df["open"]
         high_s[c] = df["high"]
     calendar = [r[0] for r in _q(
-        "SELECT DISTINCT date FROM daily_bar WHERE date>='2020-06-01' AND date<=? ORDER BY date",
+        "SELECT DISTINCT date FROM daily_bar WHERE date>='2010-01-01' AND date<=? ORDER BY date",
         f"{CACHE}/bars.db", (end,))]
     return {
         "close": pd.DataFrame({c: close_s[c].reindex(calendar) for c in close_s}).ffill(),
@@ -181,7 +181,7 @@ def _load_fin():
 def _load_mv():
     global _MV
     if _MV is None:
-        rows = _q("SELECT month, code, circ_mv FROM hist_mv WHERE month>='2020-06'", f"{CACHE}/hist_mv.db")
+        rows = _q("SELECT month, code, circ_mv FROM hist_mv WHERE month>='2010-01'", f"{CACHE}/hist_mv.db")
         _MV = pd.DataFrame(rows, columns=["month", "code", "circ_mv"]).pivot_table(
             index="month", columns="code", values="circ_mv")
     return _MV

@@ -1,0 +1,162 @@
+{
+  "version": "1.0",
+  "generated": "2026-10-15",
+  "source": "FRONTIER_FACTOR_PAPERS_20261015.md",
+  "papers": [
+    {
+      "id": "A1",
+      "title": "Empirical Asset Pricing via Machine Learning",
+      "authors": "Gu, Kelly, Xiu (2020 RFS)",
+      "mechanism": "ML 用高维特征+非线性交互预测收益，优于线性",
+      "factor": "ML 预期收益多空",
+      "data_need": "需训练 ML 模型（非公式语言可表达）",
+      "expressible": false,
+      "note": "归入「因子库/ML 通道」，非公式挖掘"
+    },
+    {
+      "id": "B1",
+      "title": "Replicating Anomalies (q-factor)",
+      "authors": "Hou, Xue, Zhang (2020 RFS)",
+      "mechanism": "投资 I/A 与盈利 ROE 是横截面收益两大驱动",
+      "factor": "投资因子(资产增长) + 盈利因子(ROE)",
+      "data_need": "财务：总资产增长、ROE",
+      "expressible": true,
+      "feat_hint": "EP/BP/SUE/ACCEL/REV_YOY（盈利+估值），资产增长可新增特征"
+    },
+    {
+      "id": "B3",
+      "title": "Untangling Value Premium with Labor Shares",
+      "authors": "Donangelo (2021 RFS)",
+      "mechanism": "劳动份额→经营杠杆→预期收益",
+      "factor": "劳动经营杠杆",
+      "data_need": "劳动报酬/增加值（A股无直接数据）",
+      "expressible": false,
+      "note": "可用「固定成本/经营杠杆」代理（DOL 类），需财务费用结构"
+    },
+    {
+      "id": "B4",
+      "title": "Reports of Value's Death Exaggerated",
+      "authors": "Arnott, Harvey, Kalesnik, Linnainmaa (2021 FAJ)",
+      "mechanism": "无形资产资本化后 B/M 溢价复活",
+      "factor": "无形资产调整账面市值比",
+      "data_need": "研发/SG&A 资本化",
+      "expressible": true,
+      "feat_hint": "BP/EP（价值）+ SUE/ACCEL（质量交叉），研发资本化可近似"
+    },
+    {
+      "id": "B5",
+      "title": "Uncertainty Shocks as Second-Moment News",
+      "authors": "Berger, Dew-Becker, Giglio (2020 REStud)",
+      "mechanism": "不确定性暴露→预期收益",
+      "factor": "波动率 beta / 不确定性暴露",
+      "data_need": "波动率序列",
+      "expressible": true,
+      "feat_hint": "VOLAT/STD20（波动结构）"
+    },
+    {
+      "id": "C1",
+      "title": "Investor Attention and Stock Returns",
+      "authors": "Chen, Tang, Yao, Zhou (2022 JFQA)",
+      "mechanism": "高关注→价格压力→短期反转",
+      "factor": "关注度综合指数（反转）",
+      "data_need": "关注度代理（换手/量能/涨跌幅）",
+      "expressible": true,
+      "feat_hint": "TURN/VOL_CHG/RET（关注度代理）+ 反转"
+    },
+    {
+      "id": "C5",
+      "title": "Time-dependent Lottery Preference",
+      "authors": "Lin, Chen, Ko, Yang (2021 JEF)",
+      "mechanism": "彩票偏好→高 MAX 股被高估→低 MAX 溢价",
+      "factor": "TMAX 最大日收益（反转）",
+      "data_need": "日收益分布",
+      "expressible": true,
+      "feat_hint": "RET 的近期极值（MAX），需新增 TMAX 特征"
+    },
+    {
+      "id": "D5",
+      "title": "Dissecting Characteristics Nonparametrically",
+      "authors": "Freyberger, Neuhierl, Weber (2020 RFS)",
+      "mechanism": "特征非线性/阈值效应定价",
+      "factor": "非参数特征工程",
+      "data_need": "特征非线性变换",
+      "expressible": true,
+      "feat_hint": "现有特征的 GATE/TS_RANK/非线性组合"
+    },
+    {
+      "id": "A4",
+      "title": "Can ChatGPT Forecast Stock Price Movements",
+      "authors": "Lopez-Lira, Tang (2023 JFE)",
+      "mechanism": "新闻情绪→次日收益漂移",
+      "factor": "LLM 新闻情绪",
+      "data_need": "新闻文本（通联 NEWS_* 因子库）",
+      "expressible": false,
+      "note": "用通联精品因子 NEWS_NUM_30/NEWS_NUM_NEG_30 等"
+    },
+    {
+      "id": "C4",
+      "title": "Business News and Business Cycles",
+      "authors": "Bybee, Kelly, Manela, Xiu (2024 JF)",
+      "mechanism": "新闻主题关注度→收益可预测性",
+      "factor": "新闻主题+情绪",
+      "data_need": "新闻文本（通联 NEWS_*/GPOST_* 因子库）",
+      "expressible": false,
+      "note": "用通联精品因子新闻/社交情绪族"
+    },
+    {
+      "id": "D1",
+      "title": "Lazy Prices",
+      "authors": "Cohen, Malloy, Nguyen (2020 JF)",
+      "mechanism": "披露文本惰性→低估坏消息→低收益",
+      "factor": "文本惰性（反转）",
+      "data_need": "披露文本（年报/季报）",
+      "expressible": false,
+      "note": "需文本数据，或用通联 AST_RPT_SENTIMENT 代理"
+    },
+    {
+      "id": "D2",
+      "title": "Firm-level Climate Change Exposure",
+      "authors": "Sautner et al. (2023 JF)",
+      "mechanism": "气候暴露→横截面定价",
+      "factor": "气候 beta",
+      "data_need": "电话会议文本（无）",
+      "expressible": false
+    },
+    {
+      "id": "D3",
+      "title": "Sustainable Investing in Equilibrium",
+      "authors": "Pastor, Stambaugh, Taylor (2021 JFE)",
+      "mechanism": "绿色资产低期望收益",
+      "factor": "绿色-棕色",
+      "data_need": "ESG 评级（通联有 ESG 数据但因子库未见）",
+      "expressible": false
+    },
+    {
+      "id": "D4",
+      "title": "Do Investors Care About Carbon Risk",
+      "authors": "Bolton, Kacperczyk (2021 JFE)",
+      "mechanism": "碳强度→碳溢价",
+      "factor": "碳强度",
+      "data_need": "碳排放数据（无）",
+      "expressible": false
+    },
+    {
+      "id": "B2",
+      "title": "Production Networks and Stock Returns",
+      "authors": "Gofman, Segal, Wu (2020 RFS)",
+      "mechanism": "供应链创新冲击→收益",
+      "factor": "供应链创新暴露",
+      "data_need": "客户-供应商网络（无）",
+      "expressible": false
+    },
+    {
+      "id": "C2C3",
+      "title": "Attention-Induced Trading / Tracking Retail",
+      "authors": "Barber et al. (2022 JF); Boehmer et al. (2021 JF)",
+      "mechanism": "散户净买入→反转",
+      "factor": "ROIB 散户订单流",
+      "data_need": "订单流（无，可用龙虎榜/融资融券代理）",
+      "expressible": false
+    }
+  ]
+}

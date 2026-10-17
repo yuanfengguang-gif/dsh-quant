@@ -106,10 +106,16 @@ class DailyCache:
 
     def __init__(self, db_path=None):
         self.db_path = Path(db_path) if db_path else DEFAULT_DB
-        self.inc_path = None if db_path else INC_DB
+        # ★2026-10-17（DS-06）单库模式：主库 bars.db 现已可写（实测 BEGIN IMMEDIATE 成功），
+        #   旧的「主库只读 → 写入路由到 bars_incr.db」机制不仅失效，而且**危险**：
+        #     · bars_incr.db 是固定名，而项目里 15 个文件读的是 glob `bars_incr_*.db`（带下划线）→ 看不到它
+        #     · 一旦主库被锁，写入会静默进 bars_incr.db，下游全部读不到 → 脑裂
+        #   故：固定 inc 路由关闭，写入只走主库；主库被锁时**直接报错**（fail fast），
+        #   而不是静默改道。历史遗留的 `bars_incr_*.db` 仍会被 _inc_paths() 合并读取（兼容旧数据）。
+        self.inc_path = None
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
-        if self.inc_path is not None:
+        if self.inc_path is not None:            # 保留结构，当前恒 False
             self.inc_path.parent.mkdir(parents=True, exist_ok=True)
             self._init_schema_inc()
 

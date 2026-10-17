@@ -1,0 +1,27 @@
+# ============================================================
+# 预警与复盘配置模板（开源版）
+# 复制为 alerts.yaml 后填写通知通道。字段说明见 alerts.yaml。
+# 5 类预警：回撤 / 因子失效 / 执行异常 / 数据异常 / 择时防御期。
+# ============================================================
+alerts:
+  drawdown_warning: 0.05
+  drawdown_control: 0.10
+  drawdown_circuit: 0.15
+  factor_icir_window: 20
+  factor_icir_fail: 0.0
+  factor_fail_days: 20
+  exec_fail_max: 3
+  data_health_min: 80.0
+
+notify:
+  serverchan_sendkey: ""        # Server酱 SendKey
+  wechat_work_webhook: ""       # 企业微信机器人 webhook
+  email_smtp_host: ""           # 例：smtp.qq.com
+  email_smtp_port: 465
+  email_from: ""
+  email_password: ""            # 邮箱授权码
+  email_to: ""
+
+review:
+  cadence: "weekly"
+  report_dir: "report"

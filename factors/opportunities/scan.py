@@ -78,7 +78,7 @@ def batch_check_one(code: str) -> dict:
             import sqlite3
             con = sqlite3.connect(QD_DB)
             period = con.execute(
-                "SELECT period, COUNT(*) c FROM quality WHERE period < '2026-07-01' "
+                "SELECT period, COUNT(*) c FROM quality WHERE period < '2026-10-17' "
                 "GROUP BY period ORDER BY period DESC LIMIT 1").fetchone()
             # 取最新且覆盖≥1000 的期
             rows = con.execute(
@@ -156,7 +156,7 @@ def load_panel(end: str = None, days: int = 300):
     dbs = [BARS_DB] + [str(p) for p in inc_files]
     for db in dbs:
         try:
-            uri = f"{_P(db).as_uri()}?mode=ro&immutable=1"   # immutable 免等锁（0.01s vs 20s）
+            uri = f"{_P(db).resolve().as_uri()}?mode=ro&immutable=1"   # immutable 免等锁（0.01s vs 20s）
             con = sqlite3.connect(uri, uri=True, timeout=3)
             r2 = con.execute(
                 "SELECT code, date, close, volume FROM daily_bar WHERE adjust='qfq' "
@@ -560,7 +560,7 @@ def load_event_flags(codes: set, end: str = None) -> dict:
     out = {}
     try:
         from pathlib import Path as _P
-        uri = f"{_P(BARS_DB).as_uri()}?mode=ro&immutable=1"
+        uri = f"{_P(BARS_DB).resolve().as_uri()}?mode=ro&immutable=1"
         con = sqlite3.connect(uri, uri=True, timeout=3)
         # 先取 bars 最近交易日（★双库合并：主库 + 增量库最大值）
         mx = con.execute("SELECT MAX(date) FROM daily_bar").fetchone()[0]
@@ -1365,7 +1365,7 @@ def _amount_20d_yi(codes: set) -> dict:
         _by_code = {c: {} for c in codes}
         for _db in _dbs:
             try:
-                _uri = _P(_db).as_uri() + "?mode=ro&immutable=1"
+                _uri = _P(_db).resolve().as_uri() + "?mode=ro&immutable=1"
                 _c = _sq.connect(_uri, uri=True, timeout=4)
                 _ph = ",".join("?" * len(codes))
                 for _r in _c.execute(

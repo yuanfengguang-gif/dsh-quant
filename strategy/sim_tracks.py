@@ -148,7 +148,7 @@ def _stats(curve_rets: list, nav_curve: list) -> dict:
     }
 
 
-def run(start: str = "2020-01") -> dict:
+def run(start: str = "2010-01") -> dict:
     print("加载数据...", flush=True)
     bars, fin, q, basic = _load_all()
     trig = triggers()
@@ -350,7 +350,7 @@ def live_track() -> dict:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start", type=str, default="2020-01")
+    ap.add_argument("--start", type=str, default="2010-01")
     ap.add_argument("--live", action="store_true", help="实时段：真实持仓估值（portfolio.json → sim_tracks_live.json）")
     args = ap.parse_args()
     if args.live:

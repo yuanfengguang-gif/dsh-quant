@@ -1,0 +1,40 @@
+# ============================================================
+# 预警与复盘配置（层8 监控预警层）
+# 5 类预警：回撤 / 因子失效 / 执行异常 / 数据异常 / 择时防御期
+# 通知通道：Server酱(微信) / 企业微信机器人 / 邮件；未配置则降级为控制台+日志
+# ============================================================
+
+# ---- 5 类预警阈值 ----
+alerts:
+  # 1) 回撤（对齐主系统三级回撤 5%/10%/15%）
+  drawdown_warning: 0.05       # 警戒 5%
+  drawdown_control: 0.10       # 控制 10%
+  drawdown_circuit: 0.15       # 熔断 15%
+  # 2) 因子失效（滚动 ICIR 转负）
+  factor_icir_window: 20       # 滚动窗口（交易日）
+  factor_icir_fail: 0.0        # 滚动 ICIR < 此值 = 失效
+  factor_fail_days: 20         # 连续转负 N 日才报警（防噪声）
+  # 3) 执行异常（下单失败 / 一字板买不进）
+  exec_fail_max: 3             # 单期买不进股票数 > 此值报警
+  # 4) 数据异常（data_audit 健康度）
+  data_health_min: 80.0        # 健康度 < 此值报警
+  # 5) 择时防御期（空头态提醒）
+
+# ---- 通知通道 ----
+notify:
+  # Server酱（微信推送，免费）：https://sct.ftqq.com 注册获取 SendKey
+  serverchan_sendkey: "SCT439657TZPU5GRVkXzklf2NStjtXjy3v"
+  # 企业微信机器人 webhook（群机器人）
+  wechat_work_webhook: ""       # 例：https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx
+  # 邮件（SMTP）
+  email_smtp_host: ""           # 例：smtp.qq.com
+  email_smtp_port: 465
+  email_from: ""                # 发件邮箱
+  email_password: ""            # 邮箱授权码（非登录密码）
+  email_to: ""                  # 收件邮箱
+  # 无任何通道配置时 → 降级为「控制台 + logs/alerts.log」写入
+
+# ---- 复盘 ----
+review:
+  cadence: "weekly"             # weekly / monthly
+  report_dir: "report"          # 复盘报告输出目录

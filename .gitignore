@@ -1,4 +1,4 @@
-﻿# ---- 环境 ----
+# ---- 环境 ----
 .venv/
 venv/
 __pycache__/
@@ -21,6 +21,12 @@ harness/home/.credentials.yaml
 data/cache/
 data/factorpool/
 data/trash/
+# 通达信批量下载的因子/测试数据（2026-10-17 实测：data/tdx_factor 有 3,746 文件 / 496 MB）
+data/tdx_factor/
+data/tdx_zip_test/
+data/tdx_sample/
+data/parquet/
+*.zip
 *.db
 *.sqlite
 *.parquet
