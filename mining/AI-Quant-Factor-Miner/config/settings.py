@@ -62,8 +62,10 @@ MODEL_CONFIG = {
 # ===========================
 # 基础根目录
 BASE_OUTPUT_DIR = r"D:\框架\QuantFactorAI\output\correlation"
-DATA_PATH_STOCK = r"D:\框架\QuantFactorAI\data\data.parquet"
-DATA_PATH_INDEX = r"D:\框架\QuantFactorAI\data\index.parquet"
+# ★2026-10-17 并入主项目：路径改为相对仓库（原为上游作者本机的 D:\框架\... 绝对路径）
+_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+DATA_PATH_STOCK = os.path.join(_DATA_DIR, "data.parquet")
+DATA_PATH_INDEX = os.path.join(_DATA_DIR, "index.parquet")
 
 STOCK_COLUMNS_DESC = """
 'TradingDay', 'SecuCode', 'PrevClosePrice', 'OpenPrice', 'HighPrice', 'LowPrice',

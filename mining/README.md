@@ -26,6 +26,23 @@ df_index = pd.read_parquet(index_path)
 → 需要先从 `data/cache/bars.db` 导出两份 parquet（股票面板 + 指数）。
 **parquet 不进 Git**（`.gitignore` 已排除 `*.parquet`），新机要自己生成。
 
+**导出命令**（在项目根目录执行，已验证可跑通，约 8 分钟 / 773 MB）：
+```powershell
+python scripts\migration\export_parquet_for_miner.py
+```
+输出的列名严格对齐上游 `config/settings.py` 的 `STOCK_COLUMNS_DESC` / `INDEX_COLUMNS_DESC`：
+
+| 文件 | 行数（实测） | 列 |
+|---|---|---|
+| `mining\AI-Quant-Factor-Miner\data\data.parquet` | 13,798,233 | TradingDay, SecuCode, PrevClosePrice, OpenPrice, HighPrice, LowPrice, ClosePrice, TurnOverVolume, TurnOverValue, TurnOverRate, FloatMarketValue |
+| `mining\AI-Quant-Factor-Miner\data\index.parquet` | 4,074 | TradingDay, HS300, ZZ500, ZZ1000, SZ |
+
+口径说明：
+- 价格 = **前复权（qfq）**，与主项目因子链一致
+- `TurnOverRate` = **百分数**（0.83 表示 0.83%）；如需小数用 `--turn-unit ratio`
+- `FloatMarketValue` = 元（取自 `tdx_base.daily.circ_mv` × 10000，原单位万元）
+- 指数列：`HS300` 用本地 `bars.db` 的 `SH.000300`；`ZZ500/ZZ1000/SZ` 走通达信（需客户端运行，失败会自动留空）
+
 ### 4. 环境变量名与主项目不一致
 上游读：`DEEPSEEK_API_KEY` / `KIMI_API_KEY` / `QWEN_API_KEY` / `ZHIPU_API_KEY`（见 `config/settings.py`）
 主项目 `.env` 里是：`DSH_API_KEY` / `ARK_API_KEY` / `OPENAI_API_KEY` 等
