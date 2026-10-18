@@ -185,6 +185,30 @@
       ]
     },
     {
+      "round": "R5-4",
+      "owner": "implementer",
+      "desc": "通胀调整提款（4种规则/名义+实际）+ 滚动3年覆盖度 + 组合测试（每月分红可行性）",
+      "must_commits": [],
+      "files": [
+        {
+          "path": "reports/r5_4_inflation_withdrawal.json",
+          "min_bytes": 8000
+        },
+        {
+          "path": "reports/R5-4_报告.md",
+          "min_bytes": 3000
+        },
+        {
+          "path": "scripts/r5_4_inflation_withdrawal.py",
+          "min_bytes": 2500
+        },
+        {
+          "path": "reports/R5-4_预期申报.md",
+          "min_bytes": 600
+        }
+      ]
+    },
+    {
       "round": "R4",
       "owner": "implementer",
       "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
