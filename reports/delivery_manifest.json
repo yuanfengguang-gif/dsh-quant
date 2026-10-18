@@ -161,6 +161,30 @@
       ]
     },
     {
+      "round": "R5-3",
+      "owner": "implementer",
+      "desc": "数据补全（515450/费率/跟踪指数）+ 红利低波专项（分年牛市检验/行业集中度）",
+      "must_commits": [],
+      "files": [
+        {
+          "path": "reports/r5_3_lowvol_deepdive.json",
+          "min_bytes": 6000
+        },
+        {
+          "path": "reports/R5-3_报告.md",
+          "min_bytes": 3000
+        },
+        {
+          "path": "scripts/r5_3_lowvol_deepdive.py",
+          "min_bytes": 2000
+        },
+        {
+          "path": "reports/R5-3_预期申报.md",
+          "min_bytes": 600
+        }
+      ]
+    },
+    {
       "round": "R4",
       "owner": "implementer",
       "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
