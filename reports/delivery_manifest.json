@@ -61,6 +61,17 @@
       ]
     },
     {
+      "round": "R4",
+      "owner": "implementer",
+      "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
+      "must_commits": [],
+      "files": [
+        { "path": "reports/R4_预注册判据.md", "min_bytes": 600 },
+        { "path": "scripts/r4_t5_paper_trading.py", "min_bytes": 1500 },
+        { "path": "reports/r4_t5_daily_log.csv", "min_bytes": 200 }
+      ]
+    },
+    {
       "round": "R3-2",
       "owner": "implementer",
       "desc": "T5 稳健性压测（共同窗口2011+ / 逐年分解 / 阈值邻域 / 成本 / 简单策略对比）",
