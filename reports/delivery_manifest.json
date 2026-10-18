@@ -45,6 +45,17 @@
       ]
     },
     {
+      "round": "R3-0",
+      "owner": "implementer",
+      "desc": "危机触发器历史演习（6 个触发器 × 4 张表，不做策略）",
+      "must_commits": [],
+      "files": [
+        { "path": "reports/r3_0_trigger_drill.json", "min_bytes": 2000 },
+        { "path": "reports/R3-0_演习报告.md", "min_bytes": 1500 },
+        { "path": "scripts/r3_0_trigger_drill.py", "min_bytes": 2000 }
+      ]
+    },
+    {
       "round": "R3",
       "owner": "implementer",
       "desc": "B1.5：修慢熊失效模式（缓冲带 / 斜率过滤 / 仓位上限）",
