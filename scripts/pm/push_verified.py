@@ -82,33 +82,51 @@ def main() -> int:
         if not ok:
             add("推送", "FAIL", f"{args.retries} 次均失败：{last_err}")
 
-    # ---------- 3) fetch + 自检 ----------
-    git("fetch", args.remote, "--quiet", timeout=300)
+    # ---------- 3) 自检：主判据用 ls-remote（不下载对象，抗网络抖动）----------
     rc_l, local = git("rev-parse", "HEAD")
-    rc_r, remote = git("rev-parse", f"{args.remote}/{args.branch}")
-    local, remote = local.strip(), remote.strip()
+    local = local.strip()
 
-    if rc_l != 0 or rc_r != 0:
-        add("自检", "FAIL", "无法读取 hash（fetch 失败？）")
+    remote = ""
+    ls_err = ""
+    for attempt in range(3):
+        rc, out = git("ls-remote", args.remote, f"refs/heads/{args.branch}", timeout=90)
+        if rc == 0 and out:
+            remote = out.split()[0]
+            break
+        ls_err = (out or "").splitlines()[-1][:90] if out else "empty"
+        time.sleep(3)
+
+    if not remote:
+        add("自检", "FAIL", f"ls-remote 三次失败：{ls_err}")
     elif local == remote:
         add("自检", "OK", f"远端 {remote[:8]} == 本地")
     else:
         add("自检", "FAIL", f"本地 {local[:8]} ≠ 远端 {remote[:8]}")
 
+    # 辅助：ahead/behind（需 fetch，失败不致命）
     ahead = behind = ""
-    rc, out = git("rev-list", "--left-right", "--count", f"{args.remote}/{args.branch}...HEAD")
-    if rc == 0 and out:
-        behind, ahead = (out.split() + ["", ""])[:2]
-        add("差距", "OK" if (ahead == "0" and behind == "0") else "FAIL",
-            f"远端领先 {behind} / 本地领先 {ahead}")
-
-    unpushed: list[str] = []
-    rc, out = git("log", "--oneline", f"{args.remote}/{args.branch}..HEAD")
-    if rc == 0 and out:
-        unpushed = out.splitlines()
-        add("未推送提交", "FAIL", f"{len(unpushed)} 个")
+    fetched = False
+    try:
+        rc_f, _ = git("fetch", args.remote, "--quiet", timeout=120)
+        fetched = (rc_f == 0)
+    except Exception:
+        fetched = False
+    if fetched:
+        rc, out = git("rev-list", "--left-right", "--count", f"{args.remote}/{args.branch}...HEAD")
+        if rc == 0 and out:
+            behind, ahead = (out.split() + ["", ""])[:2]
+            add("差距", "OK" if (ahead == "0" and behind == "0") else "FAIL",
+                f"远端领先 {behind} / 本地领先 {ahead}")
+        unpushed: list[str] = []
+        rc, out = git("log", "--oneline", f"{args.remote}/{args.branch}..HEAD")
+        if rc == 0 and out:
+            unpushed = out.splitlines()
+            add("未推送提交", "FAIL", f"{len(unpushed)} 个")
+        else:
+            add("未推送提交", "OK", "无")
     else:
-        add("未推送提交", "OK", "无")
+        add("差距", "SKIP", "fetch 超时/失败，已用 ls-remote 代替主判据")
+        unpushed = []
 
     # ---------- 输出 ----------
     print("=" * 92)
