@@ -147,7 +147,7 @@
       "must_commits": [],
       "files": [
         {
-          "path": "reports/r5_2_splitfix_withdrawal.json",
+          "path": "reports/r5_2_split_correction.json",
           "min_bytes": 8000
         },
         {
@@ -155,7 +155,7 @@
           "min_bytes": 3000
         },
         {
-          "path": "scripts/r5_2_splitfix_withdrawal.py",
+          "path": "scripts/r5_2_split_correction.py",
           "min_bytes": 2500
         }
       ]
