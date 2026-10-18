@@ -141,6 +141,26 @@
       ]
     },
     {
+      "round": "R5-2",
+      "owner": "implementer",
+      "desc": "份额折算修正重算（复权因子法）+ 养老提款测试（3%/4%/5% + 最差启动 + 分红覆盖度）",
+      "must_commits": [],
+      "files": [
+        {
+          "path": "reports/r5_2_splitfix_withdrawal.json",
+          "min_bytes": 8000
+        },
+        {
+          "path": "reports/R5-2_报告.md",
+          "min_bytes": 3000
+        },
+        {
+          "path": "scripts/r5_2_splitfix_withdrawal.py",
+          "min_bytes": 2500
+        }
+      ]
+    },
+    {
       "round": "R4",
       "owner": "implementer",
       "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
