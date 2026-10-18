@@ -61,6 +61,18 @@
       ]
     },
     {
+      "round": "R3-1",
+      "owner": "implementer",
+      "desc": "降仓激进度 D30/D20/D0 + 等价固定仓位对照（Q2 胜负手）",
+      "must_commits": [],
+      "files": [
+        { "path": "reports/r3_1_leverage_test.json", "min_bytes": 3000 },
+        { "path": "reports/R3-1_报告.md", "min_bytes": 2000 },
+        { "path": "reports/R3-1_预期申报.md", "min_bytes": 800 },
+        { "path": "scripts/r3_1_leverage_test.py", "min_bytes": 2000 }
+      ]
+    },
+    {
       "round": "R3",
       "owner": "implementer",
       "desc": "B1.5：修慢熊失效模式（缓冲带 / 斜率过滤 / 仓位上限）",
