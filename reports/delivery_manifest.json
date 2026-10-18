@@ -1,0 +1,78 @@
+{
+  "_说明": "交付台账：声明每一轮期望在 GitHub 上出现的文件。check_delivery.py 直接查 origin/master，不依赖对方自报。",
+  "_维护": "PM 维护。每轮下发任务书时同步更新。",
+  "updated": "2026-10-18",
+  "pm_owned_files": [
+    "reports/PM_验收看板.md",
+    "docs/ETF择时策略设计.md",
+    "docs/回测窗口与数据边界.md",
+    "docs/因子挖掘双路线方案.md",
+    "config/backtest_window.yaml",
+    ".gitattributes",
+    "reports/R1_对齐确认表.md",
+    "reports/R2_任务书.md"
+  ],
+  "rounds": [
+    {
+      "round": "R0-history",
+      "owner": "pm",
+      "desc": "历史基线（数据层/因子链/迁移/设计稿），已全部在远端",
+      "must_commits": ["639e0ae"],
+      "files": [
+        "factors/FACTOR_FALSIFICATION_LOG.md",
+        "docs/回测窗口与数据边界.md",
+        "config/backtest_window.yaml",
+        "scripts/migration/retarget_paths.py",
+        "scripts/migration/verify_after_migration.py",
+        "mining/AI-Quant-Factor-Miner/config/settings.py"
+      ]
+    },
+    {
+      "round": "R2",
+      "owner": "implementer",
+      "desc": "堵漏轮：把 P0 / 双轨 / B1 成果真正推上来",
+      "must_commits": [],
+      "files": [
+        { "path": "config/costs.yaml", "min_bytes": 150 },
+        { "path": "config/costs_etf.yaml", "min_bytes": 150 },
+        { "path": "factors/cost_model.py", "min_bytes": 800 },
+        { "path": "factors/strict_validate.py", "min_bytes": 1500 },
+        { "path": "scripts/b1_single_asset.py", "min_bytes": 1500 },
+        { "path": "reports/p0_cost_gate_strict.json", "min_bytes": 300 },
+        { "path": "reports/b1_single_asset.json", "min_bytes": 300 },
+        { "path": "reports/B0_ETF可行性.md", "min_bytes": 200 },
+        { "path": "logs/rebuild36_strict_2016.json", "min_bytes": 300 }
+      ]
+    },
+    {
+      "round": "R3",
+      "owner": "implementer",
+      "desc": "B1.5：修慢熊失效模式（缓冲带 / 斜率过滤 / 仓位上限）",
+      "must_commits": [],
+      "files": [
+        { "path": "reports/b1_5_fix.json", "min_bytes": 500 },
+        { "path": "reports/status_R3.json", "min_bytes": 100 }
+      ]
+    }
+  ],
+  "content_checks": [
+    {
+      "round": "R2",
+      "path": "factors/strict_validate.py",
+      "must_contain": ["2016"],
+      "why": "strict 起点必须是 2016-01-01"
+    },
+    {
+      "round": "R2",
+      "path": "config/costs_etf.yaml",
+      "must_contain": ["0.00036"],
+      "why": "ETF 单边成本 0.036%"
+    },
+    {
+      "round": "R2",
+      "path": "factors/FACTOR_FALSIFICATION_LOG.md",
+      "must_contain": ["## 六", "## 五"],
+      "why": "必须同时含 PM 的 §5 与实现方的 §6（union 合并后两段都在）"
+    }
+  ]
+}
