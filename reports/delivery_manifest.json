@@ -10,7 +10,9 @@
     "config/backtest_window.yaml",
     ".gitattributes",
     "reports/R1_对齐确认表.md",
-    "reports/R2_任务书.md"
+    "reports/R2_任务书.md",
+    "reports/R3-0_任务书.md",
+    "reports/实现方报告纪律.md"
   ],
   "rounds": [
     {
