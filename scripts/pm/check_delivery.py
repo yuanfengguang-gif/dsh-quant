@@ -125,7 +125,10 @@ def check_pm_files(manifest: dict) -> list[dict]:
             rows.append({"kind": "pm_owned", "item": path, "status": "SKIP",
                          "detail": "本地不存在，跳过"})
             continue
-        w_sha = hashlib.sha256((BASE / path).read_bytes()).hexdigest()[:16]
+        # 归一化行尾后再比对（CRLF/LF 差异不算篡改）
+        w_text = (BASE / path).read_bytes().decode("utf-8", "replace").replace("\r\n", "\n")
+        w_sha = hashlib.sha256(w_text.encode("utf-8")).hexdigest()[:16]
+        w_size = len(w_text.encode("utf-8"))
         if not r_exists:
             rows.append({"kind": "pm_owned", "item": path, "status": "NOT_PUSHED",
                          "detail": "本地有但远端无（PM 未推送？）"})

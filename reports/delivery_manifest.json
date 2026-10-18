@@ -13,9 +13,7 @@
     "reports/R2_任务书.md",
     "reports/R3-0_任务书.md",
     "reports/实现方报告纪律.md",
-    "reports/实现方错误台账.md",
-    "reports/R3-0_任务书.md",
-    "reports/实现方报告纪律.md"
+    "reports/实现方错误台账.md"
   ],
   "rounds": [
     {
@@ -129,7 +127,7 @@
       "must_commits": [],
       "files": [
         {
-          "path": "reports/r5_1_baseline.json",
+          "path": "reports/r5_1_data_foundation.json",
           "min_bytes": 5000
         },
         {
@@ -137,7 +135,7 @@
           "min_bytes": 2500
         },
         {
-          "path": "scripts/r5_1_baseline.py",
+          "path": "scripts/r5_1_data_foundation.py",
           "min_bytes": 1500
         }
       ]
