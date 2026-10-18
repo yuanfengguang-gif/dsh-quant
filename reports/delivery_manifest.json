@@ -65,8 +65,8 @@
     {
       "round": "R2",
       "path": "config/costs_etf.yaml",
-      "must_contain": ["0.00036"],
-      "why": "ETF 单边成本 0.036%"
+      "must_contain": ["commission: 0.00026", "slippage: 0.0001", "stamp_duty: 0.0"],
+      "why": "ETF 成本分项表达：佣金 0.026% + 滑点 0.01% = 0.036%，无印花税（原检查写死 0.00036 是错的）"
     },
     {
       "round": "R2",
