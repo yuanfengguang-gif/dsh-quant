@@ -123,6 +123,26 @@
       ]
     },
     {
+      "round": "R5-1",
+      "owner": "implementer",
+      "desc": "数据地基补齐（自由现金流指数/国债收益率/分红抽查）+ 三口径基础测算",
+      "must_commits": [],
+      "files": [
+        {
+          "path": "reports/r5_1_baseline.json",
+          "min_bytes": 5000
+        },
+        {
+          "path": "reports/R5-1_报告.md",
+          "min_bytes": 2500
+        },
+        {
+          "path": "scripts/r5_1_baseline.py",
+          "min_bytes": 1500
+        }
+      ]
+    },
+    {
       "round": "R4",
       "owner": "implementer",
       "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
