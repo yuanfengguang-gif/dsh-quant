@@ -61,6 +61,18 @@
       ]
     },
     {
+      "round": "R3-2",
+      "owner": "implementer",
+      "desc": "T5 稳健性压测（共同窗口2011+ / 逐年分解 / 阈值邻域 / 成本 / 简单策略对比）",
+      "must_commits": [],
+      "files": [
+        { "path": "reports/r3_2_t5_robustness.json", "min_bytes": 5000 },
+        { "path": "reports/R3-2_报告.md", "min_bytes": 2500 },
+        { "path": "reports/R3-2_预期申报.md", "min_bytes": 800 },
+        { "path": "scripts/r3_2_t5_robustness.py", "min_bytes": 2000 }
+      ]
+    },
+    {
       "round": "R3-1",
       "owner": "implementer",
       "desc": "降仓激进度 D30/D20/D0 + 等价固定仓位对照（Q2 胜负手）",
