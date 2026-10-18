@@ -1,0 +1,985 @@
+{
+  "generated_at": "2026-10-18 17:47:27",
+  "meta": {
+    "task": "R5-3 数据补全 + 红利低波深挖",
+    "pool": [
+      "512890.SH",
+      "515450.SH",
+      "515100.SH",
+      "515300.SH",
+      "510880.SH",
+      "515080.SH",
+      "515180.SH",
+      "510300.SH"
+    ],
+    "note": "收益用通达信后复权（含分红再投）；费率/跟踪标的用天天基金基本概况"
+  },
+  "etf": {
+    "512890.SH": {
+      "annual": 0.1269,
+      "vol": 0.1687,
+      "sharpe": 0.793,
+      "max_drawdown": -0.1653,
+      "start": "2019-01-18",
+      "end": "2026-10-16",
+      "n_days": 1875,
+      "n_splits": 0,
+      "name": "红利低波ETF华泰柏瑞",
+      "fee_mgmt": 0.005,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "中证红利低波动指数",
+      "aum": "312.90亿元（截止至：2026年06月30日）",
+      "fee_total": 0.006
+    },
+    "515450.SH": {
+      "annual": 0.1073,
+      "vol": 0.1327,
+      "sharpe": 0.835,
+      "max_drawdown": -0.1387,
+      "start": "2020-02-26",
+      "end": "2026-10-16",
+      "n_days": 1610,
+      "n_splits": 0,
+      "name": "红利低波50ETF南方",
+      "fee_mgmt": 0.005,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "标普中国A股大盘红利低波50指数",
+      "aum": "180.00亿元（截止至：2026年06月30日）",
+      "fee_total": 0.006
+    },
+    "515100.SH": {
+      "annual": 0.1082,
+      "vol": 0.1355,
+      "sharpe": 0.826,
+      "max_drawdown": -0.1292,
+      "start": "2020-07-03",
+      "end": "2026-10-16",
+      "n_days": 1524,
+      "n_splits": 0,
+      "name": "红利低波100ETF景顺",
+      "fee_mgmt": 0.005,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "中证红利低波动100指数",
+      "aum": "55.25亿元（截止至：2026年06月30日）",
+      "fee_total": 0.006
+    },
+    "515300.SH": {
+      "annual": 0.0794,
+      "vol": 0.1386,
+      "sharpe": 0.621,
+      "max_drawdown": -0.1469,
+      "start": "2019-09-19",
+      "end": "2026-10-16",
+      "n_days": 1712,
+      "n_splits": 0,
+      "name": "300红利低波ETF嘉实",
+      "fee_mgmt": 0.005,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "沪深300红利低波动指数",
+      "aum": "46.59亿元（截止至：2026年06月30日）",
+      "fee_total": 0.006
+    },
+    "510880.SH": {
+      "annual": 0.0495,
+      "vol": 0.2356,
+      "sharpe": 0.323,
+      "max_drawdown": -0.75,
+      "start": "2007-01-18",
+      "end": "2026-10-16",
+      "n_days": 4796,
+      "n_splits": 0,
+      "name": "红利ETF华泰柏瑞",
+      "fee_mgmt": 0.005,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "上证红利指数",
+      "aum": "222.76亿元（截止至：2026年06月30日）",
+      "fee_total": 0.006
+    },
+    "515080.SH": {
+      "annual": 0.1059,
+      "vol": 0.1518,
+      "sharpe": 0.739,
+      "max_drawdown": -0.1723,
+      "start": "2019-12-27",
+      "end": "2026-10-16",
+      "n_days": 1646,
+      "n_splits": 0,
+      "name": "中证红利ETF招商",
+      "fee_mgmt": 0.002,
+      "fee_custody": 0.001,
+      "fee_sales": 0.0,
+      "tracking": "中证红利指数",
+      "aum": "115.45亿元（截止至：2026年06月30日）",
+      "fee_total": 0.003
+    },
+    "515180.SH": {
+      "annual": 0.0911,
+      "vol": 0.1506,
+      "sharpe": 0.655,
+      "max_drawdown": -0.1731,
+      "start": "2019-12-20",
+      "end": "2026-10-16",
+      "n_days": 1651,
+      "n_splits": 0,
+      "name": "红利ETF易方达",
+      "fee_mgmt": 0.0015,
+      "fee_custody": 0.0005,
+      "fee_sales": 0.0,
+      "tracking": "中证红利指数",
+      "aum": "156.30亿元（截止至：2026年06月30日）",
+      "fee_total": 0.002
+    },
+    "510300.SH": {
+      "annual": 0.0499,
+      "vol": 0.2069,
+      "sharpe": 0.339,
+      "max_drawdown": -0.4437,
+      "start": "2012-05-28",
+      "end": "2026-10-16",
+      "n_days": 3495,
+      "n_splits": 0,
+      "name": "沪深300ETF华泰柏瑞",
+      "fee_mgmt": 0.0015,
+      "fee_custody": 0.0005,
+      "fee_sales": 0.0,
+      "tracking": "沪深300指数",
+      "aum": "948.72亿元（截止至：2026年06月30日）",
+      "fee_total": 0.002
+    }
+  },
+  "indices": {
+    "中证红利低波动指数": {
+      "code": "H30269",
+      "name": "中证红利低波动",
+      "n_constituents": 50,
+      "index_name_api": "红利低波"
+    },
+    "中证红利低波动100指数": {
+      "code": "930955",
+      "name": "红利低波100",
+      "n_constituents": 100,
+      "index_name_api": "红利低波100"
+    },
+    "沪深300红利低波动指数": {
+      "code": "无",
+      "name": "沪深300红利低波动（代码未取到）",
+      "n_constituents": null
+    },
+    "标普中国A股大盘红利低波50指数": {
+      "code": "无",
+      "name": "标普中国A股大盘红利低波50（代码未取到）",
+      "n_constituents": null
+    },
+    "上证红利指数": {
+      "code": "000015",
+      "name": "红利指数",
+      "n_constituents": 50,
+      "index_name_api": "红利指数"
+    },
+    "中证红利指数": {
+      "code": "000922",
+      "name": "中证红利",
+      "n_constituents": 100,
+      "index_name_api": "中证红利"
+    },
+    "沪深300指数": {
+      "code": "000300",
+      "name": "沪深300",
+      "n_constituents": 300,
+      "index_name_api": "沪深300"
+    }
+  },
+  "yearly": {
+    "2019": {
+      "year": 2019,
+      "bench": 0.3653,
+      "lowvol": {
+        "512890.SH": 0.2084,
+        "515300.SH": 0.0356
+      },
+      "pure": {
+        "510880.SH": 0.1475
+      },
+      "type": "牛",
+      "lowvol_mean": 0.122,
+      "mean_excess": -0.2433
+    },
+    "2020": {
+      "year": 2020,
+      "bench": 0.2508,
+      "lowvol": {
+        "512890.SH": 0.0814,
+        "515450.SH": 0.0966,
+        "515100.SH": 0.123,
+        "515300.SH": 0.0246
+      },
+      "pure": {
+        "510880.SH": -0.0142,
+        "515080.SH": 0.203,
+        "515180.SH": 0.1193
+      },
+      "type": "牛",
+      "lowvol_mean": 0.0814,
+      "mean_excess": -0.1694
+    },
+    "2021": {
+      "year": 2021,
+      "bench": -0.0444,
+      "lowvol": {
+        "512890.SH": 0.2045,
+        "515450.SH": 0.1958,
+        "515100.SH": 0.2632,
+        "515300.SH": 0.098
+      },
+      "pure": {
+        "510880.SH": 0.0765,
+        "515080.SH": 0.2092,
+        "515180.SH": 0.1855
+      },
+      "type": "震荡",
+      "lowvol_mean": 0.1904,
+      "mean_excess": 0.2348
+    },
+    "2022": {
+      "year": 2022,
+      "bench": -0.1792,
+      "lowvol": {
+        "512890.SH": 0.0111,
+        "515450.SH": -0.0317,
+        "515100.SH": -0.0136,
+        "515300.SH": -0.0201
+      },
+      "pure": {
+        "510880.SH": 0.008,
+        "515080.SH": -0.012,
+        "515180.SH": -0.0202
+      },
+      "type": "熊",
+      "lowvol_mean": -0.0136,
+      "mean_excess": 0.1656
+    },
+    "2023": {
+      "year": 2023,
+      "bench": -0.0861,
+      "lowvol": {
+        "512890.SH": 0.1119,
+        "515450.SH": 0.1322,
+        "515100.SH": 0.1203,
+        "515300.SH": 0.1364
+      },
+      "pure": {
+        "510880.SH": 0.0495,
+        "515080.SH": 0.0425,
+        "515180.SH": 0.0446
+      },
+      "type": "震荡",
+      "lowvol_mean": 0.1252,
+      "mean_excess": 0.2113
+    },
+    "2024": {
+      "year": 2024,
+      "bench": 0.1574,
+      "lowvol": {
+        "512890.SH": 0.2151,
+        "515450.SH": 0.2486,
+        "515100.SH": 0.1206,
+        "515300.SH": 0.242
+      },
+      "pure": {
+        "510880.SH": 0.124,
+        "515080.SH": 0.1371,
+        "515180.SH": 0.1441
+      },
+      "type": "牛",
+      "lowvol_mean": 0.2066,
+      "mean_excess": 0.0492
+    },
+    "2025": {
+      "year": 2025,
+      "bench": 0.2036,
+      "lowvol": {
+        "512890.SH": 0.0681,
+        "515450.SH": 0.038,
+        "515100.SH": 0.0379,
+        "515300.SH": 0.0
+      },
+      "pure": {
+        "510880.SH": 0.0101,
+        "515080.SH": 0.0459,
+        "515180.SH": 0.0506
+      },
+      "type": "牛",
+      "lowvol_mean": 0.036,
+      "mean_excess": -0.1676
+    },
+    "2026": {
+      "year": 2026,
+      "bench": -0.0866,
+      "lowvol": {
+        "512890.SH": 0.0392,
+        "515450.SH": 0.0427,
+        "515100.SH": 0.0035,
+        "515300.SH": 0.0404
+      },
+      "pure": {
+        "510880.SH": 0.0852,
+        "515080.SH": 0.0367,
+        "515180.SH": 0.0375
+      },
+      "type": "震荡",
+      "lowvol_mean": 0.0314,
+      "mean_excess": 0.118
+    }
+  },
+  "summary_year": {
+    "bull_mean_excess": -0.1328,
+    "bear_mean_excess": 0.1656,
+    "n_bull": 4,
+    "n_bear": 1
+  },
+  "holdings": {
+    "512890.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "601229",
+          "name": "上海银行",
+          "weight": 0.0283,
+          "industry_tdx": "地方性银行",
+          "industry": "银行"
+        },
+        {
+          "code": "601009",
+          "name": "南京银行",
+          "weight": 0.0274,
+          "industry_tdx": "地方性银行",
+          "industry": "银行"
+        },
+        {
+          "code": "000001",
+          "name": "平安银行",
+          "weight": 0.0256,
+          "industry_tdx": "全国性银行",
+          "industry": "银行"
+        },
+        {
+          "code": "601825",
+          "name": "沪农商行",
+          "weight": 0.0253,
+          "industry_tdx": "地方性银行",
+          "industry": "银行"
+        },
+        {
+          "code": "600750",
+          "name": "华润江中",
+          "weight": 0.0248,
+          "industry_tdx": "中药",
+          "industry": "医药生物"
+        },
+        {
+          "code": "600938",
+          "name": "中国海油",
+          "weight": 0.0247,
+          "industry_tdx": "油气开采",
+          "industry": "石油石化"
+        },
+        {
+          "code": "601857",
+          "name": "中国石油",
+          "weight": 0.0246,
+          "industry_tdx": "油气开采",
+          "industry": "石油石化"
+        },
+        {
+          "code": "600016",
+          "name": "民生银行",
+          "weight": 0.0233,
+          "industry_tdx": "全国性银行",
+          "industry": "银行"
+        },
+        {
+          "code": "601369",
+          "name": "陕鼓动力",
+          "weight": 0.023,
+          "industry_tdx": "通用设备",
+          "industry": "机械设备"
+        },
+        {
+          "code": "601838",
+          "name": "成都银行",
+          "weight": 0.0226,
+          "industry_tdx": "地方性银行",
+          "industry": "银行"
+        }
+      ],
+      "top10_weight": 0.2496,
+      "industries": {
+        "银行": 0.1525,
+        "石油石化": 0.0493,
+        "医药生物": 0.0248,
+        "机械设备": 0.023
+      },
+      "ind_sum": 0.2496,
+      "first": {
+        "code": "601229",
+        "name": "上海银行",
+        "weight": 0.0283,
+        "industry_tdx": "地方性银行",
+        "industry": "银行"
+      }
+    },
+    "515450.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "000651",
+          "name": "格力电器",
+          "weight": 0.037,
+          "industry_tdx": "白色家电",
+          "industry": "家用电器"
+        },
+        {
+          "code": "600023",
+          "name": "浙能电力",
+          "weight": 0.0339,
+          "industry_tdx": "电力",
+          "industry": "公用事业"
+        },
+        {
+          "code": "600642",
+          "name": "申能股份",
+          "weight": 0.0336,
+          "industry_tdx": "电力",
+          "industry": "公用事业"
+        },
+        {
+          "code": "600177",
+          "name": "雅戈尔",
+          "weight": 0.0331,
+          "industry_tdx": "服装家纺",
+          "industry": "纺织服饰"
+        },
+        {
+          "code": "601088",
+          "name": "中国神华",
+          "weight": 0.033,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "000895",
+          "name": "双汇发展",
+          "weight": 0.0309,
+          "industry_tdx": "食品加工",
+          "industry": "食品饮料"
+        },
+        {
+          "code": "000858",
+          "name": "五粮液",
+          "weight": 0.0276,
+          "industry_tdx": "酿酒",
+          "industry": "酿酒"
+        },
+        {
+          "code": "601668",
+          "name": "中国建筑",
+          "weight": 0.0272,
+          "industry_tdx": "房屋建设",
+          "industry": "建筑装饰"
+        },
+        {
+          "code": "001286",
+          "name": "陕西能源",
+          "weight": 0.0263,
+          "industry_tdx": "电力",
+          "industry": "公用事业"
+        },
+        {
+          "code": "600352",
+          "name": "浙江龙盛",
+          "weight": 0.0262,
+          "industry_tdx": "化学制品",
+          "industry": "化学制品"
+        }
+      ],
+      "top10_weight": 0.3088,
+      "industries": {
+        "公用事业": 0.0938,
+        "家用电器": 0.037,
+        "纺织服饰": 0.0331,
+        "煤炭": 0.033,
+        "食品饮料": 0.0309
+      },
+      "ind_sum": 0.2278,
+      "first": {
+        "code": "000651",
+        "name": "格力电器",
+        "weight": 0.037,
+        "industry_tdx": "白色家电",
+        "industry": "家用电器"
+      }
+    },
+    "515100.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "000937",
+          "name": "冀中能源",
+          "weight": 0.029,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600177",
+          "name": "雅戈尔",
+          "weight": 0.0238,
+          "industry_tdx": "服装家纺",
+          "industry": "纺织服饰"
+        },
+        {
+          "code": "600256",
+          "name": "广汇能源",
+          "weight": 0.0238,
+          "industry_tdx": "石油化工",
+          "industry": "石油石化"
+        },
+        {
+          "code": "601006",
+          "name": "大秦铁路",
+          "weight": 0.0236,
+          "industry_tdx": "公路铁路",
+          "industry": "交通运输"
+        },
+        {
+          "code": "601919",
+          "name": "中远海控",
+          "weight": 0.0192,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "000895",
+          "name": "双汇发展",
+          "weight": 0.0191,
+          "industry_tdx": "食品加工",
+          "industry": "食品饮料"
+        },
+        {
+          "code": "000651",
+          "name": "格力电器",
+          "weight": 0.0181,
+          "industry_tdx": "白色家电",
+          "industry": "家用电器"
+        },
+        {
+          "code": "002032",
+          "name": "苏泊尔",
+          "weight": 0.0177,
+          "industry_tdx": "小家电",
+          "industry": "家用电器"
+        },
+        {
+          "code": "600502",
+          "name": "安徽建工",
+          "weight": 0.0152,
+          "industry_tdx": "基础建设",
+          "industry": "建筑装饰"
+        },
+        {
+          "code": "600132",
+          "name": "重庆啤酒",
+          "weight": 0.0149,
+          "industry_tdx": "酿酒",
+          "industry": "酿酒"
+        }
+      ],
+      "top10_weight": 0.2044,
+      "industries": {
+        "交通运输": 0.0428,
+        "家用电器": 0.0358,
+        "煤炭": 0.029,
+        "纺织服饰": 0.0238,
+        "石油石化": 0.0238
+      },
+      "ind_sum": 0.1552,
+      "first": {
+        "code": "000937",
+        "name": "冀中能源",
+        "weight": 0.029,
+        "industry_tdx": "煤炭开采",
+        "industry": "煤炭"
+      }
+    },
+    "515300.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "601088",
+          "name": "中国神华",
+          "weight": 0.0513,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600938",
+          "name": "中国海油",
+          "weight": 0.0467,
+          "industry_tdx": "油气开采",
+          "industry": "石油石化"
+        },
+        {
+          "code": "601857",
+          "name": "中国石油",
+          "weight": 0.0427,
+          "industry_tdx": "油气开采",
+          "industry": "石油石化"
+        },
+        {
+          "code": "000895",
+          "name": "双汇发展",
+          "weight": 0.0379,
+          "industry_tdx": "食品加工",
+          "industry": "食品饮料"
+        },
+        {
+          "code": "000651",
+          "name": "格力电器",
+          "weight": 0.0348,
+          "industry_tdx": "白色家电",
+          "industry": "家用电器"
+        },
+        {
+          "code": "600028",
+          "name": "中国石化",
+          "weight": 0.0338,
+          "industry_tdx": "石油化工",
+          "industry": "石油石化"
+        },
+        {
+          "code": "601006",
+          "name": "大秦铁路",
+          "weight": 0.0332,
+          "industry_tdx": "公路铁路",
+          "industry": "交通运输"
+        },
+        {
+          "code": "601668",
+          "name": "中国建筑",
+          "weight": 0.0274,
+          "industry_tdx": "房屋建设",
+          "industry": "建筑装饰"
+        },
+        {
+          "code": "001965",
+          "name": "招商公路",
+          "weight": 0.0267,
+          "industry_tdx": "公路铁路",
+          "industry": "交通运输"
+        },
+        {
+          "code": "000333",
+          "name": "美的集团",
+          "weight": 0.0259,
+          "industry_tdx": "白色家电",
+          "industry": "家用电器"
+        }
+      ],
+      "top10_weight": 0.3604,
+      "industries": {
+        "石油石化": 0.1232,
+        "家用电器": 0.0607,
+        "交通运输": 0.0599,
+        "煤炭": 0.0513,
+        "食品饮料": 0.0379
+      },
+      "ind_sum": 0.333,
+      "first": {
+        "code": "601088",
+        "name": "中国神华",
+        "weight": 0.0513,
+        "industry_tdx": "煤炭开采",
+        "industry": "煤炭"
+      }
+    },
+    "510880.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "601919",
+          "name": "中远海控",
+          "weight": 0.0486,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "600256",
+          "name": "广汇能源",
+          "weight": 0.0384,
+          "industry_tdx": "石油化工",
+          "industry": "石油石化"
+        },
+        {
+          "code": "600188",
+          "name": "兖矿能源",
+          "weight": 0.0316,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600295",
+          "name": "鄂尔多斯",
+          "weight": 0.0284,
+          "industry_tdx": "冶钢原料",
+          "industry": "钢铁"
+        },
+        {
+          "code": "603565",
+          "name": "中谷物流",
+          "weight": 0.0279,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "601699",
+          "name": "潞安环能",
+          "weight": 0.0277,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601225",
+          "name": "陕西煤业",
+          "weight": 0.0269,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600546",
+          "name": "山煤国际",
+          "weight": 0.0265,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601666",
+          "name": "平煤股份",
+          "weight": 0.0249,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601088",
+          "name": "中国神华",
+          "weight": 0.0249,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        }
+      ],
+      "top10_weight": 0.3058,
+      "industries": {
+        "煤炭": 0.1625,
+        "交通运输": 0.0765,
+        "石油石化": 0.0384,
+        "钢铁": 0.0284
+      },
+      "ind_sum": 0.3058,
+      "first": {
+        "code": "601919",
+        "name": "中远海控",
+        "weight": 0.0486,
+        "industry_tdx": "航运港口",
+        "industry": "交通运输"
+      }
+    },
+    "515080.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "601919",
+          "name": "中远海控",
+          "weight": 0.0282,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "600256",
+          "name": "广汇能源",
+          "weight": 0.0223,
+          "industry_tdx": "石油化工",
+          "industry": "石油石化"
+        },
+        {
+          "code": "600188",
+          "name": "兖矿能源",
+          "weight": 0.0184,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600295",
+          "name": "鄂尔多斯",
+          "weight": 0.0167,
+          "industry_tdx": "冶钢原料",
+          "industry": "钢铁"
+        },
+        {
+          "code": "603565",
+          "name": "中谷物流",
+          "weight": 0.0163,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "601699",
+          "name": "潞安环能",
+          "weight": 0.0161,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601225",
+          "name": "陕西煤业",
+          "weight": 0.0156,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600546",
+          "name": "山煤国际",
+          "weight": 0.0154,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601666",
+          "name": "平煤股份",
+          "weight": 0.0147,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "002756",
+          "name": "永兴材料",
+          "weight": 0.0143,
+          "industry_tdx": "能源金属",
+          "industry": "有色金属"
+        }
+      ],
+      "top10_weight": 0.178,
+      "industries": {
+        "煤炭": 0.0802,
+        "交通运输": 0.0445,
+        "石油石化": 0.0223,
+        "钢铁": 0.0167,
+        "有色金属": 0.0143
+      },
+      "ind_sum": 0.178,
+      "first": {
+        "code": "601919",
+        "name": "中远海控",
+        "weight": 0.0282,
+        "industry_tdx": "航运港口",
+        "industry": "交通运输"
+      }
+    },
+    "515180.SH": {
+      "quarter": "2026年1季度股票投资明细",
+      "top10": [
+        {
+          "code": "601919",
+          "name": "中远海控",
+          "weight": 0.0283,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "600256",
+          "name": "广汇能源",
+          "weight": 0.0224,
+          "industry_tdx": "石油化工",
+          "industry": "石油石化"
+        },
+        {
+          "code": "600188",
+          "name": "兖矿能源",
+          "weight": 0.0185,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600295",
+          "name": "鄂尔多斯",
+          "weight": 0.0166,
+          "industry_tdx": "冶钢原料",
+          "industry": "钢铁"
+        },
+        {
+          "code": "603565",
+          "name": "中谷物流",
+          "weight": 0.0163,
+          "industry_tdx": "航运港口",
+          "industry": "交通运输"
+        },
+        {
+          "code": "601699",
+          "name": "潞安环能",
+          "weight": 0.0161,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601225",
+          "name": "陕西煤业",
+          "weight": 0.0157,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "600546",
+          "name": "山煤国际",
+          "weight": 0.0155,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601088",
+          "name": "中国神华",
+          "weight": 0.0148,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        },
+        {
+          "code": "601666",
+          "name": "平煤股份",
+          "weight": 0.0145,
+          "industry_tdx": "煤炭开采",
+          "industry": "煤炭"
+        }
+      ],
+      "top10_weight": 0.1787,
+      "industries": {
+        "煤炭": 0.0951,
+        "交通运输": 0.0446,
+        "石油石化": 0.0224,
+        "钢铁": 0.0166
+      },
+      "ind_sum": 0.1787,
+      "first": {
+        "code": "601919",
+        "name": "中远海控",
+        "weight": 0.0283,
+        "industry_tdx": "航运港口",
+        "industry": "交通运输"
+      }
+    }
+  },
+  "overlap": {
+    "n_common_in_top10": 0,
+    "codes": []
+  }
+}
