@@ -85,6 +85,40 @@ PM 本轮接受了对面的文字汇报并据此下判读（P0 4/4、轨道 A 0/
 **全部无法验证**。这与之前"接受因子有效但没做 holdout"是同一类错误：
 **把描述当成了事实。**
 
+## 零之四、文件所有权与冲突协议（2026-10-18 新增）
+
+**问题**：两台机器共用同一仓库，双方改同一文件会导致 push 被拒 + 需人工解冲突。
+
+### 文件所有权（单写者原则）
+
+| 目录/文件 | 唯一写者 | 说明 |
+|---|---|---|
+| eports/PM_验收看板.md | **PM（本机）** | 实现方只读，不得修改 |
+| docs/*.md（设计稿/口径） | **PM（本机）** | 实现方可提建议，由 PM 落笔 |
+| eports/R*_任务书.md | **PM（本机）** | 实现方只读执行 |
+| eports/R*_对齐确认表.md | PM 建表 → **实现方只填「你的答案」列** | 不改结构、不加行、不删行 |
+| actors/FACTOR_FALSIFICATION_LOG.md | **实现方（对面）** | PM 只读；PM 要加的结论写进看板 |
+| actors/*.py、scripts/*.py | **实现方** | PM 不直接改 |
+| config/*.yaml（除 backtest_window.yaml） | **实现方** | 成本/参数配置 |
+| config/backtest_window.yaml | **PM** | 窗口口径 |
+| eports/*.json、logs/* | **实现方** | 实验结果 |
+
+### 冲突处理协议
+
+| # | 场景 | 做法 |
+|---|---|---|
+| **C1** | push 被拒（non-fast-forward） | git pull --no-rebase origin master，**不许** --rebase（会改写历史） |
+| **C2** | FACTOR_FALSIFICATION_LOG.md 冲突 | .gitattributes 已设 merge=union → **自动保留双方**，无需人工 |
+| **C3** | 单写者文件冲突 | 以**所有者版本为准**，非所有者一方回退自己的改动 |
+| **C4** | R*_对齐确认表.md 冲突 | 实现方回退，重新 git pull 后在最新版上填 |
+| **C5** | 解完冲突必须验证 | git status 无未合并文件 + git ls-remote origin master == 本地 HEAD |
+
+### 禁止
+
+- ❌ 禁止 git push --force（会抹掉对方提交）
+- ❌ 禁止 git pull --rebase（改写历史，两台机器会互相踢）
+- ❌ 禁止在未 pull 的情况下修改单写者文件
+
 ## 一、当前状态总览
 
 ### 1.1 对齐记录（每轮开工前的核对结果）
