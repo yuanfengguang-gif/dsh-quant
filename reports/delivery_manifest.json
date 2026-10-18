@@ -209,6 +209,30 @@
       ]
     },
     {
+      "round": "R5-5",
+      "owner": "implementer",
+      "desc": "三层方案比例测算（购买力固定提款）+ 缓冲工具对比 + 费率敏感性 + 估值数据准备 + 完整回测",
+      "must_commits": [],
+      "files": [
+        {
+          "path": "reports/r5_5_layer_sizing.json",
+          "min_bytes": 8000
+        },
+        {
+          "path": "reports/R5-5_报告.md",
+          "min_bytes": 3000
+        },
+        {
+          "path": "scripts/r5_5_layer_sizing.py",
+          "min_bytes": 2500
+        },
+        {
+          "path": "reports/R5-5_预期申报.md",
+          "min_bytes": 600
+        }
+      ]
+    },
+    {
       "round": "R4",
       "owner": "implementer",
       "desc": "T5 paper trading 观察协议（5 把锁 / 预注册判据 / 样本外累积）",
