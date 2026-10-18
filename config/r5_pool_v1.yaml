@@ -1,0 +1,29 @@
+# R5 研究池 v1.0（已冻结，2026-10-18）
+# 来源：reports/R5_研究范围_待确认.md §七；可回测（≥750 交易日）为硬门槛
+# 规则：不得增删；新增须写明理由并记入机制缺陷台账
+pool:
+  - { code: "510880.SH", style: "纯红利", name: "红利ETF华泰柏瑞" }
+  - { code: "515180.SH", style: "纯红利", name: "红利ETF易方达" }
+  - { code: "515080.SH", style: "纯红利", name: "中证红利ETF招商" }
+  - { code: "512890.SH", style: "红利低波", name: "红利低波ETF华泰柏瑞" }
+  - { code: "515450.SH", style: "红利低波", name: "红利低波50ETF南方" }
+  - { code: "515100.SH", style: "红利低波", name: "红利低波100ETF景顺" }
+  - { code: "515300.SH", style: "红利低波", name: "300红利低波ETF嘉实" }
+  - { code: "513530.SH", style: "港股通/港股", name: "港股通红利ETF华泰柏瑞" }
+  - { code: "159691.SZ", style: "港股通/港股", name: "港股红利ETF工银" }
+  - { code: "513690.SH", style: "港股通/港股", name: "港股红利ETF博时" }
+  - { code: "513950.SH", style: "港股通/港股", name: "恒生红利ETF富国" }
+  - { code: "510030.SH", style: "红利价值", name: "价值ETF华宝" }
+  - { code: "159913.SZ", style: "红利价值", name: "深价值ETF交银" }
+  - { code: "512040.SH", style: "红利价值", name: "价值ETF富国" }
+  - { code: "159966.SZ", style: "红利价值", name: "创业板价值ETF华夏" }
+  - { code: "159617.SZ", style: "红利价值", name: "中证500价值ETF华夏" }
+  - { code: "562530.SH", style: "红利价值", name: "中证1000价值ETF华夏" }
+  - { code: "562320.SH", style: "红利价值", name: "沪深300价值ETF银华" }
+  - { code: "562330.SH", style: "红利价值", name: "中证500价值ETF银华" }
+  - { code: "560330.SH", style: "红利价值", name: "沪深300价值ETF申万菱" }
+  - { code: "560030.SH", style: "红利价值", name: "800价值ETF汇添富" }
+  - { code: "159510.SZ", style: "红利价值", name: "沪深300价值ETF华夏" }
+  - { code: "561580.SH", style: "央企红利", name: "央企红利ETF华泰柏瑞" }
+  - { code: "560070.SH", style: "央企红利", name: "央企红利ETF汇添富" }
+  - { code: "560700.SH", style: "央企红利", name: "央企红利ETF广发" }
