@@ -3,6 +3,17 @@
 #
 # 格式约定：所有标的必须写 code + name（PM 格式铁律）
 
+# 建仓方案 B：10万立即 + 140万等信号（1年上限）
+entry:
+  mode: immediate_plus_wait
+  immediate_amount: 100000        # 立即投入（分3个月定投）
+  immediate_months: 3             # 分几个月定投
+  wait_amount: 1400000            # 等待中的子弹
+  wait_deadline_months: 12        # 未触发则第12个月末无条件投完
+  signal_mode: either             # 两个信号满足任一即触发
+  trigger_batch: 3                # 触发后分几笔买入
+  trigger_days: 3                 # 几日内买完
+
 plan:
   name: 红利低波养老方案 v1.0
   capital: 1500000          # 初始本金（元）
