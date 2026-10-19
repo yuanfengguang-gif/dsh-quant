@@ -1,68 +1,111 @@
-# 红利低波养老方案配置（执行说明书 v1.0 的机器可读版）
+# 红利低波养老方案配置（执行说明书 v2.3 的机器可读版）
 # 修改本文件即可调整方案，脚本不需要改动
 #
 # 格式约定：所有标的必须写 code + name（PM 格式铁律）
 
-# 建仓方案 B：10万立即 + 140万等信号（1年上限）
+# 建仓方案：10万立即 + 140万等12个月无条件投完（R24-R30 实测最优）
 entry:
-  # v2.2：10万立即 + 140万等12个月无条件投完（不设触发条件）
   mode: immediate_plus_wait
   immediate_amount: 100000
   immediate_months: 3               # 立即部分分3个月定投
   wait_amount: 1400000
   wait_deadline_months: 12          # 第12个月末无条件投完
-  trigger_conditions: none          # 不设任何触发条件（R24-R30 实测最优）
+  trigger_conditions: none          # 不设任何触发条件
   voluntary_early_if_dd: 0.50       # 仅当暴跌≥50%时允许自愿提前投完
+  start_date: null                  # 建仓起始日（YYYY-MM-DD），开始建仓时填写
 
 
 plan:
-  name: 红利低波养老方案 v1.0
+  name: 红利低波养老方案 v2.3
   capital: 1500000          # 初始本金（元）
   withdrawal_rate: 0.04     # 提款率
   initial_annual: 60000     # 首年提款额（元）
   cpi_base_year: 2026       # 购买力基准年
-  assume_cpi: 0.02          # 计算下年提款额时假设的通胀（仅用于提示，实际按官方CPI）
+  assume_cpi: 0.02          # 计算下年提款额时假设的通胀（仅用于提示）
+  backtest_window_years: 20 # 历史统计窗口
 
-# 资产配置
+# 资产配置（v2.3：40/35/25，因 512890 前三大行业 58.3%、银行 52.5%）
 assets:
-  - code: "512890"
-    name: 红利低波ETF华泰柏瑞
-    weight: 0.30
-    market: sh
-  - code: "515450"
-    name: 红利低波50ETF南方
-    weight: 0.30
-    market: sh
   - code: "515100"
     name: 红利低波100ETF景顺
-    weight: 0.30
+    weight: 0.40
     market: sh
+    top3_industry: 0.291      # 2026Q2 实测
+    bank_share: 0.199
+  - code: "515450"
+    name: 红利低波50ETF南方
+    weight: 0.35
+    market: sh
+    top3_industry: 0.436
+    bank_share: 0.301
+  - code: "512890"
+    name: 红利低波ETF华泰柏瑞
+    weight: 0.25
+    market: sh
+    top3_industry: 0.583
+    bank_share: 0.525
 
 cash:
   code: "511990"
   name: 货币ETF华宝添益
-  weight: 0.10
   market: sh
   target_months: 12         # 货币ETF 目标水位 = N 个月生活费
 
-# 卖出信号
-signal:
-  rule: ma_premium            # ma_premium | dividend_pct | fixed_jan
-  ma_window: 250              # 均线窗口（交易日）
-  premium: 0.05               # 收盘价 > MA × (1+premium) 触发
-  dividend_pct_window: 1250   # 股息率分位滚动窗口（rule=dividend_pct 时用）
-  dividend_pct_threshold: 0.30 # 股息率分位 <= 该值视为"偏贵"
-  fallback_month: 12          # 兜底卖出月份（每年必卖一次）
-  max_sell_per_year: 1        # 每年最多卖出次数
+# 三层结构（v2.3）
+layers:
+  base: 0.70                # 底仓，永不动
+  satellite: 0.30           # 卫星仓，按股息率分位调
+
+# 信号（v2.3，全部经过 R5~R42 验证）
+signals:
+  # ① 股息率 5 年分位 —— 管卫星仓（唯一验证可用的信号）
+  dividend_pct:
+    enabled: true
+    index_code: H30269              # 红利低波（全收益对应 H20269）
+    index_name: 红利低波
+    window: 1250                    # 5 年滚动窗口（交易日）
+    expensive: 0.30                 # 分位 <= 30% → 卫星仓卖出
+    cheap: 0.70                     # 分位 >= 70% → 卫星仓买回
+
+  # ② 6 月季节性 —— 轻度降仓（R38 验证：6 月均值 -3.57%，t≈-2.3）
+  june_effect:
+    enabled: true
+    month: 6
+    reduced_position: 0.70          # 6 月仓位降到 70%
+    note: "2014-2020 曾失效，仅轻度使用"
+
+  # ③ ERP 温度计 —— 只做参考，不用于调仓（R41/R42 验证：温和倾斜也降年化）
+  erp_thermometer:
+    enabled: true
+    index_code: "000922"            # 中证红利（PE 数据更全）
+    index_name: 中证红利
+    bond_key: cn10y                 # 10Y 国债（macro 表）
+    window: 750
+    note: "仅作估值温度计，不产生交易信号"
+
+  # ④ 行业集中度 —— 季度检查（R33）
+  industry_check:
+    enabled: true
+    top3_limit: 0.50
+    bank_limit: 0.35
+    note: "超过则降权该 ETF"
+
+  # ⑤ 建仓兜底提醒
+  entry_fallback:
+    enabled: true
+    note: "第 12 个月末无条件投完，不许再等"
 
 # 风控
 risk:
   liquidate_floor: 0.0        # 永不清仓（最低仓位）
   min_fund_size_yi: 10        # 规模低于该值(亿)考虑更换
   review_power_drop_years: 3  # 连续N年购买力下降则下调提款率
+  cash_min_months: 3          # 现金池跌破 3 个月生活费 → 立即补足
 
 # 状态（脚本自动维护，不要手改）
 state:
   last_sell_date: null
   last_sell_year: null
   last_check: null
+  entry_invested: 0           # 已投建仓金额
+  entry_remaining: 1500000    # 待投金额
