@@ -5,14 +5,15 @@
 
 # 建仓方案 B：10万立即 + 140万等信号（1年上限）
 entry:
+  # v2.2：10万立即 + 140万等12个月无条件投完（不设触发条件）
   mode: immediate_plus_wait
-  immediate_amount: 100000        # 立即投入（分3个月定投）
-  immediate_months: 3             # 分几个月定投
-  wait_amount: 1400000            # 等待中的子弹
-  wait_deadline_months: 12        # 未触发则第12个月末无条件投完
-  signal_mode: either             # 两个信号满足任一即触发
-  trigger_batch: 3                # 触发后分几笔买入
-  trigger_days: 3                 # 几日内买完
+  immediate_amount: 100000
+  immediate_months: 3               # 立即部分分3个月定投
+  wait_amount: 1400000
+  wait_deadline_months: 12          # 第12个月末无条件投完
+  trigger_conditions: none          # 不设任何触发条件（R24-R30 实测最优）
+  voluntary_early_if_dd: 0.50       # 仅当暴跌≥50%时允许自愿提前投完
+
 
 plan:
   name: 红利低波养老方案 v1.0
