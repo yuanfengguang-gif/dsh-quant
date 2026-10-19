@@ -1,0 +1,56 @@
+# 红利低波养老方案配置（执行说明书 v1.0 的机器可读版）
+# 修改本文件即可调整方案，脚本不需要改动
+#
+# 格式约定：所有标的必须写 code + name（PM 格式铁律）
+
+plan:
+  name: 红利低波养老方案 v1.0
+  capital: 1500000          # 初始本金（元）
+  withdrawal_rate: 0.04     # 提款率
+  initial_annual: 60000     # 首年提款额（元）
+  cpi_base_year: 2026       # 购买力基准年
+  assume_cpi: 0.02          # 计算下年提款额时假设的通胀（仅用于提示，实际按官方CPI）
+
+# 资产配置
+assets:
+  - code: "512890"
+    name: 红利低波ETF华泰柏瑞
+    weight: 0.30
+    market: sh
+  - code: "515450"
+    name: 红利低波50ETF南方
+    weight: 0.30
+    market: sh
+  - code: "515100"
+    name: 红利低波100ETF景顺
+    weight: 0.30
+    market: sh
+
+cash:
+  code: "511990"
+  name: 货币ETF华宝添益
+  weight: 0.10
+  market: sh
+  target_months: 12         # 货币ETF 目标水位 = N 个月生活费
+
+# 卖出信号
+signal:
+  rule: ma_premium            # ma_premium | dividend_pct | fixed_jan
+  ma_window: 250              # 均线窗口（交易日）
+  premium: 0.05               # 收盘价 > MA × (1+premium) 触发
+  dividend_pct_window: 1250   # 股息率分位滚动窗口（rule=dividend_pct 时用）
+  dividend_pct_threshold: 0.30 # 股息率分位 <= 该值视为"偏贵"
+  fallback_month: 12          # 兜底卖出月份（每年必卖一次）
+  max_sell_per_year: 1        # 每年最多卖出次数
+
+# 风控
+risk:
+  liquidate_floor: 0.0        # 永不清仓（最低仓位）
+  min_fund_size_yi: 10        # 规模低于该值(亿)考虑更换
+  review_power_drop_years: 3  # 连续N年购买力下降则下调提款率
+
+# 状态（脚本自动维护，不要手改）
+state:
+  last_sell_date: null
+  last_sell_year: null
+  last_check: null
