@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-20T10:57:50",
+ "exported_at": "2026-10-20T11:17:17",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-20T10:57:49"
+    "value": "2026-10-20T11:17:17"
    },
    {
     "key": "description",
@@ -589,6 +589,42 @@
     "verdict": "CONFIRMED",
     "rid": "R46",
     "data_pointer": "reports/R46_6个视频分析_2026-10-20.md"
+   },
+   {
+    "fid": "F043",
+    "category": "数据",
+    "statement": "东方红红利低波（012708/012709）是场外指数基金，非 ETF",
+    "evidence": "成立 2021-12-30，规模 A 35.65亿 + C 28.36亿 ≈ 64亿；跟踪东方红定制指数；申赎 T+1/T+2，不适合每月择时操作",
+    "verdict": "CONFIRMED",
+    "rid": "R56",
+    "data_pointer": "logs/_dfh_info.py"
+   },
+   {
+    "fid": "F044",
+    "category": "风控",
+    "statement": "东方红红利低波收益不占优但回撤最小",
+    "evidence": "同区间 2021-12-30~2026-10-19：东方红 8.65%/-11.8%(Calmar 0.733) vs 515100 6.25%/-12.9%(0.484) vs 515450 8.73%/-13.6%(0.642) vs 512890 9.79%/-14.0%(0.699)",
+    "verdict": "CONFIRMED",
+    "rid": "R56",
+    "data_pointer": "logs/_dfh_cmp.py"
+   },
+   {
+    "fid": "F045",
+    "category": "认知",
+    "statement": "光总「512890 跑输前两只」与我们数据相反",
+    "evidence": "同区间 512890 年化 9.79% 是三只最高（东方红 8.65%、515450 8.73%、515100 6.25%）；可能他用了不同区间或混淆净值与二级市场价格",
+    "verdict": "PARTIAL",
+    "rid": "R56",
+    "data_pointer": "logs/_dfh_cmp.py"
+   },
+   {
+    "fid": "F046",
+    "category": "建仓",
+    "statement": "我们的建仓计划（10万分3月+第12月投140万）回本周数远优于一次投入",
+    "evidence": "211 个历史起点：账户浮亏转正月数中位 12、P90 14、最坏 33（2.8年）；75.6% 的起点投完即转正；建仓期最深浮亏中位 -10.1%、P10 -39.8%",
+    "verdict": "CONFIRMED",
+    "rid": "R56",
+    "data_pointer": "reports/r56_entry_breakeven.json"
    },
    {
     "fid": "F030",

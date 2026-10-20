@@ -113,6 +113,70 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
     return out, "取数失败（东财+新浪均不可用）"
 
 
+def entry_breakeven_stats(cfg: dict) -> dict | None:
+    """计算「按本计划建仓，账户浮亏转正所需月数」的历史分布。
+
+    模拟：第 1-3 月各投 immediate_amount/3，第 wait_deadline_months 月末投完 wait_amount。
+    对每个历史月起点跑一遍，统计转正所需月数。
+    """
+    ent = cfg.get("entry", {})
+    imm = float(ent.get("immediate_amount", 100000))
+    wait = float(ent.get("wait_amount", 1400000))
+    total = imm + wait
+    imm_months = int(ent.get("immediate_months", 3))
+    wait_m = int(ent.get("wait_deadline_months", 12))
+
+    with conn() as c:
+        d = pd.read_sql_query(
+            "SELECT date,close FROM idx_daily WHERE code='H20269' ORDER BY date", c)
+    if len(d) < 500:
+        return None
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.sort_values("date").reset_index(drop=True)
+    d["ym"] = d["date"].dt.to_period("M")
+    m = d.groupby("ym").last().reset_index()
+    m["date"] = m["ym"].dt.to_timestamp(how="end")
+    px = m["close"].to_numpy(float)
+    dates = m["date"].to_numpy()
+
+    bes, worsts = [], []
+    horizon = wait_m + 24
+    for si in range(0, len(px) - horizon - 2):
+        shares = invested = 0.0
+        be = None
+        worst = 0.0
+        for k in range(horizon):
+            i = si + k
+            if i >= len(px):
+                break
+            if k < imm_months:
+                amt = imm / imm_months
+                shares += amt / px[i]; invested += amt
+            if k == wait_m - 1:
+                shares += wait / px[i]; invested += wait
+            val = shares * px[i]
+            if invested > 0:
+                worst = min(worst, val / invested - 1)
+            if be is None and invested >= total - 1 and val >= invested:
+                be = k + 1
+        if be is not None:
+            bes.append(be); worsts.append(worst)
+    if not bes:
+        return None
+    a = np.array(bes)
+    return {
+        "n": len(a),
+        "median": float(np.median(a)),
+        "p90": float(np.percentile(a, 90)),
+        "worst": int(a.max()),
+        "best": int(a.min()),
+        "pct_immediate": float((a <= wait_m).mean()),
+        "worst_dd_median": float(np.median(worsts)),
+        "worst_dd_p10": float(np.percentile(worsts, 10)),
+        "span": f"{str(dates[0])[:7]} ~ {str(dates[len(px)-horizon-2])[:7]}",
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", default=None, help="评估日期 YYYY-MM-DD，默认今天")
@@ -312,8 +376,30 @@ def main() -> int:
         L.append(f"| 兜底 | 第 {ent['wait_deadline_months']} 个月末 | **无条件投完** |")
         L.append("")
 
+    # ── 建仓期回本参考
+    bes = entry_breakeven_stats(cfg)
+    if bes:
+        L.append("## 六、建仓期回本参考（历史统计）")
+        L.append("")
+        L.append(f"> 模拟「{ent.get('immediate_amount', 0):,} 元分 {ent.get('immediate_months', 3)} 个月 + "
+                 f"{ent.get('wait_amount', 0):,} 元第 {ent.get('wait_deadline_months', 12)} 个月投完」，"
+                 f"遍历 {bes['n']} 个历史起点（{bes['span']}）。")
+        L.append("")
+        L.append("| 指标 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| **账户浮亏转正所需月数 · 中位** | **{bes['median']:.0f} 个月** |")
+        L.append(f"| P90 | {bes['p90']:.0f} 个月 |")
+        L.append(f"| **最坏** | **{bes['worst']} 个月（{bes['worst']/12:.1f} 年）** |")
+        L.append(f"| 最好 | {bes['best']} 个月 |")
+        L.append(f"| 投完即转正的起点占比 | **{bes['pct_immediate']:.1%}** |")
+        L.append(f"| 建仓期最深浮亏 · 中位 | {bes['worst_dd_median']:.1%} |")
+        L.append(f"| 建仓期最深浮亏 · P10 | {bes['worst_dd_p10']:.1%} |")
+        L.append("")
+        L.append("> 📌 来源：穷诸葛「红利之道三-节奏的账」提出的指标（一次投入 89 月 vs 分批 14 月）。"
+                 "我们的计划因「等 12 个月」，中位 12 个月即转正。")
+
     if args.history > 0:
-        L.append(f"## 六、过去 {args.history} 个月信号历史")
+        L.append(f"## 七、过去 {args.history} 个月信号历史")
         L.append("")
         L.append("| 月份 | 股息率 | 分位 | 信号 |")
         L.append("|---|---|---|---|")

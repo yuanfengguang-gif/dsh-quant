@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-20 10:57:50
+-- 导出时间：2026-10-20 11:17:17
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T10:57:49');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T11:17:17');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -97,6 +97,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F040','建仓','「账户浮亏转正所需月数」是退休提款方案的关键指标','2015-06 高点进场：一次投入 89 个月 vs 分批 12 个月 14 个月（差 6 倍）；价格回到起点 62 vs 41 个月','CONFIRMED','R55','logs/transcript_v5_穷诸葛_红利之道3_节奏的账.txt');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F041','认知','两个独立博主对自由现金流给出相反结论，数据支持「暂不纳入」','睡前投资课主推 1:1 组合（称 10 年 20.31%）；光总有话说明确拒绝（称样本外从 2025 开始、历史检验不够）；我们的验证支持后者','CONFIRMED','R46','reports/R46_6个视频分析_2026-10-20.md');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F042','风控','512890 在三个独立来源中都被评为最差红利低波 ETF','光总：再平衡一年一次（vs 半年）、费率 0.85%（vs 0.72%）；我们：前三大行业 58.3%、银行 52.5%','CONFIRMED','R46','reports/R46_6个视频分析_2026-10-20.md');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F043','数据','东方红红利低波（012708/012709）是场外指数基金，非 ETF','成立 2021-12-30，规模 A 35.65亿 + C 28.36亿 ≈ 64亿；跟踪东方红定制指数；申赎 T+1/T+2，不适合每月择时操作','CONFIRMED','R56','logs/_dfh_info.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F044','风控','东方红红利低波收益不占优但回撤最小','同区间 2021-12-30~2026-10-19：东方红 8.65%/-11.8%(Calmar 0.733) vs 515100 6.25%/-12.9%(0.484) vs 515450 8.73%/-13.6%(0.642) vs 512890 9.79%/-14.0%(0.699)','CONFIRMED','R56','logs/_dfh_cmp.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F045','认知','光总「512890 跑输前两只」与我们数据相反','同区间 512890 年化 9.79% 是三只最高（东方红 8.65%、515450 8.73%、515100 6.25%）；可能他用了不同区间或混淆净值与二级市场价格','PARTIAL','R56','logs/_dfh_cmp.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F046','建仓','我们的建仓计划（10万分3月+第12月投140万）回本周数远优于一次投入','211 个历史起点：账户浮亏转正月数中位 12、P90 14、最坏 33（2.8年）；75.6% 的起点投完即转正；建仓期最深浮亏中位 -10.1%、P10 -39.8%','CONFIRMED','R56','reports/r56_entry_breakeven.json');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
