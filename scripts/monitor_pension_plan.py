@@ -3,7 +3,7 @@
 
 一次运行给出：
   1. 建仓进度（10万已投 / 140万待投 / 剩余月数 / 兜底日）
-  2. 股息率 5 年分位 → 卫星仓买卖信号
+  2. 股息率绝对阈值 → 卫星仓买卖信号
   3. 6 月季节性提醒
   4. ERP 估值温度计（仅参考）
   5. 行业集中度快照
@@ -39,6 +39,18 @@ OUTDIR = BASE / "reports"
 def load_cfg() -> dict:
     with open(CFG, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def load_state() -> dict:
+    """读取持仓与提款记录（config/portfolio_state.yaml）"""
+    f = BASE / "config" / "portfolio_state.yaml"
+    if not f.exists():
+        return {}
+    try:
+        with open(f, encoding="utf-8") as fh:
+            return yaml.safe_load(fh) or {}
+    except Exception:
+        return {}
 
 
 def conn() -> sqlite3.Connection:
@@ -178,9 +190,94 @@ def bank_strength(cfg: dict) -> dict | None:
             "action": bm.get("action", "display_only")}
 
 
+def portfolio_health(cfg: dict, asof: str) -> dict | None:
+    """持仓健康：现金池水位、权重漂移、累计提款与购买力
+
+    数据来源：config/portfolio_state.yaml（手工填写）。未填写时返回 None。
+    """
+    st = load_state()
+    if not st:
+        return None
+    plan = cfg.get("plan", {})
+    monthly = float(plan.get("initial_annual", 60000)) / 12.0
+    cpi = float(plan.get("assume_cpi", 0.02))
+
+    # 现金
+    cash_amt = (st.get("cash") or {}).get("amount")
+    cash_amt = float(cash_amt) if cash_amt is not None else None
+
+    # 持仓市值
+    prices, _src = get_etf_prices([a["code"] for a in cfg.get("assets", [])], asof)
+    rows, total_hold = [], 0.0
+    any_holding = False
+    for a in cfg.get("assets", []):
+        h = next((x for x in (st.get("holdings") or [])
+                  if str(x.get("code")) == str(a["code"])), None)
+        amt = None
+        if h:
+            if h.get("amount") is not None:
+                amt = float(h["amount"])
+            elif h.get("shares") is not None and a["code"] in prices:
+                amt = float(h["shares"]) * prices[a["code"]]
+        if amt is not None:
+            any_holding = True
+            total_hold += amt
+        rows.append({"code": a["code"], "name": a["name"],
+                     "target_weight": float(a.get("weight", 0)),
+                     "amount": amt,
+                     "drift": None})
+    if not any_holding and cash_amt is None:
+        return None
+
+    total_asset = total_hold + (cash_amt or 0.0)
+    for r in rows:
+        if r["amount"] is not None and total_asset > 0:
+            r["actual_weight"] = r["amount"] / total_asset
+            r["drift"] = r["actual_weight"] - r["target_weight"]
+        else:
+            r["actual_weight"] = None
+
+    # 提款与购买力
+    wds = st.get("withdrawals") or []
+    wd_total = 0.0
+    wd_real = 0.0
+    for w in wds:
+        try:
+            amt = float(w.get("amount") or 0)
+        except Exception:
+            continue
+        wd_total += amt
+        # 按 CPI 折算到最新时点的购买力（简化：用年数幂）
+        try:
+            dt = pd.Timestamp(w.get("date"))
+            yrs = max(0.0, (pd.Timestamp(asof) - dt).days / 365.25)
+            wd_real += amt * (1 + cpi) ** yrs
+        except Exception:
+            wd_real += amt
+
+    deps = st.get("deposits") or []
+    dep_total = sum(float(d.get("amount") or 0) for d in deps)
+
+    return {
+        "as_of": st.get("as_of"),
+        "cash": cash_amt,
+        "cash_months": (cash_amt / monthly) if (cash_amt is not None and monthly > 0) else None,
+        "cash_min_months": float(cfg.get("risk", {}).get("cash_min_months", 3)),
+        "monthly_cost": monthly,
+        "holdings": rows,
+        "total_hold": total_hold if any_holding else None,
+        "total_asset": total_asset if (any_holding or cash_amt is not None) else None,
+        "withdrawal_total": wd_total if wds else None,
+        "withdrawal_real": wd_real if wds else None,
+        "withdrawal_count": len(wds),
+        "deposit_total": dep_total if deps else None,
+        "deposit_count": len(deps),
+    }
+
+
 def dividend_level(cfg: dict) -> dict | None:
     """股息率绝对值的历史区间（交叉验证分位信号，因为分位会漂移）"""
-    code = cfg["signals"]["dividend_pct"]["index_code"]
+    code = cfg["signals"]["dividend_abs"]["index_code"]
     d = load_index(code)
     v = d["dy_ttm"].dropna()
     if len(v) < 500:
@@ -194,7 +291,7 @@ def dividend_level(cfg: dict) -> dict | None:
 
 def signal_track_record(cfg: dict, horizon_months: int = 12) -> dict | None:
     """信号历史战绩：每次触发后未来 N 个月的实际收益（用于监控信号是否失效）"""
-    sig = cfg["signals"]["dividend_pct"]
+    sig = cfg["signals"]["dividend_abs"]
     d = load_index(sig["index_code"])
     tr_code = {"H30269": "H20269", "000922": "H00922"}.get(sig["index_code"], "H20269")
     with conn() as c:
@@ -204,11 +301,11 @@ def signal_track_record(cfg: dict, horizon_months: int = 12) -> dict | None:
     d = d.merge(t.rename(columns={"close": "tr"}), on="date", how="left")
     d["date"] = pd.to_datetime(d["date"])
     d = d.sort_values("date").reset_index(drop=True)
-    d["pct"] = rolling_pct(d["dy_ttm"].to_numpy(float), int(sig["window"]))
-    exp, cheap = float(sig["expensive"]), float(sig["cheap"])
-    mo = d.set_index("date")[["pct", "tr"]].resample("ME").last().reset_index()
-    mo["sig"] = np.where(mo["pct"] <= exp, "SELL",
-                         np.where(mo["pct"] >= cheap, "BUY", ""))
+    exp, cheap = float(sig["sell_below"]), float(sig["buy_above"])
+    mo = d.set_index("date")[["dy_ttm", "tr"]].resample("ME").last().reset_index()
+    mo["pct"] = mo["dy_ttm"]      # 这里不再是分位，而是绝对股息率本身
+    mo["sig"] = np.where(mo["dy_ttm"] <= exp, "SELL",
+                         np.where(mo["dy_ttm"] >= cheap, "BUY", ""))
     events, prev = [], ""
     for _, r in mo.iterrows():
         s = r["sig"]
@@ -236,7 +333,7 @@ def signal_track_record(cfg: dict, horizon_months: int = 12) -> dict | None:
 def price_alerts(cfg: dict, asof: str) -> list:
     """价格异常报警（只基于指数，不需要持仓数据）"""
     out = []
-    code = cfg["signals"]["dividend_pct"]["index_code"]
+    code = cfg["signals"]["dividend_abs"]["index_code"]
     tr_code = {"H30269": "H20269", "000922": "H00922"}.get(code, "H20269")
     with conn() as c:
         t = pd.read_sql_query("SELECT date,close FROM idx_daily WHERE code=? ORDER BY date",
@@ -334,19 +431,19 @@ def main() -> int:
     plan = cfg["plan"]
 
     # ── 1. 股息率分位
-    idx_code = sig["dividend_pct"]["index_code"]
+    idx_code = sig["dividend_abs"]["index_code"]
     d = load_index(idx_code)
     d = d[d["date"] <= asof_ts].reset_index(drop=True)
     if len(d) == 0:
         print(f"❌ 没有 {asof} 之前的数据")
         return 1
-    win = int(sig["dividend_pct"]["window"])
-    d["dy_pct"] = rolling_pct(d["dy_ttm"].to_numpy(float), win)
+    # 绝对阈值：直接用股息率本身，不再算分位
     cur_dy = float(d["dy_ttm"].iloc[-1])
-    cur_pct = float(d["dy_pct"].iloc[-1]) if not np.isnan(d["dy_pct"].iloc[-1]) else np.nan
+    cur_pct = cur_dy            # 变量名保留以兼容下游
+    dy_ok = not np.isnan(cur_dy)
     last_date = d["date"].iloc[-1].date()
-    exp_th = sig["dividend_pct"]["expensive"]
-    cheap_th = sig["dividend_pct"]["cheap"]
+    exp_th = float(sig["dividend_abs"]["sell_below"])
+    cheap_th = float(sig["dividend_abs"]["buy_above"])
 
     # ── 2. ERP 温度计
     erp_val = erp_pct = np.nan
@@ -385,13 +482,13 @@ def main() -> int:
     actions = []
     month = asof_ts.month
 
-    if not np.isnan(cur_pct):
+    if dy_ok:
         if cur_pct <= exp_th:
-            actions.append(("🔴 卫星仓：卖出", f"股息率分位 {cur_pct:.0%} ≤ {exp_th:.0%}（偏贵）"))
+            actions.append(("🔴 卫星仓：应空仓", f"股息率 {cur_pct:.2%} ≤ {exp_th:.1%}（太贵）"))
         elif cur_pct >= cheap_th:
-            actions.append(("🟢 卫星仓：买回", f"股息率分位 {cur_pct:.0%} ≥ {cheap_th:.0%}（便宜）"))
+            actions.append(("🟢 卫星仓：买回", f"股息率 {cur_dy:.2%} ≥ {cheap_th:.1%}（便宜）"))
         else:
-            actions.append(("⚪ 卫星仓：不动", f"股息率分位 {cur_pct:.0%}（{exp_th:.0%}~{cheap_th:.0%} 中性区）"))
+            actions.append(("⚪ 卫星仓：不动", f"股息率 {cur_dy:.2%}（{exp_th:.1%}~{cheap_th:.1%} 中性区）"))
 
     if sig["june_effect"]["enabled"] and month == int(sig["june_effect"]["month"]):
         rp = sig["june_effect"]["reduced_position"]
@@ -426,31 +523,40 @@ def main() -> int:
                  else f"| {a} | — | {b} |")
     L.append("")
 
-    L.append("## 二、核心信号")
+    L.append("## 二、核心信号（绝对股息率阈值）")
     L.append("")
-    L.append(f"### ① 股息率 5 年分位（管卫星仓）")
+    L.append(f"### ① 股息率绝对阈值（管卫星仓）")
     L.append("")
     L.append("| 项目 | 数值 |")
     L.append("|---|---|")
-    L.append(f"| 指数 | {sig['dividend_pct']['index_code']} {sig['dividend_pct']['index_name']} |")
-    L.append(f"| 股息率(TTM) | **{cur_dy:.2%}** |")
-    L.append(f"| 5 年分位 | **{cur_pct:.0%}** |" if not np.isnan(cur_pct) else "| 5 年分位 | — |")
-    L.append(f"| 卖出阈值 | ≤ {exp_th:.0%} |")
-    L.append(f"| 买回阈值 | ≥ {cheap_th:.0%} |")
-    if not np.isnan(cur_pct):
-        if cur_pct <= exp_th:
-            dist = "**已触发卖出**"
-        elif cur_pct >= cheap_th:
-            dist = "**已触发买回**"
+    L.append(f"| 指数 | {sig['dividend_abs']['index_code']} {sig['dividend_abs']['index_name']} |")
+    L.append(f"| **当前股息率** | **{cur_dy:.2%}** |")
+    L.append(f"| 卖出阈值（太贵） | 股息率 ≤ {exp_th:.1%} |")
+    L.append(f"| 买回阈值（便宜） | 股息率 ≥ {cheap_th:.1%} |")
+    if dy_ok:
+        if cur_dy <= exp_th:
+            st = f"**应空仓**（股息率 {cur_dy:.2%} ≤ {exp_th:.1%}）"
+        elif cur_dy >= cheap_th:
+            st = f"**应满仓**（股息率 {cur_dy:.2%} ≥ {cheap_th:.1%}）"
         else:
-            dist = f"距卖出还需分位降 {(cur_pct-exp_th)*100:.0f}pp"
-        L.append(f"| 状态 | {dist} |")
+            st = (f"**维持现状**（股息率 {cur_dy:.2%} 在 {exp_th:.1%}~{cheap_th:.1%} 之间）")
+        L.append(f"| **状态** | {st} |")
+        L.append(f"| 距卖出还需 | 股息率降 {(cur_dy-exp_th)*100:.2f}pp"
+                 f"（股价约需涨 {(cur_dy/exp_th-1)*100:.0f}%） |")
+    L.append(f"| 检查频率 | 每月 |")
     L.append("")
-    L.append("> **实测（R43/R44）**：该信号 20 年只调仓 **11 次**（平均 2 年 1 次），不算频繁。"
-             "**不要加「连续 N 个月同向」过滤** —— 实测过滤会降低年化 0.6~2.4pp。")
+    L.append("> **实测（R89-R99）**：该信号 20 年只调仓 **2 次**（2007-10 卖 / 2014-09 买回）。"
+             "Calmar 0.250（永不动 0.226），年化 13.06%（永不动 12.97%）。")
+    L.append(">")
+    L.append("> **⚠️ 重大局限**：本策略只在「高分红年代」有效。2007-2013 年股息率仅 1.5%~3.5%，"
+             "永远够不到 4.0% 买回线 → 长期空仓；2008 年指数跌 66.2%，股息率也只从 1.56% 涨到 2.15%，"
+             "仍不满足买回。**20 年回测实质是「13 年空仓 + 7 年满仓」。**")
     L.append(">")
     L.append("> **卫星仓要「全卖全买」，不要「部分降仓」**："
-             "全卖 16.33%/−52.2%（Calmar 0.313）优于降到 30% 的 16.20%/−56.9%（0.285）。")
+             "全卖 −52.2% 回撤优于降到 30% 的 −56.9%。")
+    L.append(">")
+    L.append("> **应急条款：不加**。R97 宽版仅 +0.004 Calmar 但多 8 次摩擦；"
+             "R98 窄版从不触发；R99 回落版产生「买了又卖」冲突。")
 
     L.append("### ② ERP 估值温度计（仅参考，不调仓）")
     L.append("")
@@ -577,12 +683,12 @@ def main() -> int:
     if args.history > 0:
         L.append(f"## 八、过去 {args.history} 个月信号历史")
         L.append("")
-        L.append("| 月份 | 股息率 | 分位 | 信号 |")
-        L.append("|---|---|---|---|")
+        L.append("| 月份 | 股息率 | 卖出线 | 买回线 | 信号 |")
+        L.append("|---|---|---|---|---|")
         d["ym"] = d["date"].dt.to_period("M")
         g = d.groupby("ym").last().tail(args.history)
         for ym, r in g.iterrows():
-            pv = r["dy_pct"]
+            pv = r["dy_ttm"]
             if np.isnan(pv):
                 s = "—"
             elif pv <= exp_th:
@@ -591,7 +697,7 @@ def main() -> int:
                 s = "🟢 买回"
             else:
                 s = "⚪ 不动"
-            L.append(f"| {ym} | {r['dy_ttm']:.2%} | {pv:.0%} | {s} |")
+            L.append(f"| {ym} | {pv:.2%} | {exp_th:.1%} | {cheap_th:.1%} | {s} |")
         L.append("")
 
     L.append("---")
@@ -599,7 +705,7 @@ def main() -> int:
     # ── 股息率绝对值（交叉验证分位）
     dl = dividend_level(cfg)
     if dl:
-        L.append("## 九、股息率绝对值（交叉验证分位）")
+        L.append("## 九、股息率历史位置（20 年分布）")
         L.append("")
         L.append(f"> 分位会随窗口漂移，绝对值不会。两者一起看更可靠。"
                  f"（样本 {dl['n']} 个交易日）")
@@ -657,6 +763,63 @@ def main() -> int:
     L.append("> 现金池水位、权重漂移、提款进度这几项需要实际持仓金额，"
              "等开始建仓填写 `entry.start_date` 后再启用。")
 
+    # ── 持仓健康（现金池 / 权重漂移 / 提款购买力）
+    ph = portfolio_health(cfg, asof)
+    L.append("## 十二、持仓健康（需填 config/portfolio_state.yaml）")
+    L.append("")
+    if not ph:
+        L.append("**未填写持仓数据** —— `config/portfolio_state.yaml` 里的 `holdings` 和 `cash` 都是空的。")
+        L.append("")
+        L.append("填好之后，这里会自动显示：")
+        L.append("")
+        L.append("- 现金池还能撑几个月（低于 3 个月会报警）")
+        L.append("- 三只 ETF 的实际权重与目标权重的偏离")
+        L.append("- 累计提款了多少、按通胀折算的实际购买力")
+        L.append("")
+    else:
+        if ph.get("cash_months") is not None:
+            cm = ph["cash_months"]
+            warn = cm < ph["cash_min_months"]
+            L.append("| 项目 | 数值 |")
+            L.append("|---|---|")
+            L.append(f"| 现金池余额 | {ph['cash']:,.0f} 元 |")
+            L.append(f"| 月生活费 | {ph['monthly_cost']:,.0f} 元 |")
+            L.append(f"| **现金池还能撑** | **{cm:.1f} 个月**"
+                     f"{' 🔴 **低于红线，必须补足**' if warn else ''} |")
+            L.append(f"| 红线 | {ph['cash_min_months']:.0f} 个月 |")
+            L.append("")
+        if ph.get("holdings"):
+            L.append("**权重漂移：**")
+            L.append("")
+            L.append("| 代码 | 名称 | 市值 | 实际权重 | 目标权重 | 偏离 |")
+            L.append("|---|---|---|---|---|---|")
+            for r in ph["holdings"]:
+                amt = f"{r['amount']:,.0f}" if r["amount"] is not None else "—"
+                aw = f"{r['actual_weight']:.1%}" if r["actual_weight"] is not None else "—"
+                dr = f"{r['drift']*100:+.1f}pp" if r["drift"] is not None else "—"
+                flag = " ⚠️" if (r["drift"] is not None and abs(r["drift"]) > 0.10) else ""
+                L.append(f"| {r['code']} | {r['name']} | {amt} | {aw} | "
+                         f"{r['target_weight']:.0%} | {dr}{flag} |")
+            if ph.get("total_asset"):
+                L.append(f"| **合计** | — | **{ph['total_asset']:,.0f}** | 100% | 100% | — |")
+            L.append("")
+            L.append("> 偏离超过 10pp 会标 ⚠️，提示再平衡。")
+            L.append("")
+        if ph.get("withdrawal_total") is not None:
+            L.append("**提款与购买力：**")
+            L.append("")
+            L.append("| 项目 | 数值 |")
+            L.append("|---|---|")
+            L.append(f"| 累计提款笔数 | {ph['withdrawal_count']} |")
+            L.append(f"| **累计提款（名义）** | **{ph['withdrawal_total']:,.0f} 元** |")
+            L.append(f"| **按通胀折算的实际购买力** | **{ph['withdrawal_real']:,.0f} 元** |")
+            if ph.get("deposit_total"):
+                L.append(f"| 累计建仓投入 | {ph['deposit_total']:,.0f} 元（{ph['deposit_count']} 笔） |")
+            L.append("")
+            L.append("> 「实际购买力」= 把每笔提款按 CPI 折算到今天的价值，"
+                     "用来判断同样的钱还能不能买到同样的东西。")
+            L.append("")
+
     L.append("## 附：本工具不做什么")
     L.append("")
     L.append("| 不做 | 原因 |")
@@ -678,7 +841,7 @@ def main() -> int:
     for a, b in actions:
         print(f"  {a:<22s} {b}")
     print("-" * 78)
-    print(f"  股息率 {cur_dy:.2%}  5年分位 {cur_pct:.0%}" if not np.isnan(cur_pct)
+    print(f"  股息率 {cur_dy:.2%}  卖出线 {exp_th:.1%}  买回线 {cheap_th:.1%}" if dy_ok
           else f"  股息率 {cur_dy:.2%}  分位 —")
     if not np.isnan(erp_val):
         print(f"  ERP {erp_val:.2%}  3年分位 {erp_pct:.0%}（仅参考）")

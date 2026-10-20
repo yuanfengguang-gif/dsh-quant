@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-20 16:12:42
+-- 导出时间：2026-10-20 17:21:56
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T16:12:41');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T17:21:55');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -42,6 +42,7 @@ INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R35-R36','银行兜底强度分析','2026-10-19','风险','done','中国无全国性银行破产，但国有大行股价仍跌 60-74%；512890 国有大行仅 11.3%','');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R37-R38','反向利用信号验证','2026-10-19','信号','done','仅 6 月效应可反向用（+2.6pp）；P2/股债比正反都不行','reports/R37_反向利用信号验证.md');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R39-R41','5 个新择时信号','2026-10-19','信号','closed','全部证伪；发现「预测力≠可交易性」（ERP 相关 0.439 但不可交易）','reports/R39_新择时信号探索.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R82-R99','卫星仓择时系统性验证（18 轮）','2026-10-20','信号','done','发现分红季锯齿、基准漂移、股息率数据污染三个缺陷；从 5 年分位改为绝对阈值 2.5%/4.0%，每月检查；应急条款证伪','reports/r93_threshold_grid.json');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R73-R81','配比对比 + 银行业趋势','2026-10-20','策略','done','20 年全收益下 40/35/25 与 55/30/15 的 Calmar 相同（0.228），旧配比略优；515100 优势仅存在于 2014-2018；银行业 2025-2026 转强但属顺势','reports/r80_longcompare.json');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R46-R55','6 个视频分析（4 位博主）','2026-10-20','博主验证','done','自由现金流 1:1 有样本内效果但样本仅 12.8 年；比价信号有预测力但不如股息率分位；价格网格灾难；穷诸葛 70/30 与我们一致','reports/R46_6个视频分析_2026-10-20.md');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R42-R44','P1 监控工具 + P2 温和倾斜','2026-10-19','策略','done','ERP 温和倾斜也证伪；卫星仓全卖优于部分降仓（16.33%/-52.2%）；加过滤是负优化','reports/R42_P1工具_P2温和倾斜.md');
@@ -107,6 +108,17 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F049','风险','银行业 2025-2026 转强，但此前连续 3 年落后','银行 vs 红利低波：2022 差 -21.9pp（银行赢 0%）、2023 差 -31.7pp（0%）、2024 差 -26.9pp（0%）、2025-2026 差 +10.0pp（赢 82%）；近3年 +6.42pp','CONFIRMED','R81','reports/r81_bank.json');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F050','风险','银行的波动与最大跌幅在缩小（成熟期特征）','波动：全期 19.59% → 近5年 16.66% → 近3年 16.20% → 近1年 14.67%；最大跌幅：-37.1% → -26.8% → -21.9% → -15.7%','CONFIRMED','R81','reports/r81_bank.json');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F051','认知','银行强弱是顺势指标，不是预测指标','2022-2024 连续 3 年落后 22-32pp 后于 2025 反转；追涨在转折点会滞后吃亏。用途是追踪理解，不是自动调仓依据','CONFIRMED','R81','logs/_r81_bank.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F052','信号','股息率有强季节效应：6 月平均跳升 +13.45%，7 月回落 −7.78%','20 年月度统计：6月 +13.45%、7月 −7.78%、8月 −4.35%，其它月约 0%；同期 6 月指数平均 −4.89%','CONFIRMED','R86','logs/_r86_seasonal.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F053','信号','股息率月度变化的 81.6% 来自分红数据更新，仅 19.1% 来自股价','全期相关：股息率变化 vs 分红变化 +0.706（贡献 81.6%）；vs 股价变化 −0.226（贡献 19.1%）；2025-05→07 股价 −0.18% 但股息率 −32.83%','CONFIRMED','R92','logs/_r92_yield_source.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F054','信号','5 年分位信号在 2025 年给出错误卖出（实为最便宜时）','2025-09 股息率 4.80%，5年分位 3%（极贵→卖），但 20 年历史位置 70%（便宜）；绝对值阈值判定为买回','FALSIFIED','R90','logs/_r90_two_problems.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F055','信号','5 年窗口的基准被 2021-2025 高股息期抬高（基准漂移）','5年窗口（2020-09~2025-09）股息率最低 4.50%、中位 5.46%，所以 4.80% 在此窗口算 3 分位，但 20 年均值仅 3.88%','CONFIRMED','R90','logs/_r90_two_problems.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F056','信号','20 年窗口分位会让策略在 2011 后永久满仓（近乎不择时）','20年窗口全部 6 次调仓发生在 2007-04~2011-06；2011-06 后 15 年零动作；卖出需股价涨 83%','CONFIRMED','R83','reports/r83_window20.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F057','策略','绝对阈值 2.5%/4.0% 优于 2.5%/4.5%（Calmar 0.250 vs 0.242）','2006-07~2026-10，每月检查：4.0% 版年化 13.06%/Calmar 0.250；4.5% 版 12.66%/0.242；4.0-4.2% 结果相同，4.5-4.8% 结果相同','CONFIRMED','R96','logs/_r96_recent_and_emergency.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F058','策略','判定频率对结果影响极小（每天/每月/每季/每年9月 Calmar 0.242~0.245）','R95 实测：所有频率调仓次数都是 2 次，因为 2.5%~4.0% 有 1.5pp 死区，天然防抖动；只有每半年较差（0.223，卖出延迟到 2008-01）','CONFIRMED','R95','logs/_r95_freq2.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F059','策略','应急条款（暴跌加仓）在本策略里不成立','R97 宽版 +0.004 Calmar 但多 8 次摩擦；R98 窄版（需股息率≥3%）从不触发；R99 回落版产生「买了又卖」冲突（Calmar 无改善）','FALSIFIED','R97-R99','logs/_r99_emergency_drawdown.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F060','策略','本策略只在「高分红年代」有效，2014 年前会长期空仓','2007-2013 股息率仅 1.5%~3.5%，永远够不到 4.0% 买回线；2008 年指数跌 66.2%，股息率只从 1.56% 涨到 2.15%，仍不满足买回 → 20年回测实质是「13年空仓+7年满仓」','CONFIRMED','R96','logs/_r96_recent_and_emergency.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F061','信号','8 位博主中只有 1 位（v1）用 20 年回测给出股息率阈值，其结论 4.5% 与我们的独立验证吻合','v1 实证：低于 4.5% 买入一年胜率 63.7%，高于 4.5% 胜率 95%；v1 明确反驳「3% 就卖」（3% 已 10 年未出现）；v2/v3 用 5%，v4 只提现状，v8 无数字，v9 用价格网格','CONFIRMED','R93','logs/transcript_v1_波段策略胜率.txt');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F062','风险','近期股息率区间：2020 年起 4.20%~7.85%（中位 5.28%）；2022 年起最低 4.50%；2026 年 4.65%~5.45%','2020 年后 100% 时间股息率 ≥4.0%；2026 年最低 4.65% → 绝对值阈值在当前环境下不会触发卖出','CONFIRMED','R96','logs/_r96_recent_and_emergency.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -197,6 +209,7 @@ INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E13','202
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','2026-10-18','从覆盖率反推股息率高估 1.2-3.1pp','三层比例全部算错','股息率必须直接计算');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E19','2026-10-20','把 5 年分位信号当作可靠工具用了多轮，未先检验股息率数据本身质量','股息率月度变化 81.6% 来自分红数据更新（非股价），5 年分位因此产生假信号：2025-09 在最便宜时判定卖出','改为绝对阈值 2.5%/4.0%；新增第九章「股息率历史位置」交叉验证');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E18','2026-10-20','用窗口依赖的回测结论（R68 的 2014-2026 窗口）指导配比调整，把 515100 权重从 40% 提到 55%','515100 的优势只在 2014-2018；2019 年后消失。新配比在真实 ETF 数据（2020-2026）上少赚 4.9 万，20 年全收益也略差','退回 40/35/25；新增「银行强弱监测」只追踪不自动调仓');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E17','2026-10-19','用「全仓 0/1」测信号，与「底仓永不动」结构不符','差点把 16.61%/-42.5% 当成本方案预期','用正确 70/30 结构重算');
 
@@ -214,6 +227,9 @@ INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workar
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M11','2026-10-19','bars_tdx.db 有脏数据（价格 0.010/0.020）','高','open','算个股回撤用 bars.db 或过滤 price<0.1');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M12','2026-10-19','HuggingFace 直连不可用（WinError 10060）','中','fixed','用 HF_ENDPOINT=https://hf-mirror.com + HF_HUB_DISABLE_XET=1');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M13','2026-10-19','东财 ETF 接口偶发 RemoteDisconnected','低','fixed','退化到新浪 fund_etf_category_sina 现价快照');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M16','2026-10-20','股息率数据有「分红季」更新 artefact（6 月平均 +13.45%、7 月 -7.78%）','高','open','已规避：卫星仓改用绝对阈值，并在说明书与面板披露；数据源未修复');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M17','2026-10-20','5 年分位窗口基准被高股息期抬高（2021-2025 把底抬到 4.50%）','高','open','已规避：改用绝对阈值，不再用相对排名');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M18','2026-10-20','择时策略在低分红年代（2007-2013）实质失效（股息率仅 1.5%-3.5%，够不到 4.0% 买回线）','中','open','已披露：说明书与面板均标注「只在高分红年代有效」');
 
 -- ── open_item ──
 DROP TABLE IF EXISTS [open_item];

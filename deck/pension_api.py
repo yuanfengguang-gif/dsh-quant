@@ -53,23 +53,29 @@ def pension_data(asof: str | None = None) -> dict:
     out["portfolio_industry"] = {"top3": tot_top3, "bank": tot_bank}
 
     # 核心信号
-    sig_cfg = cfg["signals"]["dividend_pct"]
+    sig_cfg = cfg["signals"]["dividend_abs"]
     try:
         d = mp.load_index(sig_cfg["index_code"])
         d = d[d["date"] <= pd.Timestamp(asof)].reset_index(drop=True)
-        pct = mp.rolling_pct(d["dy_ttm"].to_numpy(float), int(sig_cfg["window"]))
-        cur_pct = float(pct[-1]) if not pd.isna(pct[-1]) else None
+        cur_dy = float(d["dy_ttm"].iloc[-1])
+        sell_th = float(sig_cfg["sell_below"])
+        buy_th = float(sig_cfg["buy_above"])
+        # 20 年历史位置（交叉验证用）
+        hist = d["dy_ttm"].dropna().to_numpy(float)
+        pos20 = float((hist < cur_dy).mean())
         out["signal"] = {
             "index": sig_cfg["index_code"], "index_name": sig_cfg.get("index_name"),
-            "dividend_yield": float(d["dy_ttm"].iloc[-1]),
-            "percentile": cur_pct,
-            "expensive": float(sig_cfg["expensive"]), "cheap": float(sig_cfg["cheap"]),
-            "action": ("卫星仓全卖" if cur_pct is not None and cur_pct <= sig_cfg["expensive"]
-                       else "卫星仓买回" if cur_pct is not None and cur_pct >= sig_cfg["cheap"]
+            "dividend_yield": cur_dy,
+            "sell_below": sell_th, "buy_above": buy_th,
+            "check_freq": sig_cfg.get("check_freq", "monthly"),
+            "history_position": pos20,
+            "action": ("卫星仓应空仓" if cur_dy <= sell_th
+                       else "卫星仓应满仓" if cur_dy >= buy_th
                        else "不动"),
+            "gap_to_sell": cur_dy - sell_th,
+            "gap_to_buy": cur_dy - buy_th,
             "last_date": str(d["date"].iloc[-1])[:10],
         }
-        mp_ = cur_pct
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
 
