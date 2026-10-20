@@ -7,16 +7,17 @@
     { id: 'portal',   label: '门户',   ic: 'home',     url: '/' },
     { id: 'control',  label: '控制',   ic: 'cpu',      url: '/control' },
     { id: 'pitch',    label: '决策',   ic: 'target',   url: '/pitch' },
+    { id: 'pension',  label: '养老',   ic: 'target',   url: '/pension' },
     { id: 'holdings', label: '持仓',   ic: 'bar',      url: '/holdings' },
     { id: 'factors',  label: '因子',   ic: 'molecule', url: '/factors' },
     { id: 'backtest', label: '回测',   ic: 'chart',    url: '/backtest' },
     { id: 'pitchtrack', label: '远期', ic: 'funnel', url: '/pitchtrack' }
   ];
-  // ★P2 菜单收敛（2026-08-15）：主菜单 6 项（门户/控制/决策/持仓/因子/回测）+「更多」分组（日报/数据/说明）
+  // ★P2 菜单收敛（2026-08-15）：主菜单收敛 + 「更多」分组
+  // ★2026-10-20：养老方案提升到主菜单（核心模块）
   var MORE = [
     { id: 'report',  label: '日报', ic: 'doc',  url: '/report' },
     { id: 'data',    label: '数据', ic: 'db',   url: '/data' },
-    { id: 'pension', label: '养老', ic: 'target', url: '/pension' },
   { id: 'help',    label: '说明', ic: 'help', url: '/help' }
   ];
 

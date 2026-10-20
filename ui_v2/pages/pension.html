@@ -153,7 +153,6 @@
     // 三、股息率双视角
     var dl = d.dividend_level;
     if(dl){
-      var gap = dl.pctile_now - (p==null?0:p);
       $('pn-divlevel').innerHTML =
         kpi('当前股息率', pct(dl.cur), '历史区间 '+pct(dl.min)+' ~ '+pct(dl.max), '') +
         kpi('20 年历史位置', pct(dl.pctile_now,0), '0%=最贵 100%=最便宜', dl.pctile_now>0.7?'good':'') +
@@ -264,6 +263,9 @@
         '总亏 '+pct(ex.stop_total,0)+' 停止再投。<br><b>'+(ex.note||'')+'</b>';
     }
   }
+
+  // 侧栏（与其他页面一致的初始化方式）
+  if (window.LW && LW.sidebar) LW.sidebar.render('sidebar', {active: 'pension'});
 
   LW.api.get('/api/pension').then(function(d){
     render(d);
