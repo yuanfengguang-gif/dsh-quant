@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-20 09:49:53
+-- 导出时间：2026-10-20 10:57:50
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T09:49:53');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T10:57:49');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -42,6 +42,7 @@ INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R35-R36','银行兜底强度分析','2026-10-19','风险','done','中国无全国性银行破产，但国有大行股价仍跌 60-74%；512890 国有大行仅 11.3%','');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R37-R38','反向利用信号验证','2026-10-19','信号','done','仅 6 月效应可反向用（+2.6pp）；P2/股债比正反都不行','reports/R37_反向利用信号验证.md');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R39-R41','5 个新择时信号','2026-10-19','信号','closed','全部证伪；发现「预测力≠可交易性」（ERP 相关 0.439 但不可交易）','reports/R39_新择时信号探索.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R46-R55','6 个视频分析（4 位博主）','2026-10-20','博主验证','done','自由现金流 1:1 有样本内效果但样本仅 12.8 年；比价信号有预测力但不如股息率分位；价格网格灾难；穷诸葛 70/30 与我们一致','reports/R46_6个视频分析_2026-10-20.md');
 INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R42-R44','P1 监控工具 + P2 温和倾斜','2026-10-19','策略','done','ERP 温和倾斜也证伪；卫星仓全卖优于部分降仓（16.33%/-52.2%）；加过滤是负优化','reports/R42_P1工具_P2温和倾斜.md');
 
 -- ── finding ──
@@ -85,6 +86,17 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F028','认知','预测力不等于可交易性','ERP 相关系数 0.439（最强）但策略 Calmar 最差；股息率相关系数仅 0.119~0.209 却是唯一可用信号','CONFIRMED','R41','');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F029','认知','博主策略复现：她的信号有效但低频，不适合管卫星仓','博主三条件 20 年 6-7 次、胜率 100%、平均 +45.6%；但用于卫星仓只有 11.12%（股息率分位 13.15%）','CONFIRMED','R11','');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F031','信号','信号检查频率会显著改变结果：按月检查 16.33%/-52.2%（11次调仓），按日检查 15.84%/-62.1%（84次调仓）','股息率分位在 30% 阈值附近日频抖动导致频繁翻转；方案规定按月检查，故以月频为准','CONFIRMED','R45','logs/_r45_s07fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F032','信号','自由现金流指数「10 年年化 20.31%」不可复现','932365 10年 10.89%、932368 12.07%、980092 13.01%；遍历 2015-2026 全部 9-11.5 年窗口最高仅 11.49%（起点 2016-02-19）','FALSIFIED','R46','logs/_r48_find2031.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F033','信号','自由现金流 1:1 组合在 2014-2026 样本内优于纯红利低波，但不可外推','50/50 半年再平衡 Calmar 0.230 vs 纯红利低波 0.167；但样本仅 12.8 年、指数 2014 前仅 2 行、与红利日相关 0.877/月 0.867','PARTIAL','R52','reports/r52_fcf_honest.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F034','信号','自由现金流组合中的再平衡无价值甚至有害','50/50 不再平衡 0.236 > 半年再平衡 0.230 = 年度再平衡 0.230（博主称「再平衡是必不可少的一环」，数据不支持）','FALSIFIED','R52','reports/r52_fcf_honest.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F035','信号','创业板/红利点数比价对红利未来 1 年收益有强预测力','原始比价相关系数 +0.394（分位化后 +0.311）；分档完美单调：<0.3 红利未来1年 -4.0%，>0.7 则 +16.6%；2026-06-30 比价 0.865 为历史最高','PARTIAL','R53','logs/_r53_ratio.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F036','信号','比价作卫星仓驱动不如股息率分位','比价单独用 Calmar 0.130 vs 股息率分位 0.142；两者组合 0.145（仅提升 2%，不值得复杂度）','FALSIFIED','R54','reports/r54_ratio_strategy.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F037','信号','价格网格（涨5%卖90%）灾难性失败','回测年化 -26.78%、回撤 -99.8%、155 次调仓；因长期上涨资产会把仓位卖光后永远踏空','FALSIFIED','R55','logs/_r55_v9.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F038','信号','股息率<3.5%空仓的漂亮回测是后视偏差','股息率<3% 在 2006-2014 是常态（8年均值 2.64%），策略几乎全程空仓恰好躲过 2008；Calmar 0.376 不可外推','FALSIFIED','R55','logs/_r55_v9.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F039','建仓','建仓节奏的排序取决于起点：开局上涨一次投入赢 78%，开局下跌分批赢 85%','穷诸葛 55 个「开局12月上涨」窗口中 43 个一次投入领先；26 个「开局12月下跌」窗口中 22 个分批领先（独立博主，与我们 R25 结论一致）','CONFIRMED','R55','logs/transcript_v5_穷诸葛_红利之道3_节奏的账.txt');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F040','建仓','「账户浮亏转正所需月数」是退休提款方案的关键指标','2015-06 高点进场：一次投入 89 个月 vs 分批 12 个月 14 个月（差 6 倍）；价格回到起点 62 vs 41 个月','CONFIRMED','R55','logs/transcript_v5_穷诸葛_红利之道3_节奏的账.txt');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F041','认知','两个独立博主对自由现金流给出相反结论，数据支持「暂不纳入」','睡前投资课主推 1:1 组合（称 10 年 20.31%）；光总有话说明确拒绝（称样本外从 2025 开始、历史检验不够）；我们的验证支持后者','CONFIRMED','R46','reports/R46_6个视频分析_2026-10-20.md');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F042','风控','512890 在三个独立来源中都被评为最差红利低波 ETF','光总：再平衡一年一次（vs 半年）、费率 0.85%（vs 0.72%）；我们：前三大行业 58.3%、银行 52.5%','CONFIRMED','R46','reports/R46_6个视频分析_2026-10-20.md');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -115,6 +127,7 @@ INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,cor
 INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S10','ERP = 1/PE − 10Y','估值','ERP 分位<30% 降仓','2018','2026',0.439,0.0634,-0.203,0.31231527093596056,0.0843,-0.197,'TEMPERATURE','预测力最强但不可交易；Calmar 0.312 vs 0.428');
 INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S11','股息率 − 10Y 绝对利差','估值','利差分位<30% 降仓','2018','2026',0.227,0.0859,-0.196,0.43826530612244896,0.0843,-0.197,'FALSIFIED','Calmar 0.440 ≈ 满仓 0.428');
 INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S12','PE 6 个月动量','基本面','PE 6月涨幅分位≥0.7 降仓','2014','2026',-0.214,0.0545,-0.343,0.15889212827988336,0.1185,-0.425,'FALSIFIED','红利低波更差、中证红利略好，不一致');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S14','创业板/红利点数比价','风格','比价分位≥70% 卫星满 / ≤30% 空','2010','2026',0.394,0.0569,-0.436,0.1305045871559633,0.0604,-0.436,'FALSIFIED','预测力强(0.394)但作卫星驱动不如股息率分位(0.130 vs 0.142)；仅作监控，>0.7 是红利强买入信号');
 INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S13','纯回撤阶梯','价格','15/25/35/50% 各投 25%','2006','2026',NULL,NULL,NULL,NULL,NULL,NULL,'FALSIFIED','10年均值 2.483 < 一次性 3.210；急跌时一天跌穿');
 
 -- ── strategy ──
@@ -203,4 +216,6 @@ INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O0
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O02','建仓启动时填 config/pension_plan.yaml 的 entry.start_date','P1','目前是 null，监控工具会显示「建仓未启动」','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O03','每季度复核行业集中度（512890 银行 52.5%）','P2','用 ak.fund_portfolio_hold_em 取最新季度','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','今天做了 1 个（新博主）；还有 6 个待处理','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O06','评估东方红红利低波（ROE+预期股息率，费率0.72%，半年再平衡）','P2','光总认为其编制因子优于现有三只；可选替代部分 512890','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O07','监控「账户浮亏转正所需月数」','P2','穷诸葛：一次投入 89 月 vs 分批 14 月；纳入监控工具输出','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');
