@@ -41,7 +41,7 @@
   <div id="pn-alerts"></div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>一、核心信号 <span class="tag">股息率分位决定卫星仓</span></h2>
+    <h2>一、核心信号 <span class="tag">绝对股息率阈值决定卫星仓</span></h2>
     <div class="pn-grid" id="pn-signal" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-signal-note"></div>
   </div>
@@ -53,7 +53,7 @@
   </div>
 
   <div class="v2-card anim-fade-in-up d2" style="margin-top:14px">
-    <h2>三、股息率双视角 <span class="tag">5年分位 vs 20年绝对值</span></h2>
+    <h2>三、股息率历史位置 <span class="tag">20 年分布（交叉验证，不参与调仓）</span></h2>
     <div class="pn-grid" id="pn-divlevel" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-divlevel-note"></div>
   </div>
@@ -197,14 +197,14 @@
     var tr = d.track_record;
     if(tr){
       $('pn-track').innerHTML =
-        kpi('卖出信号次数', tr.n_sell, '分位≤30% 触发', '') +
+        kpi('卖出信号次数', tr.n_sell, '股息率≤2.5% 触发', '') +
         kpi('卖出后 12 个月', tr.sell_avg==null?'—':pp(tr.sell_avg), tr.sell_avg<0?'卖对了':'卖错了（还在涨）', tr.sell_avg<0?'good':'warn') +
-        kpi('买回信号次数', tr.n_buy, '分位≥70% 触发', '') +
+        kpi('买回信号次数', tr.n_buy, '股息率≥4.0% 触发', '') +
         kpi('买回后 12 个月', tr.buy_avg==null?'—':pp(tr.buy_avg), tr.buy_avg>0?'买对了':'买错了（还在跌）', tr.buy_avg>0?'good':'warn');
-      var rt = ['<tr><th>日期</th><th>信号</th><th>当时分位</th><th>之后 12 个月</th></tr>'];
+      var rt = ['<tr><th>日期</th><th>信号</th><th>当时股息率</th><th>之后 12 个月</th></tr>'];
       (tr.recent||[]).forEach(function(e){
         rt.push('<tr><td>'+e.date+'</td><td>'+(e.signal==='SELL'?'卖出':'买回')+'</td>'+
-          '<td>'+pct(e.pct,0)+'</td><td>'+pp(e.fwd)+'</td></tr>');
+          '<td>'+pct(e.pct)+'</td><td>'+pp(e.fwd)+'</td></tr>');
       });
       $('pn-track-recent').innerHTML = rt.join('');
       $('pn-track-note').innerHTML = '<b>判读：</b>卖出后平均<b>负</b>（卖对了）、买回后平均<b>正</b>（买对了），信号就还活着。' +
