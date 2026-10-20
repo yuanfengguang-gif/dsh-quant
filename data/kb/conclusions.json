@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-20T11:17:17",
+ "exported_at": "2026-10-20T16:03:36",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-20T11:17:17"
+    "value": "2026-10-20T16:03:36"
    },
    {
     "key": "description",
@@ -200,6 +200,15 @@
     "status": "closed",
     "verdict": "全部证伪；发现「预测力≠可交易性」（ERP 相关 0.439 但不可交易）",
     "report_path": "reports/R39_新择时信号探索.md"
+   },
+   {
+    "rid": "R73-R81",
+    "title": "配比对比 + 银行业趋势",
+    "rdate": "2026-10-20",
+    "topic": "策略",
+    "status": "done",
+    "verdict": "20 年全收益下 40/35/25 与 55/30/15 的 Calmar 相同（0.228），旧配比略优；515100 优势仅存在于 2014-2018；银行业 2025-2026 转强但属顺势",
+    "report_path": "reports/r80_longcompare.json"
    },
    {
     "rid": "R46-R55",
@@ -625,6 +634,51 @@
     "verdict": "CONFIRMED",
     "rid": "R56",
     "data_pointer": "reports/r56_entry_breakeven.json"
+   },
+   {
+    "fid": "F047",
+    "category": "策略",
+    "statement": "515100（红利低波100）的优势只存在于 2014-2018，2019 年后消失",
+    "evidence": "滚动3年新方案（55/30/15）跑赢旧方案（40/35/25）的占比：2014-2018 为 80%，2019-2021 降至 14%，2022-2026 仅 16%",
+    "verdict": "FALSIFIED",
+    "rid": "R80",
+    "data_pointer": "reports/r80_longcompare.json"
+   },
+   {
+    "fid": "F048",
+    "category": "策略",
+    "statement": "20 年全收益下两个配比的 Calmar 完全相同（0.228），旧配比略优",
+    "evidence": "旧 40/35/25：2478.1万/14.89%/-65.3%；新 55/30/15：2454.2万/14.83%/-65.0%；纯512890型 2517.2万/14.97%；纯515100型 2354.7万/14.60%",
+    "verdict": "CONFIRMED",
+    "rid": "R80",
+    "data_pointer": "reports/r80_longcompare.json"
+   },
+   {
+    "fid": "F049",
+    "category": "风险",
+    "statement": "银行业 2025-2026 转强，但此前连续 3 年落后",
+    "evidence": "银行 vs 红利低波：2022 差 -21.9pp（银行赢 0%）、2023 差 -31.7pp（0%）、2024 差 -26.9pp（0%）、2025-2026 差 +10.0pp（赢 82%）；近3年 +6.42pp",
+    "verdict": "CONFIRMED",
+    "rid": "R81",
+    "data_pointer": "reports/r81_bank.json"
+   },
+   {
+    "fid": "F050",
+    "category": "风险",
+    "statement": "银行的波动与最大跌幅在缩小（成熟期特征）",
+    "evidence": "波动：全期 19.59% → 近5年 16.66% → 近3年 16.20% → 近1年 14.67%；最大跌幅：-37.1% → -26.8% → -21.9% → -15.7%",
+    "verdict": "CONFIRMED",
+    "rid": "R81",
+    "data_pointer": "reports/r81_bank.json"
+   },
+   {
+    "fid": "F051",
+    "category": "认知",
+    "statement": "银行强弱是顺势指标，不是预测指标",
+    "evidence": "2022-2024 连续 3 年落后 22-32pp 后于 2025 反转；追涨在转折点会滞后吃亏。用途是追踪理解，不是自动调仓依据",
+    "verdict": "CONFIRMED",
+    "rid": "R81",
+    "data_pointer": "logs/_r81_bank.py"
    },
    {
     "fid": "F030",
@@ -1101,6 +1155,13 @@
     "what": "未验证就往脚本加「连续2个月过滤」提示",
     "impact": "若照做损失 0.6-2.4pp 年化",
     "fix": "已删除并改为实测表述"
+   },
+   {
+    "eid": "E18",
+    "edate": "2026-10-20",
+    "what": "用窗口依赖的回测结论（R68 的 2014-2026 窗口）指导配比调整，把 515100 权重从 40% 提到 55%",
+    "impact": "515100 的优势只在 2014-2018；2019 年后消失。新配比在真实 ETF 数据（2020-2026）上少赚 4.9 万，20 年全收益也略差",
+    "fix": "退回 40/35/25；新增「银行强弱监测」只追踪不自动调仓"
    },
    {
     "eid": "E17",

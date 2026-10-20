@@ -24,7 +24,14 @@ plan:
   assume_cpi: 0.02          # 计算下年提款额时假设的通胀（仅用于提示）
   backtest_window_years: 20 # 历史统计窗口
 
-# 资产配置（v2.3：40/35/25，因 512890 前三大行业 58.3%、银行 52.5%）
+# 硬约束（用户 2026-10-20 明确）
+constraints:
+  etf_only: true            # 只买 ETF，不买个股
+  no_leverage: true         # 不加杠杆
+  no_short: true            # 不做空
+  base_never_sell: true     # 底仓永不动
+
+# 资产配置（v2.4：40/35/25，维持原配比。R80 实测 20 年全收益旧方案略优，515100 优势 2019 后已消失）
 assets:
   - code: "515100"
     name: 红利低波100ETF景顺
@@ -109,3 +116,88 @@ state:
   last_check: null
   entry_invested: 0           # 已投建仓金额
   entry_remaining: 1500000    # 待投金额
+
+# 配对候选评估结果（R68 实测，2014-2026，加 15% 权重后相对纯红利低波）
+# 判定标准：牛市 / 震荡市 / 熊市 三者是否都优于纯红利
+# 数据口径：指数价格，按红利低波同期涨跌幅划分市场状态
+pairing_candidates:
+  # ── 三市全胜 ──
+  - index_code: "932365"
+    index_name: 中证全指自由现金流
+    etf: "563780 现金流全指ETF方正"
+    etf_alt: "159222 自由现金流ETF易方达"
+    weight_tested: 0.15
+    bull_pp: 1.8
+    range_pp: 1.0
+    bear_pp: 0.4
+    all_three_win: true
+    portfolio_ann: 0.0842
+    note: "年化最高；但 ETF 均上市约 1.5 年，流动性待验证"
+  - index_code: "930955"
+    index_name: 红利低波100
+    etf: "515100 红利低波100ETF景顺"
+    weight_tested: 0.15
+    bull_pp: 1.1
+    range_pp: 0.0
+    bear_pp: 0.6
+    all_three_win: true
+    portfolio_ann: 0.0772
+    drawdown_improve_pp: 1.1
+    note: "回撤改善最多；已在持仓中，只需调权重"
+  - index_code: "000932"
+    index_name: 中证主要消费
+    etf: "159928 消费ETF汇添富"
+    weight_tested: 0.15
+    bull_pp: 0.2
+    range_pp: 0.3
+    bear_pp: 1.1
+    all_three_win: true
+    portfolio_ann: 0.0771
+    note: "熊市最抗跌；牛市贡献小"
+
+  # ── 未通过三市全胜 ──
+  - index_code: "sz399006"
+    index_name: 创业板指
+    bull_pp: -0.3
+    range_pp: 1.0
+    bear_pp: 0.0
+    all_three_win: false
+    note: "牛市里反而拖累（波动太大侵蚀复利）"
+  - index_code: "000922"
+    index_name: 中证红利
+    all_three_win: false
+  - index_code: "000300"
+    index_name: 沪深300
+    all_three_win: false
+  - index_code: "000905"
+    index_name: 中证500
+    all_three_win: false
+  - index_code: "000919"
+    index_name: 中证价值
+    all_three_win: false
+  - index_code: "000933"
+    index_name: 中证医药卫生
+    all_three_win: false
+
+# 未来任务：探索仓（用户 2026-10-20 决定，暂不执行）
+exploration:
+  status: planned            # planned | active | closed
+  note: "等 AI 牛市真正出现、且主仓明显落后时再启动；不预先研究标的"
+  max_weight: 0.10           # 上限 10%（15 万）
+  source: satellite          # 从卫星仓腾出，不动底仓
+  tranches: 5                # 分 5 笔投入
+  stop_per_trade: 0.30       # 单笔亏 30% 卖出
+  stop_total: 0.50           # 总亏 50%（7.5 万）停止再投入
+  record_required: true      # 每笔必须写清：买什么/为什么/预期多久/何时卖
+
+# 银行强弱监测（用户 2026-10-20：只追踪，不自动调仓）
+bank_monitor:
+  enabled: true
+  index_code: "sz399986"          # 中证银行指数
+  index_name: 中证银行
+  benchmark: H30269               # 红利低波（对比基准）
+  window_years: 3                 # 滚动窗口
+  strong_threshold: 0.05          # 银行 3 年领先 >5pp → 强
+  weak_threshold: -0.10          # 银行 3 年落后 >10pp → 弱
+  action: "display_only"          # 只显示建议，不自动调仓
+  note: "本质是顺势指标，转折点会滞后；用户决定是否参考"

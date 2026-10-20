@@ -113,6 +113,71 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
     return out, "取数失败（东财+新浪均不可用）"
 
 
+def bank_strength(cfg: dict) -> dict | None:
+    """银行强弱监测（只追踪，不自动调仓）
+
+    计算：中证银行 过去 N 年 vs 红利低波 过去 N 年的年化收益差
+    返回：银行年化、红利年化、差值、判定（强/中/弱）
+    """
+    bm = cfg.get("bank_monitor", {})
+    if not bm.get("enabled"):
+        return None
+    win = float(bm.get("window_years", 3))
+    try:
+        import akshare as ak
+        d = ak.stock_zh_index_daily(symbol=bm.get("index_code", "sz399986"))
+        d.columns = [str(x) for x in d.columns]
+        d["date"] = pd.to_datetime(d["date"])
+        bank = d[["date", "close"]].rename(columns={"close": "bank"})
+    except Exception:
+        return None
+
+    with conn() as c:
+        ref = pd.read_sql_query(
+            "SELECT date,close FROM idx_daily WHERE code=? ORDER BY date",
+            c, params=(bm.get("benchmark", "H30269"),))
+    if len(ref) < 300:
+        return None
+    ref["date"] = pd.to_datetime(ref["date"])
+    ref = ref.rename(columns={"close": "div"})
+
+    m = bank.merge(ref, on="date").sort_values("date").reset_index(drop=True)
+    start = m["date"].iloc[-1] - pd.Timedelta(days=int(365.25 * win))
+    m = m[m["date"] >= start].reset_index(drop=True)
+    if len(m) < 100:
+        return None
+
+    yrs = (m["date"].iloc[-1] - m["date"].iloc[0]).days / 365.25
+    a_bank = (m["bank"].iloc[-1] / m["bank"].iloc[0]) ** (1 / yrs) - 1
+    a_div = (m["div"].iloc[-1] / m["div"].iloc[0]) ** (1 / yrs) - 1
+    diff = a_bank - a_div
+
+    strong = float(bm.get("strong_threshold", 0.05))
+    weak = float(bm.get("weak_threshold", -0.10))
+    if diff > strong:
+        level, hint = "强", "银行明显领先，512890 集中度暂不构成拖累"
+    elif diff < weak:
+        level, hint = "弱", "银行明显落后，考虑降低 512890 权重（用户决定）"
+    else:
+        level, hint = "中", "银行与红利基本同步，维持 25%"
+
+    # 近年趋势（每年一组，看方向）
+    m["yr"] = m["date"].dt.year
+    trend = []
+    for yr, g in m.groupby("yr"):
+        if len(g) < 100:
+            continue
+        rb = g["bank"].iloc[-1] / g["bank"].iloc[0] - 1
+        rd = g["div"].iloc[-1] / g["div"].iloc[0] - 1
+        trend.append({"year": int(yr), "bank": float(rb), "div": float(rd),
+                      "diff": float(rb - rd)})
+
+    return {"window_years": win, "start": str(m["date"].iloc[0])[:10],
+            "bank_ann": float(a_bank), "div_ann": float(a_div), "diff": float(diff),
+            "level": level, "hint": hint, "trend": trend,
+            "action": bm.get("action", "display_only")}
+
+
 def entry_breakeven_stats(cfg: dict) -> dict | None:
     """计算「按本计划建仓，账户浮亏转正所需月数」的历史分布。
 
@@ -358,8 +423,13 @@ def main() -> int:
         L.append("_行情取数失败（网络或接口问题），**不影响信号判断**_")
     L.append("")
 
+    L.append("## 五、建仓进度")
+    if not progress:
+        L.append("")
+        L.append("**未启动** —— `config/pension_plan.yaml` 的 `entry.start_date` 还是 null。")
+        L.append("开始建仓时填写该日期，本工具会自动追踪进度与兜底倒计时。")
+        L.append("")
     if progress:
-        L.append("## 五、建仓进度")
         L.append("")
         L.append("| 项目 | 数值 |")
         L.append("|---|---|")
@@ -376,10 +446,38 @@ def main() -> int:
         L.append(f"| 兜底 | 第 {ent['wait_deadline_months']} 个月末 | **无条件投完** |")
         L.append("")
 
+    # ── 银行强弱监测（只追踪，不自动调仓）
+    bst = bank_strength(cfg)
+    if bst:
+        L.append("## 六、银行强弱监测（只追踪，不自动调仓）")
+        L.append("")
+        L.append(f"> 中证银行 vs 红利低波，滚动 {bst['window_years']:.0f} 年"
+                 f"（{bst['start']} 起算）")
+        L.append("")
+        L.append("| 项目 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| 中证银行 年化 | {bst['bank_ann']:.2%} |")
+        L.append(f"| 红利低波 年化 | {bst['div_ann']:.2%} |")
+        L.append(f"| **差值（银行 − 红利）** | **{bst['diff']*100:+.2f}pp** |")
+        L.append(f"| **判定** | **{bst['level']}** |")
+        L.append(f"| 提示 | {bst['hint']} |")
+        L.append("")
+        L.append("**逐年分解：**")
+        L.append("")
+        L.append("| 年份 | 银行 | 红利低波 | 差值 |")
+        L.append("|---|---|---|---|")
+        for t in bst["trend"]:
+            L.append(f"| {t['year']} | {t['bank']:+.2%} | {t['div']:+.2%} | "
+                     f"**{t['diff']*100:+.2f}pp** |")
+        L.append("")
+        L.append("> ⚠️ **这是顺势指标，不是预测指标。** 银行走强可能已接近末期"
+                 "（2022-2024 曾连续 3 年落后 22-32pp 后反转）。"
+                 "**只用于追踪理解，是否调整权重由你决定。**")
+
     # ── 建仓期回本参考
     bes = entry_breakeven_stats(cfg)
     if bes:
-        L.append("## 六、建仓期回本参考（历史统计）")
+        L.append("## 七、建仓期回本参考（历史统计）")
         L.append("")
         L.append(f"> 模拟「{ent.get('immediate_amount', 0):,} 元分 {ent.get('immediate_months', 3)} 个月 + "
                  f"{ent.get('wait_amount', 0):,} 元第 {ent.get('wait_deadline_months', 12)} 个月投完」，"
@@ -399,7 +497,7 @@ def main() -> int:
                  "我们的计划因「等 12 个月」，中位 12 个月即转正。")
 
     if args.history > 0:
-        L.append(f"## 七、过去 {args.history} 个月信号历史")
+        L.append(f"## 八、过去 {args.history} 个月信号历史")
         L.append("")
         L.append("| 月份 | 股息率 | 分位 | 信号 |")
         L.append("|---|---|---|---|")
