@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-20 16:03:36
+-- 导出时间：2026-10-20 16:12:42
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T16:03:36');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T16:12:41');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -229,4 +229,5 @@ INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O0
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','今天做了 1 个（新博主）；还有 6 个待处理','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O06','评估东方红红利低波（ROE+预期股息率，费率0.72%，半年再平衡）','P2','光总认为其编制因子优于现有三只；可选替代部分 512890','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O07','监控「账户浮亏转正所需月数」','P2','穷诸葛：一次投入 89 月 vs 分批 14 月；纳入监控工具输出','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O08','验证：股息率分位该用 5 年还是 20 年窗口','P1','当前 5 年分位=39%（中性）但 20 年绝对值位置=82%（很便宜），两者冲突；可能一直在该买时说不动','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');

@@ -16,7 +16,8 @@
   var MORE = [
     { id: 'report',  label: '日报', ic: 'doc',  url: '/report' },
     { id: 'data',    label: '数据', ic: 'db',   url: '/data' },
-    { id: 'help',    label: '说明', ic: 'help', url: '/help' }
+    { id: 'pension', label: '养老', ic: 'target', url: '/pension' },
+  { id: 'help',    label: '说明', ic: 'help', url: '/help' }
   ];
 
   window.LW = window.LW || {};

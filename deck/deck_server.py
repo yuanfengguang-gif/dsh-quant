@@ -262,8 +262,17 @@ class Handler(BaseHTTPRequestHandler):
             return self._v2_page("control.html", "control missing")
         if path == "/etf" or path == "/etf.html":   # ★2026-08-15 ETF 映射页（配置类：策略暴露→ETF 相关性/pitch/小资金配置）
             return self._v2_page("etf.html", "etf missing")
+        if path == "/pension" or path == "/pension.html":   # 2026-10-20 养老方案面板（读 /api/pension，配置驱动）
+            return self._v2_page("pension.html", "pension missing")
         if path == "/pitchtrack" or path == "/pitchtrack.html":   # ★2026-08-15 主观多池远期（5 池对比 + 牛散决策者分组）
             return self._v2_page("pitchtrack.html", "pitchtrack missing")
+        if path == "/api/pension":   # 2026-10-20 养老方案数据（config/pension_plan.yaml 驱动，实时计算）
+            try:
+                sys.path.insert(0, str(BASE))
+                from deck.pension_api import pension_data
+                return self._send_json(pension_data())
+            except Exception as e:
+                return self._send_json({"ok": False, "error": f"{type(e).__name__}: {e}"})
         if path == "/api/harness":   # ★2026-08-15 harness 状态快照（output/harness_state.json，agent 维护）
             try:
                 _hs = BASE / "output" / "harness_state.json"

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Deepseek HARNESS Quant · 养老方案</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/v2/assets/ui_common.css">
+<link rel="stylesheet" href="/v2/assets/anim_common.css">
+<link rel="stylesheet" href="/v2/assets/app.css">
+<style>
+  .pn-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+  .pn-kpi { border:1px solid #2a2a30; background:#131316; border-radius:8px; padding:12px 14px; }
+  .pn-kpi .lb { font-size:11px; color:#a1a1aa; letter-spacing:.02em; }
+  .pn-kpi .vl { font-size:22px; font-weight:700; color:#f4f4f5; margin-top:4px; font-variant-numeric:tabular-nums; }
+  .pn-kpi .hint { font-size:11px; color:#71717a; margin-top:4px; }
+  .pn-kpi.good .vl { color:#22c55e; }
+  .pn-kpi.warn .vl { color:#f59e0b; }
+  .pn-kpi.bad  .vl { color:#ef4444; }
+  .pn-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+  .pn-tbl th { text-align:left; color:#a1a1aa; font-weight:600; padding:7px 9px; border-bottom:1px solid rgba(255,255,255,.12); font-size:11px; }
+  .pn-tbl td { padding:7px 9px; border-bottom:1px solid rgba(255,255,255,.06); font-variant-numeric:tabular-nums; }
+  .pn-tbl tr:last-child td { border-bottom:none; }
+  .pn-chip { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .pn-chip.ok   { background:rgba(34,197,94,.15);  color:#22c55e; }
+  .pn-chip.warn { background:rgba(245,158,11,.15); color:#f59e0b; }
+  .pn-chip.bad  { background:rgba(239,68,68,.15);  color:#ef4444; }
+  .pn-chip.hint { background:rgba(94,106,210,.15); color:#818cf8; }
+  .pn-note { font-size:12px; color:#a1a1aa; line-height:1.7; margin-top:8px; }
+  .pn-alert { padding:8px 12px; border-left:3px solid #ef4444; background:rgba(239,68,68,.08); border-radius:4px; margin:6px 0; font-size:12px; }
+  .pn-none { color:#71717a; font-size:12px; padding:10px 0; }
+</style>
+</head>
+<body style="background:var(--bg);margin:0">
+<div id="sidebar"></div>
+<div class="v2-wrap">
+  <div class="v2-h"><span class="bar"></span><h1>养老方案</h1>
+    <span class="sub">红利低波 · 卫星仓择时 · 银行追踪 · 建仓进度</span>
+    <span id="pn-asof" class="tag" style="margin-left:auto">—</span>
+  </div>
+
+  <div id="pn-alerts"></div>
+
+  <div class="v2-card anim-fade-in-up" style="margin-top:14px">
+    <h2>一、核心信号 <span class="tag">股息率分位决定卫星仓</span></h2>
+    <div class="pn-grid" id="pn-signal" style="margin-top:8px">加载中…</div>
+    <div class="pn-note" id="pn-signal-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
+    <h2>二、配比与行业集中度 <span class="tag">按配置权重实时计算</span></h2>
+    <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-assets"></table></div>
+    <div class="pn-note" id="pn-ind-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d2" style="margin-top:14px">
+    <h2>三、股息率双视角 <span class="tag">5年分位 vs 20年绝对值</span></h2>
+    <div class="pn-grid" id="pn-divlevel" style="margin-top:8px">加载中…</div>
+    <div class="pn-note" id="pn-divlevel-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
+    <h2>四、银行强弱监测 <span class="tag">只追踪，不自动调仓</span></h2>
+    <div class="pn-grid" id="pn-bank" style="margin-top:8px">加载中…</div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-bank-trend"></table></div>
+    <div class="pn-note" id="pn-bank-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
+    <h2>五、信号历史战绩 <span class="tag">防失效</span></h2>
+    <div class="pn-grid" id="pn-track" style="margin-top:8px">加载中…</div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-track-recent"></table></div>
+    <div class="pn-note" id="pn-track-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up" style="margin-top:14px">
+    <h2>六、建仓进度与回本参考</h2>
+    <div class="pn-grid" id="pn-entry" style="margin-top:8px">加载中…</div>
+    <div class="pn-note" id="pn-entry-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up" style="margin-top:14px">
+    <h2>七、ETF 行情 <span class="tag" id="pn-price-src">—</span></h2>
+    <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-prices"></table></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up" style="margin-top:14px">
+    <h2>八、配对候选与未来任务 <span class="tag">来自配置</span></h2>
+    <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-pairing"></table></div>
+    <div class="pn-note" id="pn-explore-note"></div>
+  </div>
+</div>
+
+<script src="/v2/core/api.js"></script>
+<script src="/v2/core/render.js"></script>
+<script src="/v2/components/icons.js"></script>
+<script src="/v2/components/sidebar.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  function pct(x, d){ return (x==null||isNaN(x)) ? '—' : (x*100).toFixed(d==null?2:d)+'%'; }
+  function pp(x, d){ return (x==null||isNaN(x)) ? '—' : (x>=0?'+':'')+(x*100).toFixed(d==null?2:d)+'pp'; }
+  function wan(x){ return (x==null||isNaN(x)) ? '—' : (x/10000).toFixed(1)+' 万'; }
+  function kpi(lb, vl, hint, cls){
+    return '<div class="pn-kpi '+(cls||'')+'"><div class="lb">'+lb+'</div>'+
+           '<div class="vl">'+vl+'</div>'+(hint?'<div class="hint">'+hint+'</div>':'')+'</div>';
+  }
+
+  function render(d){
+    if(!d || !d.ok){
+      $('pn-signal').innerHTML = '<div class="pn-none">加载失败：'+(d&&d.error?d.error:'未知')+'</div>';
+      return;
+    }
+    $('pn-asof').textContent = '数据截止 ' + (d.signal && d.signal.last_date ? d.signal.last_date : d.asof);
+
+    // 报警
+    var al = d.alerts || [];
+    $('pn-alerts').innerHTML = al.length
+      ? al.map(function(a){ return '<div class="pn-alert"><b>'+a.title+'</b>：'+a.detail+'</div>'; }).join('')
+      : '';
+
+    // 一、核心信号
+    var s = d.signal || {};
+    var p = s.percentile;
+    var cls = (p==null) ? '' : (p<=s.expensive ? 'bad' : (p>=s.cheap ? 'good' : ''));
+    $('pn-signal').innerHTML =
+      kpi('股息率（年化分红/价格）', pct(s.dividend_yield), '红利低波指数', '') +
+      kpi('5 年分位', pct(p,0), '0%=最贵 100%=最便宜', cls) +
+      kpi('动作', s.action || '—', '卖出≤'+pct(s.expensive,0)+' / 买回≥'+pct(s.cheap,0), cls) +
+      kpi('指数', s.index || '—', s.index_name || '', '');
+    $('pn-signal-note').innerHTML = '分位 = 当前股息率在近 5 年里的排名。' +
+      '<b>排名低（≤30%）说明现在贵（分红相对价格少），卖卫星仓；排名高（≥70%）说明便宜，买回。</b>' +
+      '中间区间不动。该信号 20 年只调仓约 11 次，不需要频繁操作。';
+
+    // 二、配比
+    var rows = ['<tr><th>代码</th><th>名称</th><th>权重</th><th>金额</th><th>前三大行业</th><th>银行占比</th><th>判定</th></tr>'];
+    (d.assets||[]).forEach(function(a){
+      var ok3 = (a.top3_industry!=null && a.top3_industry < 0.5);
+      rows.push('<tr><td>'+a.code+'</td><td>'+a.name+'</td><td>'+pct(a.weight,0)+'</td><td>'+wan(a.amount)+'</td>'+
+        '<td>'+pct(a.top3_industry,1)+'</td><td>'+pct(a.bank_share,1)+'</td>'+
+        '<td>'+(ok3?'<span class="pn-chip ok">合格</span>':'<span class="pn-chip warn">偏高</span>')+'</td></tr>');
+    });
+    var pi = d.portfolio_industry || {};
+    rows.push('<tr><td colspan="2"><b>加权组合</b></td><td>100%</td><td>'+wan(d.plan.capital)+'</td>'+
+      '<td><b>'+pct(pi.top3,1)+'</b></td><td><b>'+pct(pi.bank,1)+'</b></td>'+
+      '<td>'+(pi.top3<0.5?'<span class="pn-chip ok">合格</span>':'<span class="pn-chip warn">偏高</span>')+'</td></tr>');
+    $('pn-assets').innerHTML = rows.join('');
+    $('pn-ind-note').innerHTML = '行业集中度 = 前三大行业占净值比例。' +
+      '<b>超过 50% 说明押注单一行业，风险大。</b>512890 银行占 52.5%，所以只给 25% 权重。';
+
+    // 三、股息率双视角
+    var dl = d.dividend_level;
+    if(dl){
+      var gap = dl.pctile_now - (p==null?0:p);
+      $('pn-divlevel').innerHTML =
+        kpi('当前股息率', pct(dl.cur), '历史区间 '+pct(dl.min)+' ~ '+pct(dl.max), '') +
+        kpi('20 年历史位置', pct(dl.pctile_now,0), '0%=最贵 100%=最便宜', dl.pctile_now>0.7?'good':'') +
+        kpi('差（20年位置 − 5年分位）', pp(gap), '越大说明两者分歧越大', Math.abs(gap)>0.2?'warn':'');
+      var q = dl.pct || {};
+      var heads = ['5%','10%','25%','50%','75%','90%','95%'];
+      var keys = [5,10,25,50,75,90,95];
+      var r2 = ['<tr><th>历史分位点</th>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>'];
+      r2.push('<tr><td>对应股息率</td>'+keys.map(function(k){return '<td>'+pct(q[k])+'</td>';}).join('')+'</tr>');
+      $('pn-divlevel').innerHTML += '';
+      $('pn-divlevel-note').innerHTML = '<b>⚠️ 两个视角会打架：</b>5 年分位说「'+pct(p,0)+'」，20 年绝对值说「'+pct(dl.pctile_now,0)+'」。' +
+        '原因是近 5 年股息率普遍偏高，所以 5.25% 在 5 年里算低、在 20 年里算高。' +
+        '<b>这是已知问题，待验证（是否该改用 20 年分位）。</b>' +
+        '<div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl">'+r2.join('')+'</table></div>';
+    } else {
+      $('pn-divlevel').innerHTML = '<div class="pn-none">无数据</div>';
+    }
+
+    // 四、银行
+    var b = d.bank;
+    if(b){
+      var bcls = b.level==='强' ? 'good' : (b.level==='弱' ? 'bad' : 'warn');
+      $('pn-bank').innerHTML =
+        kpi('中证银行 3 年年化', pct(b.bank_ann), '窗口 '+b.start+' 起', '') +
+        kpi('红利低波 3 年年化', pct(b.div_ann), '', '') +
+        kpi('差值', pp(b.diff), '银行 − 红利', bcls) +
+        kpi('判定', b.level, b.hint, bcls);
+      var t = ['<tr><th>年份</th><th>银行</th><th>红利低波</th><th>差值</th></tr>'];
+      (b.trend||[]).forEach(function(x){
+        t.push('<tr><td>'+x.year+'</td><td>'+pct(x.bank)+'</td><td>'+pct(x.div)+'</td>'+
+          '<td><b>'+pp(x.diff)+'</b></td></tr>');
+      });
+      $('pn-bank-trend').innerHTML = t.join('');
+      $('pn-bank-note').innerHTML = '<b>只追踪，不自动调仓。</b>银行走强可能是估值修复的尾声' +
+        '（2022-2024 曾连续 3 年落后 22-32pp 后反转）。是否调整 512890 权重由你决定。';
+    } else {
+      $('pn-bank').innerHTML = '<div class="pn-none">无数据（可能需要联网）</div>';
+    }
+
+    // 五、战绩
+    var tr = d.track_record;
+    if(tr){
+      $('pn-track').innerHTML =
+        kpi('卖出信号次数', tr.n_sell, '分位≤30% 触发', '') +
+        kpi('卖出后 12 个月', tr.sell_avg==null?'—':pp(tr.sell_avg), tr.sell_avg<0?'卖对了':'卖错了（还在涨）', tr.sell_avg<0?'good':'warn') +
+        kpi('买回信号次数', tr.n_buy, '分位≥70% 触发', '') +
+        kpi('买回后 12 个月', tr.buy_avg==null?'—':pp(tr.buy_avg), tr.buy_avg>0?'买对了':'买错了（还在跌）', tr.buy_avg>0?'good':'warn');
+      var rt = ['<tr><th>日期</th><th>信号</th><th>当时分位</th><th>之后 12 个月</th></tr>'];
+      (tr.recent||[]).forEach(function(e){
+        rt.push('<tr><td>'+e.date+'</td><td>'+(e.signal==='SELL'?'卖出':'买回')+'</td>'+
+          '<td>'+pct(e.pct,0)+'</td><td>'+pp(e.fwd)+'</td></tr>');
+      });
+      $('pn-track-recent').innerHTML = rt.join('');
+      $('pn-track-note').innerHTML = '<b>判读：</b>卖出后平均<b>负</b>（卖对了）、买回后平均<b>正</b>（买对了），信号就还活着。' +
+        '如果反过来，说明信号可能失效。共 '+tr.n_total+' 次触发。';
+    } else {
+      $('pn-track').innerHTML = '<div class="pn-none">无数据</div>';
+    }
+
+    // 六、建仓
+    var e = d.entry_progress || {};
+    var be = d.breakeven || {};
+    var eh = '';
+    if(e.started){
+      eh = kpi('建仓已过', e.months_passed+' 个月', '起始 '+e.start, '') +
+           kpi('剩余', e.months_remaining+' 个月', '兜底 '+e.deadline, e.due?'bad':'') +
+           kpi('状态', e.due?'该投完了':'继续等', '', e.due?'bad':'');
+    } else {
+      eh = kpi('建仓', '未启动', 'config 的 entry.start_date 仍是 null', 'warn') +
+           kpi('计划立即投', wan(d.entry.immediate_amount), '分 '+d.entry.immediate_months+' 个月', '') +
+           kpi('计划等待投', wan(d.entry.wait_amount), '第 '+d.entry.wait_deadline_months+' 个月末', '');
+    }
+    if(be){
+      eh += kpi('回本中位', be.median+' 个月', '投完后账户转正', '') +
+            kpi('回本最坏', be.worst+' 个月', 'P90 '+be.p90+' 个月', 'warn');
+    }
+    $('pn-entry').innerHTML = eh;
+    $('pn-entry-note').innerHTML = '<b>回本月数</b> = 按本计划建仓后，账户从浮亏回到不亏所需月数。' +
+      '历史 '+ (be.n||0) +' 个起点中，'+pct(be.pct_immediate,0)+' 的起点投完即转正。';
+
+    // 七、价格
+    var pr = d.prices || {};
+    $('pn-price-src').textContent = pr.source || '—';
+    var pt = ['<tr><th>代码</th><th>名称</th><th>价格</th></tr>'];
+    (d.assets||[]).forEach(function(a){
+      pt.push('<tr><td>'+a.code+'</td><td>'+a.name+'</td><td>'+
+        ((pr.data&&pr.data[a.code])?pr.data[a.code].toFixed(3):'—')+'</td></tr>');
+    });
+    $('pn-prices').innerHTML = pt.join('');
+
+    // 八、配对候选
+    var pc = d.pairing_candidates || [];
+    var pct_ = ['<tr><th>指数</th><th>跟踪 ETF</th><th>牛市</th><th>震荡</th><th>熊市</th><th>三市全胜</th><th>备注</th></tr>'];
+    pc.forEach(function(c){
+      pct_.push('<tr><td>'+(c.index_name||'')+'</td><td>'+(c.etf||'—')+'</td>'+
+        '<td>'+(c.bull_pp==null?'—':pp(c.bull_pp/100))+'</td>'+
+        '<td>'+(c.range_pp==null?'—':pp(c.range_pp/100))+'</td>'+
+        '<td>'+(c.bear_pp==null?'—':pp(c.bear_pp/100))+'</td>'+
+        '<td>'+(c.all_three_win?'<span class="pn-chip ok">是</span>':'<span class="pn-chip bad">否</span>')+'</td>'+
+        '<td style="font-size:11px;color:#a1a1aa">'+(c.note||'')+'</td></tr>');
+    });
+    $('pn-pairing').innerHTML = pct_.join('');
+    var ex = d.exploration || {};
+    if(ex.status){
+      $('pn-explore-note').innerHTML = '<b>探索仓（未来任务，当前不执行）：</b>' +
+        '状态 '+ex.status+'；上限 '+pct(ex.max_weight,0)+'（'+wan(d.plan.capital*(ex.max_weight||0))+'）；' +
+        '来源 '+ex.source+'；分 '+(ex.tranches||'—')+' 笔；单笔亏 '+pct(ex.stop_per_trade,0)+' 卖出；' +
+        '总亏 '+pct(ex.stop_total,0)+' 停止再投。<br><b>'+(ex.note||'')+'</b>';
+    }
+  }
+
+  LW.api.get('/api/pension').then(function(d){
+    render(d);
+    if(LW.render && LW.render.after) LW.render.after();
+  }).catch(function(e){
+    $('pn-signal').innerHTML = '<div class="pn-none">请求失败：'+e+'</div>';
+  });
+})();
+</script>
+</body>
+</html>

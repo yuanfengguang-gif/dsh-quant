@@ -178,6 +178,84 @@ def bank_strength(cfg: dict) -> dict | None:
             "action": bm.get("action", "display_only")}
 
 
+def dividend_level(cfg: dict) -> dict | None:
+    """股息率绝对值的历史区间（交叉验证分位信号，因为分位会漂移）"""
+    code = cfg["signals"]["dividend_pct"]["index_code"]
+    d = load_index(code)
+    v = d["dy_ttm"].dropna()
+    if len(v) < 500:
+        return None
+    cur = float(v.iloc[-1])
+    qs = {p: float(np.percentile(v, p)) for p in (5, 10, 25, 50, 75, 90, 95)}
+    return {"cur": cur, "min": float(v.min()), "max": float(v.max()),
+            "mean": float(v.mean()), "pct": qs,
+            "pctile_now": float((v < cur).mean()), "n": int(len(v))}
+
+
+def signal_track_record(cfg: dict, horizon_months: int = 12) -> dict | None:
+    """信号历史战绩：每次触发后未来 N 个月的实际收益（用于监控信号是否失效）"""
+    sig = cfg["signals"]["dividend_pct"]
+    d = load_index(sig["index_code"])
+    tr_code = {"H30269": "H20269", "000922": "H00922"}.get(sig["index_code"], "H20269")
+    with conn() as c:
+        t = pd.read_sql_query("SELECT date,close FROM idx_daily WHERE code=? ORDER BY date",
+                              c, params=(tr_code,))
+    t["date"] = pd.to_datetime(t["date"])
+    d = d.merge(t.rename(columns={"close": "tr"}), on="date", how="left")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.sort_values("date").reset_index(drop=True)
+    d["pct"] = rolling_pct(d["dy_ttm"].to_numpy(float), int(sig["window"]))
+    exp, cheap = float(sig["expensive"]), float(sig["cheap"])
+    mo = d.set_index("date")[["pct", "tr"]].resample("ME").last().reset_index()
+    mo["sig"] = np.where(mo["pct"] <= exp, "SELL",
+                         np.where(mo["pct"] >= cheap, "BUY", ""))
+    events, prev = [], ""
+    for _, r in mo.iterrows():
+        s = r["sig"]
+        if s and s != prev:
+            events.append((r["date"], s, r["pct"], r["tr"]))
+            prev = s
+    out = []
+    for dt, s, p, tr0 in events:
+        idx = mo.index[mo["date"] >= dt + pd.DateOffset(months=horizon_months)]
+        if len(idx) == 0 or pd.isna(tr0) or pd.isna(mo.loc[idx[0], "tr"]):
+            continue
+        out.append({"date": str(dt)[:10], "signal": s, "pct": float(p),
+                    "fwd": float(mo.loc[idx[0], "tr"] / tr0 - 1)})
+    if not out:
+        return None
+    sells = [e for e in out if e["signal"] == "SELL"]
+    buys = [e for e in out if e["signal"] == "BUY"]
+    return {"horizon": horizon_months, "n_total": len(out),
+            "n_sell": len(sells), "n_buy": len(buys),
+            "sell_avg": float(np.mean([e["fwd"] for e in sells])) if sells else None,
+            "buy_avg": float(np.mean([e["fwd"] for e in buys])) if buys else None,
+            "recent": out[-6:]}
+
+
+def price_alerts(cfg: dict, asof: str) -> list:
+    """价格异常报警（只基于指数，不需要持仓数据）"""
+    out = []
+    code = cfg["signals"]["dividend_pct"]["index_code"]
+    tr_code = {"H30269": "H20269", "000922": "H00922"}.get(code, "H20269")
+    with conn() as c:
+        t = pd.read_sql_query("SELECT date,close FROM idx_daily WHERE code=? ORDER BY date",
+                              c, params=(tr_code,))
+    t["date"] = pd.to_datetime(t["date"])
+    t = t[t["date"] <= pd.Timestamp(asof)].reset_index(drop=True)
+    if len(t) < 10:
+        return out
+    d1 = float(t["close"].pct_change().dropna().iloc[-1])
+    d5 = float(t["close"].iloc[-1] / t["close"].iloc[-6] - 1) if len(t) > 6 else 0.0
+    if d1 <= -0.05:
+        out.append(("单日大跌", f"今日跌 {d1:.1%}（阈值 -5%）→ 不要看价格，看信号"))
+    if d5 <= -0.08:
+        out.append(("一周大跌", f"近 5 日跌 {d5:.1%}（阈值 -8%）→ 检查现金池是否够用"))
+    if d5 >= 0.10:
+        out.append(("一周大涨", f"近 5 日涨 {d5:.1%} → 检查是否该卖卫星仓（看分位）"))
+    return out
+
+
 def entry_breakeven_stats(cfg: dict) -> dict | None:
     """计算「按本计划建仓，账户浮亏转正所需月数」的历史分布。
 
@@ -518,6 +596,67 @@ def main() -> int:
 
     L.append("---")
     L.append("")
+    # ── 股息率绝对值（交叉验证分位）
+    dl = dividend_level(cfg)
+    if dl:
+        L.append("## 九、股息率绝对值（交叉验证分位）")
+        L.append("")
+        L.append(f"> 分位会随窗口漂移，绝对值不会。两者一起看更可靠。"
+                 f"（样本 {dl['n']} 个交易日）")
+        L.append("")
+        L.append("| 项目 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| **当前股息率** | **{dl['cur']:.2%}** |")
+        L.append(f"| 当前在历史中的位置 | **{dl['pctile_now']:.0%}**（0%=最低，100%=最高） |")
+        L.append(f"| 历史区间 | {dl['min']:.2%} ~ {dl['max']:.2%} |")
+        L.append(f"| 历史均值 | {dl['mean']:.2%} |")
+        L.append("")
+        L.append("| 历史分位点 | 5% | 10% | 25% | 50% | 75% | 90% | 95% |")
+        L.append("|---|---|---|---|---|---|---|---|")
+        L.append("| 对应股息率 | " + " | ".join(
+            f"{dl['pct'][k]:.2%}" for k in (5, 10, 25, 50, 75, 90, 95)) + " |")
+        L.append("")
+
+    # ── 信号历史战绩（是否失效）
+    strk = signal_track_record(cfg)
+    if strk:
+        L.append("## 十、信号历史战绩（防失效）")
+        L.append("")
+        L.append(f"> 每次信号触发后 {strk['horizon']} 个月，红利低波全收益的实际涨跌。"
+                 f"共 {strk['n_total']} 次触发。")
+        L.append("")
+        L.append("| 信号 | 触发次数 | 之后 12 个月平均 |")
+        L.append("|---|---|---|")
+        if strk["sell_avg"] is not None:
+            L.append(f"| 卖出信号（分位≤30%） | {strk['n_sell']} | **{strk['sell_avg']:+.2%}** |")
+        if strk["buy_avg"] is not None:
+            L.append(f"| 买回信号（分位≥70%） | {strk['n_buy']} | **{strk['buy_avg']:+.2%}** |")
+        L.append("")
+        L.append("**最近 6 次触发：**")
+        L.append("")
+        L.append("| 日期 | 信号 | 分位 | 之后 12 个月 |")
+        L.append("|---|---|---|---|")
+        for e in strk["recent"]:
+            L.append(f"| {e['date']} | {'卖出' if e['signal']=='SELL' else '买回'} | "
+                     f"{e['pct']:.0%} | {e['fwd']:+.2%} |")
+        L.append("")
+        L.append("> 📌 **判读方法**：卖出信号后如果平均是**负的**（说明卖对了），买回信号后如果"
+                 "平均是**正的**（说明买对了），信号就还活着。如果两者反过来，信号可能已失效。")
+
+    # ── 价格异常报警
+    alerts = price_alerts(cfg, asof)
+    L.append("## 十一、异常报警")
+    L.append("")
+    if alerts:
+        for a, b in alerts:
+            L.append(f"- **{a}**：{b}")
+    else:
+        L.append("_今日无异常（单日跌超 5% / 5 日跌超 8% / 5 日涨超 10% 才报）_")
+    L.append("")
+    L.append("> 报警只基于指数价格，**不需要持仓数据**。")
+    L.append("> 现金池水位、权重漂移、提款进度这几项需要实际持仓金额，"
+             "等开始建仓填写 `entry.start_date` 后再启用。")
+
     L.append("## 附：本工具不做什么")
     L.append("")
     L.append("| 不做 | 原因 |")
