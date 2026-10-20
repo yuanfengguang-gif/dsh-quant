@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-20T17:21:56",
+ "exported_at": "2026-10-20T17:49:16",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-20T17:21:55"
+    "value": "2026-10-20T17:49:15"
    },
    {
     "key": "description",
@@ -789,6 +789,60 @@
     "data_pointer": "logs/_r96_recent_and_emergency.py"
    },
    {
+    "fid": "F063",
+    "category": "策略",
+    "statement": "现行绝对值方案（2.5%/4.0%）在全期与分期间都优于永不动，但优势全部来自 2006-2013",
+    "evidence": "分期间：2006-2013 信号 14.78% vs 永不动 13.58%（+1.20pp）、回撤 -52.2% vs -66.2%；2014-2019 与 2020-2026 差异均为 +0.00pp（因一直满仓未触发）",
+    "verdict": "CONFIRMED",
+    "rid": "R101",
+    "data_pointer": "logs/_r101_o09_fix.py"
+   },
+   {
+    "fid": "F064",
+    "category": "策略",
+    "statement": "阈值在 2.3-2.7% × 3.8-4.2% 区间内结果完全相同（极稳健）",
+    "evidence": "9 个组合 Calmar 均为 0.250、年化 13.06%、调仓 2 次；因为 20 年只穿越阈值 2 次，区间内任何取值都捕捉到同两次",
+    "verdict": "CONFIRMED",
+    "rid": "R101",
+    "data_pointer": "logs/_r101_o09_fix.py"
+   },
+   {
+    "fid": "F065",
+    "category": "策略",
+    "statement": "换起始点后，只有含 2008 的窗口才有优势（2012 年后起算完全无用）",
+    "evidence": "10 年窗口 Calmar 差异：2006 起 +8.3、2008 起 +5.7、2010 起 +1.1、2012 起 -0.1、2014 起 0.0、2016 起 0.0",
+    "verdict": "CONFIRMED",
+    "rid": "R101",
+    "data_pointer": "logs/_r101_o09_fix.py"
+   },
+   {
+    "fid": "F066",
+    "category": "信号",
+    "statement": "六类替代择时方案都不如现行绝对股息率方案（除 E 但 E 的优势是假象）",
+    "evidence": "Calmar：A 现行 0.295 / E 双条件 0.300 / F MA250 0.268 / D 3年高点 0.254 / B 股债比 0.232 / C 回撤触发 0.221 / 永不动 0.226",
+    "verdict": "CONFIRMED",
+    "rid": "R102",
+    "data_pointer": "logs/_r102_o08_alternatives.py"
+   },
+   {
+    "fid": "F067",
+    "category": "信号",
+    "statement": "E（股息率+回撤双条件）的优势是「卖出晚一个月」的运气，不是机制改进",
+    "evidence": "A 卖于 2007-07-31，E 卖于 2007-08-31，买回均为 2013-06-30；两者仅差一个月，Calmar 差 0.005 属样本内噪声",
+    "verdict": "FALSIFIED",
+    "rid": "R104",
+    "data_pointer": "logs/_r104_e_vs_a.py"
+   },
+   {
+    "fid": "F068",
+    "category": "信号",
+    "statement": "v1 博主提出的「回撤≥10% 就上车」在本策略里反而变差",
+    "evidence": "回撤触发方案 Calmar 0.203-0.221，全部低于永不动的 0.226；原因是回撤不看估值，会在 2015 年高位回调时错误加仓",
+    "verdict": "FALSIFIED",
+    "rid": "R102",
+    "data_pointer": "logs/_r102_o08_alternatives.py"
+   },
+   {
     "fid": "F030",
     "category": "认知",
     "statement": "博主给的数据基本可信，但指标解释常出错",
@@ -1355,10 +1409,10 @@
   "open_item": [
    {
     "oid": "O01",
-    "title": "说明书更新到 v2.4（全卖表述、16.33%/-52.2%、不加过滤）",
+    "title": "说明书更新到 v2.4",
     "priority": "P1",
-    "detail": "v2.3 里写的 13.15%/-52.5% 是旧口径；卫星仓操作要改成「全卖」",
-    "status": "open"
+    "detail": "已完成 2026-10-20：信号①整段重写为绝对阈值，含三条缺陷证据与重大局限披露",
+    "status": "done"
    },
    {
     "oid": "O02",
@@ -1399,8 +1453,15 @@
     "oid": "O08",
     "title": "验证：股息率分位该用 5 年还是 20 年窗口",
     "priority": "P1",
-    "detail": "当前 5 年分位=39%（中性）但 20 年绝对值位置=82%（很便宜），两者冲突；可能一直在该买时说不动",
-    "status": "open"
+    "detail": "已完成 2026-10-20：结论是不用分位（窗口无关），改用绝对阈值；另测六类替代方案均不如现行",
+    "status": "done"
+   },
+   {
+    "oid": "O09",
+    "title": "阈值 2.5%/4.0% 更多数据复核",
+    "priority": "P2",
+    "detail": "已完成 2026-10-20（R101）：分期间 + 10 年滚动起点 + ±0.2pp 抖动，全部稳健；但确认优势仅来自 2006-2013，2012 年后起算无差异",
+    "status": "done"
    },
    {
     "oid": "O05",

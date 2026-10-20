@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-20 17:21:56
+-- 导出时间：2026-10-20 17:49:16
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T17:21:55');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T17:49:15');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -119,6 +119,12 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F060','策略','本策略只在「高分红年代」有效，2014 年前会长期空仓','2007-2013 股息率仅 1.5%~3.5%，永远够不到 4.0% 买回线；2008 年指数跌 66.2%，股息率只从 1.56% 涨到 2.15%，仍不满足买回 → 20年回测实质是「13年空仓+7年满仓」','CONFIRMED','R96','logs/_r96_recent_and_emergency.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F061','信号','8 位博主中只有 1 位（v1）用 20 年回测给出股息率阈值，其结论 4.5% 与我们的独立验证吻合','v1 实证：低于 4.5% 买入一年胜率 63.7%，高于 4.5% 胜率 95%；v1 明确反驳「3% 就卖」（3% 已 10 年未出现）；v2/v3 用 5%，v4 只提现状，v8 无数字，v9 用价格网格','CONFIRMED','R93','logs/transcript_v1_波段策略胜率.txt');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F062','风险','近期股息率区间：2020 年起 4.20%~7.85%（中位 5.28%）；2022 年起最低 4.50%；2026 年 4.65%~5.45%','2020 年后 100% 时间股息率 ≥4.0%；2026 年最低 4.65% → 绝对值阈值在当前环境下不会触发卖出','CONFIRMED','R96','logs/_r96_recent_and_emergency.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F063','策略','现行绝对值方案（2.5%/4.0%）在全期与分期间都优于永不动，但优势全部来自 2006-2013','分期间：2006-2013 信号 14.78% vs 永不动 13.58%（+1.20pp）、回撤 -52.2% vs -66.2%；2014-2019 与 2020-2026 差异均为 +0.00pp（因一直满仓未触发）','CONFIRMED','R101','logs/_r101_o09_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F064','策略','阈值在 2.3-2.7% × 3.8-4.2% 区间内结果完全相同（极稳健）','9 个组合 Calmar 均为 0.250、年化 13.06%、调仓 2 次；因为 20 年只穿越阈值 2 次，区间内任何取值都捕捉到同两次','CONFIRMED','R101','logs/_r101_o09_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F065','策略','换起始点后，只有含 2008 的窗口才有优势（2012 年后起算完全无用）','10 年窗口 Calmar 差异：2006 起 +8.3、2008 起 +5.7、2010 起 +1.1、2012 起 -0.1、2014 起 0.0、2016 起 0.0','CONFIRMED','R101','logs/_r101_o09_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F066','信号','六类替代择时方案都不如现行绝对股息率方案（除 E 但 E 的优势是假象）','Calmar：A 现行 0.295 / E 双条件 0.300 / F MA250 0.268 / D 3年高点 0.254 / B 股债比 0.232 / C 回撤触发 0.221 / 永不动 0.226','CONFIRMED','R102','logs/_r102_o08_alternatives.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F067','信号','E（股息率+回撤双条件）的优势是「卖出晚一个月」的运气，不是机制改进','A 卖于 2007-07-31，E 卖于 2007-08-31，买回均为 2013-06-30；两者仅差一个月，Calmar 差 0.005 属样本内噪声','FALSIFIED','R104','logs/_r104_e_vs_a.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F068','信号','v1 博主提出的「回撤≥10% 就上车」在本策略里反而变差','回撤触发方案 Calmar 0.203-0.221，全部低于永不动的 0.226；原因是回撤不看估值，会在 2015 年高位回调时错误加仓','FALSIFIED','R102','logs/_r102_o08_alternatives.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -239,11 +245,12 @@ CREATE TABLE open_item(
   priority TEXT,                   -- P1/P2/P3
   detail TEXT,
   status TEXT DEFAULT 'open');
-INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O01','说明书更新到 v2.4（全卖表述、16.33%/-52.2%、不加过滤）','P1','v2.3 里写的 13.15%/-52.5% 是旧口径；卫星仓操作要改成「全卖」','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O01','说明书更新到 v2.4','P1','已完成 2026-10-20：信号①整段重写为绝对阈值，含三条缺陷证据与重大局限披露','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O02','建仓启动时填 config/pension_plan.yaml 的 entry.start_date','P1','目前是 null，监控工具会显示「建仓未启动」','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O03','每季度复核行业集中度（512890 银行 52.5%）','P2','用 ak.fund_portfolio_hold_em 取最新季度','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','今天做了 1 个（新博主）；还有 6 个待处理','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O06','评估东方红红利低波（ROE+预期股息率，费率0.72%，半年再平衡）','P2','光总认为其编制因子优于现有三只；可选替代部分 512890','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O07','监控「账户浮亏转正所需月数」','P2','穷诸葛：一次投入 89 月 vs 分批 14 月；纳入监控工具输出','open');
-INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O08','验证：股息率分位该用 5 年还是 20 年窗口','P1','当前 5 年分位=39%（中性）但 20 年绝对值位置=82%（很便宜），两者冲突；可能一直在该买时说不动','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O08','验证：股息率分位该用 5 年还是 20 年窗口','P1','已完成 2026-10-20：结论是不用分位（窗口无关），改用绝对阈值；另测六类替代方案均不如现行','done');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O09','阈值 2.5%/4.0% 更多数据复核','P2','已完成 2026-10-20（R101）：分期间 + 10 年滚动起点 + ±0.2pp 抖动，全部稳健；但确认优势仅来自 2006-2013，2012 年后起算无差异','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');
