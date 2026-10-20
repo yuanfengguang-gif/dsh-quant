@@ -1,0 +1,206 @@
+-- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
+-- 导出时间：2026-10-20 09:49:53
+-- 来源：research_kb.db（本地全量库）
+-- 重建行情层：python scripts/build_research_kb.py
+
+-- ── meta ──
+DROP TABLE IF EXISTS [meta];
+CREATE TABLE meta(
+  key TEXT PRIMARY KEY, value TEXT);
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-20T09:49:53');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
+
+-- ── round ──
+DROP TABLE IF EXISTS [round];
+CREATE TABLE round(
+  rid TEXT PRIMARY KEY,            -- R6 / R14 / R33 ...
+  title TEXT NOT NULL,
+  rdate TEXT,                      -- YYYY-MM-DD
+  topic TEXT,                      -- 分类：数据/策略/建仓/信号/风控/博主验证
+  status TEXT,                     -- done / closed / superseded
+  verdict TEXT,                    -- 一句话结论
+  report_path TEXT);
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R5-0','红利 ETF 数据审计与覆盖','2026-10-17','数据','done','9 项数据验证通过；红利 ETF 分红覆盖率实测远低于预期','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R5-4','红利 ETF 分红覆盖率实测','2026-10-17','数据','done','512890 滚动 3 年分红覆盖 0%（ETF 不分红，靠净值复利）','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R6','博主策略复现（小马聊财经）','2026-10-18','博主验证','done','8 项完全复现、5 项接近、3 项部分、2 项自相矛盾；她的信号 20 年 6-7 次、胜率 100%','reports/R6_博主策略复现报告.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R7','养老方案 v2（红利低波择时）','2026-10-18','策略','done','红利低波 20 年 15.05% 年化、MDD -66.2%；4% 提款生存率 98.6%','reports/R7_养老方案v2_红利低波择时.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R8','择时卖出替代分红','2026-10-18','策略','done','分红取现 8.85% vs 再投资 12.50%（差 3.65pp）；生活费择时卖出把 P5 从 10.3% 提到 97.5%','reports/R8_择时卖出替代分红.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R9','MA250 premium 校准','2026-10-18','信号','done','MA250×1.05 触发率 86%（6/7 年）','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R10','卫星仓波段（用户澄清版）','2026-10-18','策略','done','卫星仓 30% 降回撤 -66.9%→-52.5%，但中位收益下降','reports/R10_卫星仓波段_用户澄清版.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R11','三种卫星仓驱动信号对比','2026-10-19','信号','done','股息率分位 13.15%/-52.5% > 博主规则 11.12%/-62.5%；博主信号低频不适配卫星仓','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R12','v2.0 最终方案块自助法','2026-10-19','策略','done','500 路径：生存率 99.2%、P5 22.8%、P50 651%','reports/r12_final_bootstrap.json');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R14','建仓节奏（3 年递增）','2026-10-19','建仓','done','递增建仓 10 年均值 2.057，是最差；一次性 2.601','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R16','10 万建仓 + 等信号','2026-10-19','建仓','done','等 12 个月均值 2.279 vs 一次性 1.900（危机前提下 +20%）','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R18','信号阈值失效（绝对阈值漂移）','2026-10-19','信号','done','股息率≥5% 在 2006-2014 从未达到（0%），2020-2026 达 81% → 绝对阈值失效','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R19-R23','阶梯建仓回测','2026-10-19','建仓','closed','阶梯建仓在急跌中失效（一天跌穿所有档位）；均值低于一次性','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R24-R25','公平对比（修正费率 bug + 200 随机起点）','2026-10-19','建仓','done','一次性均值最高 2.531、最差 1.537；DCA 12 月最差 1.845（尾部最优）','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R26-R30','危机前提下的建仓','2026-10-19','建仓','done','纯等 12 个月最优（+20%）；加提前触发/DCA/阶梯都更差','reports/R42_P1工具_P2温和倾斜.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R31','第三个视频验证（柒明东东）','2026-10-19','博主验证','done','5 条认知全对；核心指标股债收益比证伪；行业集中度标准有效','reports/R31_第三个视频验证_柒明东东.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R33','四项验证（行业集中度等）','2026-10-19','风控','done','512890 前三大行业 58.3%、银行 52.5%；创业板信号/季节性/PE 分位均证伪','reports/R33_四项验证_行业集中度等.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R35-R36','银行兜底强度分析','2026-10-19','风险','done','中国无全国性银行破产，但国有大行股价仍跌 60-74%；512890 国有大行仅 11.3%','');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R37-R38','反向利用信号验证','2026-10-19','信号','done','仅 6 月效应可反向用（+2.6pp）；P2/股债比正反都不行','reports/R37_反向利用信号验证.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R39-R41','5 个新择时信号','2026-10-19','信号','closed','全部证伪；发现「预测力≠可交易性」（ERP 相关 0.439 但不可交易）','reports/R39_新择时信号探索.md');
+INSERT OR REPLACE INTO [round] (rid,title,rdate,topic,status,verdict,report_path) VALUES('R42-R44','P1 监控工具 + P2 温和倾斜','2026-10-19','策略','done','ERP 温和倾斜也证伪；卫星仓全卖优于部分降仓（16.33%/-52.2%）；加过滤是负优化','reports/R42_P1工具_P2温和倾斜.md');
+
+-- ── finding ──
+DROP TABLE IF EXISTS [finding];
+CREATE TABLE finding(
+  fid TEXT PRIMARY KEY,            -- F001...
+  category TEXT NOT NULL,          -- 估值/信号/建仓/风险/数据/认知
+  statement TEXT NOT NULL,         -- 结论陈述
+  evidence TEXT,                   -- 量化证据
+  verdict TEXT NOT NULL,           -- CONFIRMED / FALSIFIED / PARTIAL / REFERENCE
+  rid TEXT,                        -- 来源轮次
+  data_pointer TEXT,               -- 指向 json/脚本/表的定位
+  FOREIGN KEY(rid) REFERENCES round(rid));
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F001','收益','红利低波 20 年年化 15.05%（2006-07-31~2026-07-31，全收益）','H20269 全收益指数；红利低波100 14.80%；中证红利 12.09%；沪深300 6.53%','CONFIRMED','R7','idx_daily:H20269');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F002','收益','红利低波在每一个区间都跑赢中证红利','20年 +2.96pp、近10年 +0.84pp、近5年 +4.03pp、近3年 +1.63pp','CONFIRMED','R11','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F003','风险','红利低波 20 年最大回撤 -66.2%（2008-11-04）','相对 250 日高点、全历史高点、全收益三个口径一致','CONFIRMED','R7','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F004','认知','分红是净值扣减，真收益来自股价上涨 + 分红再投资复利','分红取现 8.85%/年 vs 再投资 12.50%/年，差 3.65pp；全收益 vs 价格差 3.85~5.13pp','CONFIRMED','R8','reports/R8_择时卖出替代分红.md');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F005','认知','红利是防御型资产，不是全天候资产','牛市跑输 13.28pp、熊市跑赢 16.56pp','CONFIRMED','R6','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F006','信号','股息率 5 年分位是唯一通过验证的择时信号','卫星仓全卖/全买：16.33%/-52.2%/Calmar 0.313（纯持有 15.84%/-66.2%/0.239）','CONFIRMED','R44','logs/_r44_correct.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F007','信号','卫星仓要「全卖」，不要「部分降仓」','全卖 16.33%/-52.2%（0.313）> 降到30% 16.20%/-56.9%（0.285）> 降到半仓 16.11%/-59.7%（0.270）','CONFIRMED','R44','logs/_r44_correct.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F008','信号','给信号加「连续 N 个月同向」过滤是负优化','无过滤 16.61% → 连续2月 15.99% → 连续3月 14.21%；信号本身 20 年只翻转 10 次','CONFIRMED','R43','logs/_r43_flip.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F009','信号','股息率绝对阈值已失效（会随市场漂移）','股息率≥5%：2006-2014 满足 0% 天数、2015-2019 满足 2%、2020-2026 满足 81%','CONFIRMED','R18','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F010','信号','股债收益比（股息率÷10Y国债）证伪','<1.5 分位未来1年 7.59% ≈ >3.0 的 8.61%（无单调性）；11 次跌破1.5，10 次后1年正收益','FALSIFIED','R31','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F011','信号','ERP（1/PE−10Y）预测力最强但不可交易','相关系数 +0.439（全场最高），但策略 Calmar 0.312 < 满仓 0.428；温和倾斜也降年化，回撤完全不变','FALSIFIED','R41','logs/_r41_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F012','信号','ERP 低点与回撤发生点不重合','ERP<30% 时段是 2018 初/2021 初；最大回撤发生在 2018-10/2022-10（那时 ERP 已高）','CONFIRMED','R42','reports/r42_erp_tilt.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F013','信号','创业板连 5 天跑赢红利 → 减仓红利，证伪','信号后 60日 +3.49% vs 全样本 +2.91%（反而更好）；胜率 69% vs 72%','FALSIFIED','R33','logs/_r34_p2.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F014','信号','5/11 月「分红前加仓窗口」证伪（实为反向）','5/11 月后续次月 0.21%/-0.30% vs 其他月 1.54%/1.88%（差 -1.33~-2.18pp）','FALSIFIED','R33','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F015','信号','6 月季节性有效但只能轻度用','6 月均值 -3.57%（其他月 +1.56%）、正收益 8/21、t≈-2.3；但 2014-2020 完全失效','PARTIAL','R38','logs/_r38_june.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F016','信号','成交额拥挤度、波动率分位、PE 动量、股债利差 4 个信号均证伪','相关系数分别 -0.062/+0.016/-0.214/+0.227；策略 Calmar 均不优于满仓','FALSIFIED','R39','logs/_r40_out.txt');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F017','信号','13 个择时信号里只有 1 个可用（股息率分位）+ 1 个可轻用（6月）','其余 11 个证伪','CONFIRMED','R41','reports/R39_新择时信号探索.md');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F018','建仓','一次性投入的期望收益最高，但尾部最差','200 随机起点 10 年：一次性均值 2.531/最差 1.537；DCA12月 2.415/最差 1.845','CONFIRMED','R25','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F019','建仓','在「1年内有危机」前提下，纯等 12 个月最优','6 个危机前起点：等12月 2.279 vs 一次性 1.900（+20%）；加提前触发 1.995/阶梯 2.071/DCA 1.931 都更差','CONFIRMED','R30','reports/r30_final_entry.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F020','建仓','递增建仓（15/30/55）是最差的建仓节奏','6 起点 10 年均值 2.057 vs 一次性 2.601；连 2007 大顶起点也落后 51%','FALSIFIED','R14','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F021','建仓','阶梯建仓在单边急跌中失效','2008 全年多档位在同一天（兜底日）全部投完','FALSIFIED','R19','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F022','风控','512890 红利低波ETF华泰柏瑞行业集中度超标','前三大行业 58.3%（地方性银行 30.1% + 全国性银行 22.3% + 公路铁路 4.6%），银行合计 52.5%','CONFIRMED','R33','reports/r33_four_tasks.json');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F023','风控','512890 的银行持仓 57.5% 是城商行+农商行（兜底最弱）','城商行 25.6% + 农商行 4.5% = 30.1%（占净值）；国有大行仅 11.3%（21.6% of banks）；前十大无一家国有大行','CONFIRMED','R35','logs/_r35_bank.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F024','风险','中国从未有全国性银行破产，但国有大行股价仍跌 60-74%','国有大行 MDD 中位 -60.1%（交行 -74.2%、建行 -67.0%、工行 -60.3%）；恒丰银行 2020 被重组','CONFIRMED','R36','logs/_r36b.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F025','风险','政府兜底的是储户，不是股东','包商银行 2019 二级资本债全额减记；恒丰 2020 中央汇金注资后股东权益大幅稀释','CONFIRMED','R36','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F026','数据','红利 ETF 不代表分红（净值复利型）','512890 滚动 3 年分红覆盖 0%；红利低波指数分红贡献 4.16%','CONFIRMED','R5-4','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F027','数据','bars_tdx.db 的 daily_bar 有脏数据','工商银行出现价格 0.010、招商银行 0.020，导致回撤算出 -99.8%（真实 -60.3%）；应使用 bars.db','CONFIRMED','R36','logs/_dbg_bank2.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F028','认知','预测力不等于可交易性','ERP 相关系数 0.439（最强）但策略 Calmar 最差；股息率相关系数仅 0.119~0.209 却是唯一可用信号','CONFIRMED','R41','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F029','认知','博主策略复现：她的信号有效但低频，不适合管卫星仓','博主三条件 20 年 6-7 次、胜率 100%、平均 +45.6%；但用于卫星仓只有 11.12%（股息率分位 13.15%）','CONFIRMED','R11','');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F031','信号','信号检查频率会显著改变结果：按月检查 16.33%/-52.2%（11次调仓），按日检查 15.84%/-62.1%（84次调仓）','股息率分位在 30% 阈值附近日频抖动导致频繁翻转；方案规定按月检查，故以月频为准','CONFIRMED','R45','logs/_r45_s07fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
+
+-- ── signal ──
+DROP TABLE IF EXISTS [signal];
+CREATE TABLE signal(
+  sid TEXT PRIMARY KEY,            -- S01...
+  name TEXT NOT NULL,
+  stype TEXT,                      -- 趋势/估值/情绪/日历/风格/价格/基本面
+  rule TEXT,                       -- 规则描述
+  sample_start TEXT, sample_end TEXT,
+  corr_fwd1y REAL,                 -- 与未来1年收益相关系数
+  ann REAL,                        -- 策略年化
+  mdd REAL,                        -- 策略最大回撤
+  calmar REAL,
+  ann_base REAL,                   -- 满仓基准年化
+  mdd_base REAL,
+  verdict TEXT NOT NULL,           -- USABLE / LIGHT / TEMPERATURE / FALSIFIED
+  note TEXT);
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S01','MA200 趋势 + 破位保险','趋势','跌破 MA200 降仓','2005','2026',NULL,NULL,NULL,NULL,NULL,NULL,'FALSIFIED','保护代价 >> 收益，2009 -53~-65pp');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S02','与国债相关性 T5','相关性','相关性抬升 +0.05 降仓','2011','2026',NULL,NULL,NULL,NULL,NULL,NULL,'FALSIFIED','超额 71.7% 来自 2015+2018 两年；2008 无信号');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S03','股息率 5 年分位','估值','分位≤30% 卫星仓全卖 / ≥70% 全买','2006','2026',0.119,0.1633,-0.522,0.3128352490421456,0.1584,-0.662,'USABLE','唯一可用；按月检查，20年调仓11次（按日检查会抖成84次，年化降到15.84%/-62.1%）');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S04','股息率绝对阈值','估值','>4%持有 / 3.5-4%停止加仓 / <3.5%减仓','2006','2026',0.119,NULL,NULL,NULL,NULL,NULL,'TEMPERATURE','倒U型非单调；当前73%时间>4%');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S05','股债收益比','估值','股息率÷10Y国债；>2.5买 / <1.5卖','2018','2026',NULL,NULL,NULL,NULL,NULL,NULL,'FALSIFIED','<1.5(7.59%) ≈ >3.0(8.61%)；11次跌破10次正收益');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S06','创业板连5天跑赢','风格','创业板连5日跑赢红利 → 减仓红利','2010','2026',NULL,0.1142,-0.385,0.2966233766233766,0.1054,-0.425,'FALSIFIED','信号后红利反而更好(+0.57pp)，但组合层面降仓略优');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S07','6 月季节性','日历','6 月卫星仓全卖（7月买回）','2006','2026',NULL,0.1705,-0.629,0.27106518282988873,0.1584,-0.662,'LIGHT','统一70/30口径；6月均值-3.57%、t≈-2.3，但2014-2020失效；年化更高但Calmar(0.271)不及股息率分位(0.313)');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S08','成交额拥挤度','情绪','20日均额 3年分位≥0.7 降仓','2006','2026',-0.062,0.091,-0.538,0.1691449814126394,0.1584,-0.662,'FALSIFIED','Calmar 0.169 vs 满仓 0.239');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S09','波动率分位','风险','20日年化波动率 3年分位≥0.7 降仓','2006','2026',0.016,0.1102,-0.449,0.24543429844097997,0.1584,-0.662,'FALSIFIED','相关系数 0.016，无规律');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S10','ERP = 1/PE − 10Y','估值','ERP 分位<30% 降仓','2018','2026',0.439,0.0634,-0.203,0.31231527093596056,0.0843,-0.197,'TEMPERATURE','预测力最强但不可交易；Calmar 0.312 vs 0.428');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S11','股息率 − 10Y 绝对利差','估值','利差分位<30% 降仓','2018','2026',0.227,0.0859,-0.196,0.43826530612244896,0.0843,-0.197,'FALSIFIED','Calmar 0.440 ≈ 满仓 0.428');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S12','PE 6 个月动量','基本面','PE 6月涨幅分位≥0.7 降仓','2014','2026',-0.214,0.0545,-0.343,0.15889212827988336,0.1185,-0.425,'FALSIFIED','红利低波更差、中证红利略好，不一致');
+INSERT OR REPLACE INTO [signal] (sid,name,stype,rule,sample_start,sample_end,corr_fwd1y,ann,mdd,calmar,ann_base,mdd_base,verdict,note) VALUES('S13','纯回撤阶梯','价格','15/25/35/50% 各投 25%','2006','2026',NULL,NULL,NULL,NULL,NULL,NULL,'FALSIFIED','10年均值 2.483 < 一次性 3.210；急跌时一天跌穿');
+
+-- ── strategy ──
+DROP TABLE IF EXISTS [strategy];
+CREATE TABLE strategy(
+  vid TEXT PRIMARY KEY,            -- v2.3
+  sdate TEXT,
+  params_json TEXT NOT NULL,       -- 全参数（可直接被程序读）
+  backtest_json TEXT,              -- 回测结果
+  note TEXT);
+INSERT OR REPLACE INTO [strategy] (vid,sdate,params_json,backtest_json,note) VALUES('v2.3','2026-10-19','{"capital": 1500000, "withdrawal_rate": 0.04, "initial_annual": 60000, "layers": {"base": 0.7, "satellite": 0.3}, "assets": [{"code": "515100", "name": "红利低波100ETF景顺", "weight": 0.4, "top3_industry": 0.291, "bank_share": 0.199}, {"code": "515450", "name": "红利低波50ETF南方", "weight": 0.35, "top3_industry": 0.436, "bank_share": 0.301}, {"code": "512890", "name": "红利低波ETF华泰柏瑞", "weight": 0.25, "top3_industry": 0.583, "bank_share": 0.525}], "cash": {"code": "511990", "name": "货币ETF华宝添益", "target_months": 12}, "entry": {"mode": "immediate_plus_wait", "immediate_amount": 100000, "immediate_months": 3, "wait_amount": 1400000, "wait_deadline_months": 12, "trigger_conditions": "none"}, "signals": {"dividend_pct": {"index": "H30269", "window": 1250, "expensive": 0.3, "cheap": 0.7, "action": "satellite_full"}, "june_effect": {"month": 6, "reduced_position": 0.7, "status": "light"}, "erp_thermometer": {"index": "000922", "window": 750, "action": "display_only"}}}','{"satellite_full_switch": {"ann": 0.1633, "mdd": -0.522, "calmar": 0.313}, "buy_hold_70_30": {"ann": 0.1584, "mdd": -0.662, "calmar": 0.239}, "bootstrap_500_paths": {"survival": 0.992, "p5": 22.8, "p10": 68.2, "p50": 651.2}, "entry_crisis_premise": {"wait12m": 2.279, "lump_sum": 1.9}}','全卖优于部分降仓；不加连续N月过滤；ERP仅温度计不调仓');
+
+-- ── data_source ──
+DROP TABLE IF EXISTS [data_source];
+CREATE TABLE data_source(
+  did TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  kind TEXT,                       -- index / dividend / bond / etf_holding / stock / macro
+  code TEXT,
+  span TEXT,
+  rows INTEGER,
+  quality TEXT,
+  location TEXT);
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D01','红利低波指数（价格）','index','H30269','2006-07~2026-10',5049,'5,049 行全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D02','红利低波全收益指数','index','H20269','2006-07~2026-10',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D03','红利低波100指数','index','930955','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D04','红利低波100全收益','index','H20955','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D05','中证红利（价格）','index','000922','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D06','中证红利全收益','index','H00922','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D07','沪深300','index','000300','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D08','上证红利','index','000015','2006~2026',5049,'全有效','research_kb.idx_daily');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D09','股息率（TR/PR 推算）','dividend','H30269/000922/930955','2006~2026',14400,'推算值，2015 年段有误差','research_kb.div_yield');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D10','10Y 国债收益率','bond','cn10y','2018-01~2026-10',2194,'akshare bond_zh_us_rate','research_kb.macro');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D11','CPI 同比','macro','cpi_yoy','1986~2025',476,'历史序列','research_kb.macro');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D12','ETF 完整持仓','etf_holding','512890/515450/515100','2026Q2',246,'akshare fund_portfolio_hold_em','外部接口');
+INSERT OR REPLACE INTO [data_source] (did,name,kind,code,span,rows,quality,location) VALUES('D13','创业板指','index','sz399006','2010-06~2026-10',3976,'sina stock_zh_index_daily','外部接口');
+
+-- ── error_log ──
+DROP TABLE IF EXISTS [error_log];
+CREATE TABLE error_log(
+  eid TEXT PRIMARY KEY,            -- E1..E17
+  edate TEXT,
+  what TEXT NOT NULL,              -- 错在哪
+  impact TEXT,                     -- 后果
+  fix TEXT);
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E1','2026-10-17','批量替换窗口时误改 rebuild_is_st.py 的 CUTOFF（2020-06→2010）','ST 重建逻辑会失效','当场恢复；此后改白名单替换');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E2','2026-10-18','gate 定「夏普≥0.5」未参照资产夏普（HS300 只有 0.152）','把正常结果误判为失败','改为 ≥max(0.30, 资产夏普×2)');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E3','2026-10-18','gate 定「候选池≥1500 只」未考虑 2010 年市场容量','物理上不可能满足','改为 ≥800 且 ≥当日可打分 40%');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E4','2026-10-18','T5 用绝对相关阈值 0.80','实测 90.2% 天数触发，等于永久减仓','改相对抬升 +0.05');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E5','2026-10-18','提交 62fe820 声称已推送，实际未推','对端拿不到任务书','此后所有推送走 push_verified.py');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E6','2026-10-18','用「全期合并」结论掩盖分段趋势','把「近期在回暖」误述成「永久失效」','改为分段表述');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E7','2026-10-18','G3 门禁数学上退化（Calmar 是仓位不变量）','12/12 组合全部「通过」','改为相同回撤下比较年化');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E8','2026-10-18','用全期窗口评价只有部分历史的触发器','把 T5 的回撤改善错记为 0.0pp','改用共同窗口评价');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E11','2026-10-18','擅自替换方案（用户问 A vs B，我直接改成采用 B）','方案选择权被 PM 越权','恢复三方案并列由用户决定');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E12','2026-10-18','未验证的推断被表述为结论','无证据却当事实用于推荐','改写为「这是假设，未验证」');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E13','2026-10-18','覆盖率算错（按单只 ETF 而非全部资金）','覆盖率 100% 实际只有 70%','以全部提款需求为分母');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','2026-10-18','从覆盖率反推股息率高估 1.2-3.1pp','三层比例全部算错','股息率必须直接计算');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E17','2026-10-19','用「全仓 0/1」测信号，与「底仓永不动」结构不符','差点把 16.61%/-42.5% 当成本方案预期','用正确 70/30 结构重算');
+
+-- ── defect_log ──
+DROP TABLE IF EXISTS [defect_log];
+CREATE TABLE defect_log(
+  mid TEXT PRIMARY KEY,            -- M1..M11
+  discovered TEXT,
+  descr TEXT NOT NULL,
+  severity TEXT,
+  status TEXT,
+  workaround TEXT);
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M8','2026-10-17','git ls-remote / fetch 超时被误判为失败','中','open','推送后独立核实远端 hash');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M10','2026-10-17','check_delivery 的 CRLF 误报','低','fixed','换行归一化');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M11','2026-10-19','bars_tdx.db 有脏数据（价格 0.010/0.020）','高','open','算个股回撤用 bars.db 或过滤 price<0.1');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M12','2026-10-19','HuggingFace 直连不可用（WinError 10060）','中','fixed','用 HF_ENDPOINT=https://hf-mirror.com + HF_HUB_DISABLE_XET=1');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M13','2026-10-19','东财 ETF 接口偶发 RemoteDisconnected','低','fixed','退化到新浪 fund_etf_category_sina 现价快照');
+
+-- ── open_item ──
+DROP TABLE IF EXISTS [open_item];
+CREATE TABLE open_item(
+  oid TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  priority TEXT,                   -- P1/P2/P3
+  detail TEXT,
+  status TEXT DEFAULT 'open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O01','说明书更新到 v2.4（全卖表述、16.33%/-52.2%、不加过滤）','P1','v2.3 里写的 13.15%/-52.5% 是旧口径；卫星仓操作要改成「全卖」','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O02','建仓启动时填 config/pension_plan.yaml 的 entry.start_date','P1','目前是 null，监控工具会显示「建仓未启动」','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O03','每季度复核行业集中度（512890 银行 52.5%）','P2','用 ak.fund_portfolio_hold_em 取最新季度','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','今天做了 1 个（新博主）；还有 6 个待处理','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');
