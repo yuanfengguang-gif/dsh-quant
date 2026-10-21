@@ -3,7 +3,7 @@
 
 一次运行给出：
   1. 建仓进度（10万已投 / 140万待投 / 剩余月数 / 兜底日）
-  2. 股息率绝对阈值 → 卫星仓买卖信号
+  2. 三信号组合（股息率+ERP+PB）→ 卫星仓买卖信号（v2.5）
   3. 6 月季节性提醒
   4. ERP 估值温度计（仅参考）
   5. 行业集中度快照
@@ -374,7 +374,7 @@ def signal_track_record(cfg: dict, horizon_months: int = 12) -> dict | None:
     d = d.sort_values("date").reset_index(drop=True)
     exp, cheap = float(sig["sell_below"]), float(sig["buy_above"])
     mo = d.set_index("date")[["dy_ttm", "tr"]].resample("ME").last().reset_index()
-    mo["pct"] = mo["dy_ttm"]      # 这里不再是分位，而是绝对股息率本身
+    mo["pct"] = mo["dy_ttm"]      # v2.5：此列保留供历史图表用，决策已改三信号
     mo["sig"] = np.where(mo["dy_ttm"] <= exp, "SELL",
                          np.where(mo["dy_ttm"] >= cheap, "BUY", ""))
     events, prev = [], ""
@@ -553,7 +553,18 @@ def main() -> int:
     actions = []
     month = asof_ts.month
 
-    if dy_ok:
+    # v2.5：结论用三信号组合（股息率 + ERP + PB）
+    _sc = satellite_combo(cfg, asof)
+    if _sc:
+        _icon = {"应空仓": "🔴", "应满仓": "🟢", "维持现状": "⚪"}.get(_sc["verdict"], "⚪")
+        _parts = []
+        for _s in _sc["signals"]:
+            _v = "—" if _s["value"] is None else _s["fmt"].format(_s["value"])
+            _parts.append(f"{_s['name'].replace('沪深300', '')} {_v}")
+        actions.append((f"{_icon} 卫星仓：{_sc['verdict']}",
+                        f"{_sc['action']}（报警 {_sc['n_sell']} / 便宜 {_sc['n_buy']}；"
+                        + "，".join(_parts) + "）"))
+    elif dy_ok:
         if cur_pct <= exp_th:
             actions.append(("🔴 卫星仓：应空仓", f"股息率 {cur_pct:.2%} ≤ {exp_th:.1%}（太贵）"))
         elif cur_pct >= cheap_th:
@@ -594,7 +605,7 @@ def main() -> int:
                  else f"| {a} | — | {b} |")
     L.append("")
 
-    L.append("## 二、核心信号（绝对股息率阈值）")
+    L.append("## 二、核心信号（v2.5 三信号组合）")
     L.append("")
     # ══ v2.5 三信号组合
     sc_res = satellite_combo(cfg, asof)
@@ -946,8 +957,13 @@ def main() -> int:
     for a, b in actions:
         print(f"  {a:<22s} {b}")
     print("-" * 78)
-    print(f"  股息率 {cur_dy:.2%}  卖出线 {exp_th:.1%}  买回线 {cheap_th:.1%}" if dy_ok
-          else f"  股息率 {cur_dy:.2%}  分位 —")
+    _sc3 = satellite_combo(cfg, asof)
+    if _sc3:
+        for _s in _sc3['signals']:
+            _v = '—' if _s['value'] is None else _s['fmt'].format(_s['value'])
+            print(f"  {_s['name']}: {_v}   卖 {_s['fmt'].format(_s['sell'])} / 买 {_s['fmt'].format(_s['buy'])}")
+    else:
+        print(f"  股息率 {cur_dy:.2%}  卖出线 {exp_th:.1%}  买回线 {cheap_th:.1%}" if dy_ok else f"  股息率 {cur_dy:.2%}  分位 —")
     if not np.isnan(erp_val):
         print(f"  ERP {erp_val:.2%}  3年分位 {erp_pct:.0%}  区间 {(_band[0] if '_band' in dir() and _band else '—')}（仅参考）")
     print(f"  加权前三大行业 {wt3:.1%}  加权银行 {wbk:.1%}")
