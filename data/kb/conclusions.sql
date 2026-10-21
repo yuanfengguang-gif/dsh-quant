@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-21 19:27:16
+-- 导出时间：2026-10-21 20:26:14
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T19:27:14');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T20:26:13');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -130,8 +130,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F070','信号','ERP 择时只对沪深300有效，对中证红利完全无效（0 次触发）','中证红利 ERP 当前 9.55%、从未跌破 3%，所以 >6/<3 规则一次都不触发，等于什么都不做','CONFIRMED','R105','logs/_r105_erp_test.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F071','认知','「ERP 仅参考」的表述需要精确化：不适合连续倾斜，但适合极端阈值开关','R41/R42 测的是 ERP 分位→温和倾斜（无效，降年化）；R105 测的是 ERP 绝对值→>6满仓/<3空仓（+6.89pp）。两种用法结论相反，不矛盾','PARTIAL','R105','logs/_r105_erp_test.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F072','数据','「按月分红」是营销说法：三只 ETF 实际每年只分 1-3 次，且 512890 完全不发现金','真实记录：515100 分红2次(约每年1次,12月)、515450 分红9次(2024起每年2次,2026年3次)、512890 仅1次0元。512890 累计净值差额来自 2021-10-22 的 1:2 份额折算，不是分红','FALSIFIED','R108','logs/_r108_dividend_real.py');
-INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F073','策略','当前配比 40/35/25 的现金分红覆盖率仅 105.9%，余量 293 元/月','年化现金分红收益率：515100 5.86%、515450 5.40%、512890 0%；组合加权 4.23%；150万→63,510元/年=5,293元/月 vs 目标5,000元/月。分红主要在7月和12月到账，全年8-10个月零到账','CONFIRMED','R110','logs/_r110_cashflow2.py');
-INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F074','策略','提高分红型 ETF 权重可提升现金流覆盖率，但降低总收益','配比测试：40/35/25→4.23%(覆盖106%)；50/35/15→4.82%(121%)；55/40/5→5.38%(135%)；60/40/0→5.68%(142%)；35/25/40→3.40%(85%)。对照总收益：512890 13.38%、515100 11.28%、515450 9.79%','CONFIRMED','R110','logs/_r110_cashflow2.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F073','策略','当前配比 40/35/25 的现金分红覆盖率 67-78%，分红覆盖不了生活费，必须卖份额','四口径：全历史(含2023补发)99.8%、剔除补发77.6%、最近2年67.1%、2026单年15.3%。中性口径每月分红3,882元 vs 目标5,000元，缺1,118元；保守口径每月3,353元，缺1,647元。分红主要在7月/12月到账，全年8-10个月零到账','CONFIRMED','R110-R112','logs/_r112_coverage_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F074','策略','即使完全去掉 512890，保守口径下分红覆盖率也只有 90%，靠调配比覆盖生活费走不通','保守口径(C)配比测试：40/35/25→2.68%(67%)；50/35/15→3.08%(77%)；55/40/5→3.49%(87%)；60/40/0→3.59%(90%)；35/25/40→2.11%(53%)。对照总收益：512890 13.38%、515100 11.28%、515450 9.79%','CONFIRMED','R110-R112','logs/_r112_coverage_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F077','数据','515450 的分红在持续崩塌：2023 年 0.140 元/份 → 2026 年 0.025 元/份（-82%）','逐年：2021 0.060、2022 0.050(-17%)、2023 0.140(+180%)、2024 0.105(-25%)、2025 0.075(-29%)、2026 0.025(-67%)','CONFIRMED','R112','logs/_r112_coverage_fix.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F078','数据','515100 的 2023-12-21 分红 0.437 元/份是「3.5 年一次性补发」，不是常规年度分红','基金 2020-05 成立至 2023-12 一直未分红，一次性补发。用累计分红÷总年数会高估年度现金收益率（5.87% vs 剔除后 3.66%）','CONFIRMED','R111','logs/_r111_verify_div.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F075','策略','「一把梭 > 抄底 > 定投」在红利低波上成立，且博主推荐的「6-7成底仓+3-4成等跌」与我们70/30结构一致','v10 博主实测（20万，2019-03起7年）：一把梭41.4万(+107%,年化~11%) > 抄底30.5万(+52%) > 定投27.5万(+37%,年化~5%)。其结论「任何让你空仓等待的策略，都意味着你在这条坡上少爬了一段」','CONFIRMED','R106','logs/transcript_v10_睡前投资课_定投还是抄底.txt');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F076','认知','价值100 与自由现金流同样受「回测数据」问题困扰：2024-10 才正式运行，真实样本不足 2 年','博主主动披露：「过往这部分数据是拿着现在的规则用后视镜往回看的」「要等指数完整经历两个牛熊才能有更肯定答案」。编制规则：净利润>0 + 砍三刀(ROE水平/ROE稳定性/FCF率) + 三筛子(PE/股息率/FCF率算术平均)','CONFIRMED','R106','logs/transcript_v14_阿朗讲指数_价值100深度解析.txt');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
@@ -224,6 +226,7 @@ INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E13','202
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','2026-10-18','从覆盖率反推股息率高估 1.2-3.1pp','三层比例全部算错','股息率必须直接计算');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E21','2026-10-21','现金流覆盖率算错：报 105.9%，实际 67-78%','三处错误：515450 年数用 5.80 年（实际 6.76）、515100 把 3.5 年补发当年度分红摊平、净值取值错误。后果：差点得出「分红能覆盖生活费」的错误结论','已修正为四口径披露（99.8%/77.6%/67.1%/15.3%），并加 R111 除息日净值交叉验证');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E19','2026-10-20','把 5 年分位信号当作可靠工具用了多轮，未先检验股息率数据本身质量','股息率月度变化 81.6% 来自分红数据更新（非股价），5 年分位因此产生假信号：2025-09 在最便宜时判定卖出','改为绝对阈值 2.5%/4.0%；新增第九章「股息率历史位置」交叉验证');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E18','2026-10-20','用窗口依赖的回测结论（R68 的 2014-2026 窗口）指导配比调整，把 515100 权重从 40% 提到 55%','515100 的优势只在 2014-2018；2019 年后消失。新配比在真实 ETF 数据（2020-2026）上少赚 4.9 万，20 年全收益也略差','退回 40/35/25；新增「银行强弱监测」只追踪不自动调仓');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E17','2026-10-19','用「全仓 0/1」测信号，与「底仓永不动」结构不符','差点把 16.61%/-42.5% 当成本方案预期','用正确 70/30 结构重算');
