@@ -41,7 +41,10 @@ def db():
     c.execute("""CREATE TABLE IF NOT EXISTS nav_daily(
         date TEXT PRIMARY KEY, invested REAL, cash REAL, total REAL,
         nav REAL, bench REAL, pos TEXT)""")
+    c.execute("CREATE TABLE IF NOT EXISTS sim_meta(k TEXT PRIMARY KEY, v TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS bench_daily(date TEXT PRIMARY KEY, close REAL)")
+    c.execute("""CREATE TABLE IF NOT EXISTS holdings(
+        date TEXT, code TEXT, shares REAL, price REAL, mv REAL, PRIMARY KEY(date, code))""")
     return c
 
 
@@ -224,7 +227,7 @@ def simulate(cfg, c, asof: str):
         hist.append({"date": dt, "invested": mv, "cash": cash, "total": total,
                      "nav": total / nav0, "bench": bench, "pos": pos})
 
-    return hist, plan, shares, cash
+    return hist, plan, shares, cash, done
 
 
 def report(cfg, hist, sched):
@@ -307,7 +310,7 @@ def main():
     print("  [2/3] 更新基准…")
     fetch_bench(c, cfg["start_date"], asof)
     print("  [3/3] 模拟…")
-    hist, sched, shares, cash = simulate(cfg, c, asof)
+    hist, sched, shares, cash, done = simulate(cfg, c, asof)
     if not hist:
         print("  ❌ 无数据，无法模拟")
         return 1
@@ -317,6 +320,26 @@ def main():
                   [(r["date"], r["invested"], r["cash"], r["total"], r["nav"],
                     None if (isinstance(r["bench"], float) and np.isnan(r["bench"])) else r["bench"],
                     r["pos"]) for r in hist])
+    c.commit()
+
+    # 持久化当日持仓
+    _last_px = {}
+    _rows = c.execute("""SELECT code,close FROM etf_daily WHERE date=(
+        SELECT MAX(date) FROM etf_daily)""").fetchall()
+    for _c, _cl in _rows:
+        _last_px[_c] = float(_cl)
+    c.execute("DELETE FROM holdings WHERE date=?", (hist[-1]["date"],))
+    c.executemany("INSERT OR REPLACE INTO holdings(date,code,shares,price,mv) VALUES(?,?,?,?,?)",
+                  [(hist[-1]["date"], k, float(shares[k]), _last_px.get(k, 0.0),
+                    float(shares[k]) * _last_px.get(k, 0.0)) for k in shares])
+    c.commit()
+
+    # 建仓进度写入 sim_meta
+    c.execute("INSERT OR REPLACE INTO sim_meta(k,v) VALUES('build_done',?)", (str(len(done)),))
+    c.execute("INSERT OR REPLACE INTO sim_meta(k,v) VALUES('build_total',?)", (str(len(sched)),))
+    _invest = float(cfg["capital"]) - float(cfg["monthly_withdrawal"]) * int(cfg["cash_pool_months"])
+    _spent = _invest * len(done) / len(sched) if sched else 0.0
+    c.execute("INSERT OR REPLACE INTO sim_meta(k,v) VALUES('spent',?)", (f"{_spent:.2f}",))
     c.commit()
 
     DATADIR.mkdir(parents=True, exist_ok=True)

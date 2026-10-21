@@ -262,6 +262,17 @@ class Handler(BaseHTTPRequestHandler):
             return self._v2_page("control.html", "control missing")
         if path == "/etf" or path == "/etf.html":   # ★2026-08-15 ETF 映射页（配置类：策略暴露→ETF 相关性/pitch/小资金配置）
             return self._v2_page("etf.html", "etf missing")
+        if path == "/paper" or path == "/paper.html":   # 2026-10-21 养老模拟盘
+            return self._v2_page("paper.html", "paper missing")
+
+        if path == "/api/paper":                        # 2026-10-21 模拟盘数据
+            try:
+                sys.path.insert(0, str(BASE))
+                from deck.paper_api import paper_data
+                return self._send_json(paper_data())
+            except Exception as e:
+                return self._send_json({"ok": False, "error": f"{type(e).__name__}: {e}"})
+
         if path == "/pension" or path == "/pension.html":   # 2026-10-20 养老方案面板（读 /api/pension，配置驱动）
             return self._v2_page("pension.html", "pension missing")
         if path == "/pitchtrack" or path == "/pitchtrack.html":   # ★2026-08-15 主观多池远期（5 池对比 + 牛散决策者分组）

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模拟盘 · DSH Quant</title>
+<link rel="stylesheet" href="/v2/core/theme.css">
+<style>
+  .pp-hero{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .pp-hero h1{font-size:20px;font-weight:600;margin:0}
+  .pp-hero .sub{font-size:12px;color:#a1a1aa}
+  .pp-big{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .pp-delta{font-size:15px;font-weight:600;margin-left:10px}
+  .up{color:#22c55e}.down{color:#ef4444}.flat{color:#a1a1aa}
+  .pp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-top:12px}
+  .pp-kpi{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+          border-radius:10px;padding:12px 14px}
+  .pp-kpi .lb{font-size:11px;color:#a1a1aa;margin-bottom:6px}
+  .pp-kpi .vl{font-size:19px;font-weight:600}
+  .pp-kpi .hint{font-size:11px;color:#71717a;margin-top:4px}
+  .pp-kpi.good .vl{color:#22c55e}.pp-kpi.bad .vl{color:#ef4444}.pp-kpi.warn .vl{color:#f59e0b}
+  table.pp-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.pp-tbl th{text-align:left;padding:8px 10px;color:#a1a1aa;font-weight:500;
+                  border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
+  table.pp-tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04)}
+  table.pp-tbl tr:hover td{background:rgba(255,255,255,.02)}
+  .pp-note{font-size:12px;color:#a1a1aa;line-height:1.85;margin-top:12px;
+           padding:12px 14px;background:rgba(255,255,255,.02);border-radius:8px;
+           border-left:2px solid #5e6ad2}
+  .pp-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px}
+  .pp-chip.ok{background:rgba(34,197,94,.14);color:#4ade80}
+  .pp-chip.bad{background:rgba(239,68,68,.14);color:#f87171}
+  .pp-chip.warn{background:rgba(245,158,11,.14);color:#fbbf24}
+  .pp-chip.hint{background:rgba(255,255,255,.06);color:#a1a1aa}
+  .pp-none{padding:18px;color:#a1a1aa;font-size:13px}
+  svg.pp-svg{width:100%;height:190px;display:block}
+</style>
+</head>
+<body>
+<div class="v2-shell">
+  <aside class="v2-sidebar" id="sidebar"></aside>
+  <main class="v2-main">
+    <div class="v2-page">
+
+      <div class="pp-hero">
+        <h1>养老模拟盘</h1>
+        <span class="sub" id="pp-sub">加载中…</span>
+        <span class="sub" id="pp-asof" style="margin-left:auto"></span>
+      </div>
+
+      <div class="v2-card" style="margin-top:14px">
+        <h2>一、今天的结果 <span class="tag">模拟盘，不是真实持仓</span></h2>
+        <div style="margin-top:10px">
+          <span class="pp-big" id="pp-total">—</span>
+          <span class="pp-delta" id="pp-pnl">—</span>
+        </div>
+        <div class="pp-kpis" id="pp-kpis"></div>
+      </div>
+
+      <div class="v2-card" style="margin-top:14px">
+        <h2>二、净值走势</h2>
+        <div id="pp-chart" style="margin-top:10px"></div>
+        <div class="pp-note" id="pp-chart-note"></div>
+      </div>
+
+      <div class="v2-card" style="margin-top:14px">
+        <h2>三、当前持仓 <span class="tag">按最新收盘价</span></h2>
+        <div style="overflow-x:auto;margin-top:8px"><table class="pp-tbl" id="pp-hold"></table></div>
+        <div class="pp-note" id="pp-build-note"></div>
+      </div>
+
+      <div class="v2-card" style="margin-top:14px">
+        <h2>四、逐日明细</h2>
+        <div style="overflow-x:auto;margin-top:8px"><table class="pp-tbl" id="pp-hist"></table></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/v2/core/api.js"></script>
+<script src="/v2/core/render.js"></script>
+<script src="/v2/components/icons.js"></script>
+<script src="/v2/components/sidebar.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  function money(x, d){ if(x==null||isNaN(x)) return '—';
+    return x.toLocaleString('zh-CN',{minimumFractionDigits:d||0,maximumFractionDigits:d||0}); }
+  function pct(x, d){ return (x==null||isNaN(x)) ? '—' : (x*100).toFixed(d==null?2:d)+'%'; }
+  function sgn(x, d){ if(x==null||isNaN(x)) return '—';
+    return (x>=0?'+':'')+ (x*100).toFixed(d==null?2:d)+'%'; }
+  function cls(x){ return (x==null||isNaN(x)) ? 'flat' : (x>0?'up':(x<0?'down':'flat')); }
+  function kpi(lb, vl, hint, c){
+    return '<div class="pp-kpi '+(c||'')+'"><div class="lb">'+lb+'</div>'+
+           '<div class="vl">'+vl+'</div>'+(hint?'<div class="hint">'+hint+'</div>':'')+'</div>';
+  }
+
+  function chart(hist){
+    if(!hist || hist.length < 2){
+      return '<div class="pp-none">还没有足够数据画图（至少 2 个交易日）</div>';
+    }
+    var w=1000, h=190, pad=36;
+    var vals = hist.map(function(r){ return r.nav; });
+    var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+    if(hi-lo < 1e-6){ hi=lo+0.001; }
+    var n=hist.length;
+    var X=function(i){ return pad + (w-2*pad) * (n===1?0:i/(n-1)); };
+    var Y=function(v){ return h-pad - (h-2*pad) * ((v-lo)/(hi-lo)); };
+    var path='', area='';
+    hist.forEach(function(r,i){
+      var cmd = (i===0?'M':'L') + X(i).toFixed(1) + ' ' + Y(r.nav).toFixed(1);
+      path += cmd + ' ';
+    });
+    area = path + 'L' + X(n-1).toFixed(1) + ' ' + (h-pad) + ' L' + X(0).toFixed(1) + ' ' + (h-pad) + ' Z';
+    var last = hist[n-1].nav, base = 1.0;
+    var col = last>=base ? '#22c55e' : '#ef4444';
+    var s = '<svg class="pp-svg" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none">';
+    // 基准线 nav=1
+    s += '<line x1="'+pad+'" y1="'+Y(1).toFixed(1)+'" x2="'+(w-pad)+'" y2="'+Y(1).toFixed(1)+
+         '" stroke="rgba(255,255,255,.18)" stroke-dasharray="4 4"/>';
+    s += '<path d="'+area+'" fill="'+col+'" opacity="0.10"/>';
+    s += '<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2"/>';
+    s += '<text x="'+(pad+2)+'" y="'+(Y(1)-6).toFixed(1)+'" fill="#71717a" font-size="11">本金线 1.0000</text>';
+    s += '<text x="'+(w-pad-4)+'" y="'+(Y(last)-8).toFixed(1)+'" fill="'+col+
+         '" font-size="12" text-anchor="end" font-weight="600">'+last.toFixed(4)+'</text>';
+    s += '</svg>';
+    return s;
+  }
+
+  function render(d){
+    if(!d || !d.ok){
+      $('pp-sub').textContent = '加载失败';
+      $('pp-kpis').innerHTML = '<div class="pp-none">'+(d&&d.error?d.error:'未知错误')+'</div>';
+      return;
+    }
+    var L=d.latest||{}, S=d.stats||{}, sim=d.sim||{};
+    $('pp-sub').textContent = (sim.name||'') + '　|　本金 ' + money(sim.capital) + ' 元';
+    $('pp-asof').textContent = '数据截止 ' + (L.date||d.asof);
+
+    $('pp-total').textContent = money(L.total) + ' 元';
+    var pl = L.pnl, pp2 = L.pnl_pct;
+    $('pp-pnl').className = 'pp-delta ' + cls(pp2);
+    $('pp-pnl').textContent = (pl>=0?'+':'') + money(pl) + ' 元（' + sgn(pp2) + '）';
+
+    $('pp-kpis').innerHTML =
+      kpi('持仓市值', money(L.invested)+' 元', '三只 ETF 合计', '') +
+      kpi('现金', money(L.cash)+' 元',
+          '含 ' + (sim.cash_pool_months||12) + ' 个月生活费池', '') +
+      kpi('净值', L.nav==null?'—':L.nav.toFixed(4), '初始 1.0000', cls(pp2)) +
+      kpi('最大回撤', pct(S.mdd), '最惨时从高点缩水', 'bad') +
+      (S.excess_pp==null
+        ? kpi('对比基准', '待基准数据', '红利低波全收益', 'hint')
+        : kpi('对比基准', sgn(S.excess_pp/100), '红利低波全收益', cls(S.excess_pp))) +
+      kpi('持有天数', (S.days||0)+' 天', (S.records||0)+' 个交易日记录', 'hint');
+
+    $('pp-chart').innerHTML = chart(d.history||[]);
+    $('pp-chart-note').innerHTML =
+      '<b>怎么看这张图：</b>虚线是本金线（净值 1.0000）。线在虚线上方＝赚钱，下方＝亏钱。' +
+      '刚开始建仓时净值几乎贴着 1，因为大部分钱还是现金。' +
+      (S.ann!=null ? '<br><b>年化（按 '+(S.days||0)+' 天折算）：</b>'+sgn(S.ann)+
+        ' —— 天数太少，这个数字参考意义有限。' : '');
+
+    // 持仓
+    var hs = d.holdings||[];
+    var ht=['<tr><th>代码</th><th>名称</th><th>持有份额</th><th>最新价</th><th>市值</th><th>占比</th></tr>'];
+    var nameMap={};
+    (d.assets||[]).forEach(function(a){ nameMap[a.code]=a.name; });
+    hs.forEach(function(h){
+      ht.push('<tr><td><b>'+h.code+'</b></td><td>'+(nameMap[h.code]||'')+'</td>'+
+              '<td>'+money(h.shares,0)+'</td><td>'+(h.price||0).toFixed(3)+'</td>'+
+              '<td>'+money(h.mv)+'</td><td>'+(h.weight*100).toFixed(1)+'%</td></tr>');
+    });
+    if(!hs.length) ht.push('<tr><td colspan="6">还没有持仓（建仓尚未开始）</td></tr>');
+    $('pp-hold').innerHTML = ht.join('');
+
+    var b=d.build||{};
+    $('pp-build-note').innerHTML =
+      '<b>建仓进度：</b>'+(b.done||0)+' / '+(b.total||0)+' 批 —— 当前状态 <b>'+(b.pos||'—')+'</b>。'+
+      '<br><b>注意：</b>本页按「一周全额建仓」模拟，与正式方案的「10 万立即 + 140 万等 12 个月」不同，' +
+      '用来给真实建仓做对照基准。';
+
+    // 历史
+    var hist=(d.history||[]).slice().reverse();
+    var hh=['<tr><th>日期</th><th>总资产</th><th>净值</th><th>回撤</th><th>基准</th><th>状态</th></tr>'];
+    hist.forEach(function(r){
+      hh.push('<tr><td>'+r.date+'</td><td>'+money(r.total)+'</td>'+
+              '<td class="'+cls(r.nav-1)+'">'+r.nav.toFixed(4)+'</td>'+
+              '<td class="'+(r.dd<0?'down':'flat')+'">'+pct(r.dd)+'</td>'+
+              '<td>'+((r.bench==null)?'—':r.bench.toFixed(4))+'</td>'+
+              '<td>'+((r.pos==='满仓')?'<span class="pp-chip ok">满仓</span>'
+                    :'<span class="pp-chip warn">'+r.pos+'</span>')+'</td></tr>');
+    });
+    $('pp-hist').innerHTML = hh.join('');
+  }
+
+  if (window.LW && LW.sidebar) LW.sidebar.render('sidebar', {active: 'paper'});
+
+  LW.api.get('/api/paper').then(function(d){
+    render(d);
+    if(LW.render && LW.render.after) LW.render.after();
+  }).catch(function(e){
+    $('pp-kpis').innerHTML = '<div class="pp-none">请求失败：'+e+'</div>';
+  });
+})();
+</script>
+</body>
+</html>

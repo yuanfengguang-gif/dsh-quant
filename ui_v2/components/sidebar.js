@@ -8,6 +8,7 @@
     { id: 'control',  label: '控制',   ic: 'cpu',      url: '/control' },
     { id: 'pitch',    label: '决策',   ic: 'target',   url: '/pitch' },
     { id: 'pension',  label: '养老',   ic: 'target',   url: '/pension' },
+  { id: 'paper',    label: '模拟盘', ic: 'gauge',    url: '/paper' },   // 2026-10-21 养老模拟盘
     { id: 'holdings', label: '持仓',   ic: 'bar',      url: '/holdings' },
     { id: 'factors',  label: '因子',   ic: 'molecule', url: '/factors' },
     { id: 'backtest', label: '回测',   ic: 'chart',    url: '/backtest' },
