@@ -16,7 +16,7 @@ entry:
 
 
 plan:
-  name: 红利低波养老方案 v2.4
+  name: 红利低波养老方案 v2.5
   capital: 1500000          # 初始本金（元）
   withdrawal_rate: 0.04     # 提款率
   initial_annual: 60000     # 首年提款额（元）
@@ -103,8 +103,44 @@ signals:
   # 近期股息率区间（判断现处位置用）：
   #   2020 年起 4.20%~7.85%（中位 5.28%）；2022 年起最低 4.50%；2026 年 4.65%~5.45%
   #   当前 5.25% → 高于买回线 1.25pp，处于「满仓」；需涨 110% 才会触发卖出
-  dividend_abs:
+  # ══ v2.5 三信号组合（R122-R127 验证，2026-10-21 用户决定）══
+  # 为什么改：R127 实测 B（三者组合）比 A（单股息率）更安全
+  #   2015 段回撤  -31.2% vs -42.5%（少跌 11.3pp）
+  #   最差 3 年     -9.8% vs -22.0%（好 12.2pp）
+  #   年化波动      19.7% vs 21.3%
+  #   提款15年最差剩余 209.5% vs 176.4%（好 33pp）
+  #   代价：年化 15.88% vs 17.03%（少 1.15pp）
+  #   唯一通过样本外：0.342 vs 永不动 0.324（单 ERP/股息率均失效）
+  # 规则：卖出 = 任一触发；买回 = 至少两个满足
+  satellite_combo:
     enabled: true
+    check_freq: monthly
+    rule:
+      sell: any            # 任一信号报警就卖卫星仓
+      buy: at_least_2      # 至少两个信号说便宜才买回
+    signals:
+      dividend:
+        name: 红利低波股息率
+        index_code: H30269
+        higher_is_cheaper: true
+        sell_below: 0.025      # 股息率 <=2.5% 卖
+        buy_above: 0.040       # 股息率 >=4.0% 买
+      erp:
+        name: 沪深300股权风险溢价
+        index_code: "000300"
+        higher_is_cheaper: true
+        sell_below: 0.005      # ERP <=0.5% 卖
+        buy_above: 0.035       # ERP >=3.5% 买
+      pb:
+        name: 沪深300市净率
+        source: macro.hs300_pb
+        higher_is_cheaper: false
+        sell_above: 2.1        # PB >=2.1 卖
+        buy_below: 1.5         # PB <=1.5 买
+
+  # 旧口径保留（对照用，已不启用）
+  dividend_abs:
+    enabled: false                  # v2.5 已由 satellite_combo 取代
     index_code: H30269              # 红利低波（全收益对应 H20269）
     index_name: 红利低波
     sell_below: 0.025               # 股息率 <= 2.5% → 卫星仓卖出（太贵）

@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-21 20:30:45
+-- 导出时间：2026-10-21 22:09:17
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T20:30:44');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T22:09:17');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -136,6 +136,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F078','数据','515100 的 2023-12-21 分红 0.437 元/份是「3.5 年一次性补发」，不是常规年度分红','基金 2020-05 成立至 2023-12 一直未分红，一次性补发。用累计分红÷总年数会高估年度现金收益率（5.87% vs 剔除后 3.66%）','CONFIRMED','R111','logs/_r111_verify_div.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F075','策略','「一把梭 > 抄底 > 定投」在红利低波上成立，且博主推荐的「6-7成底仓+3-4成等跌」与我们70/30结构一致','v10 博主实测（20万，2019-03起7年）：一把梭41.4万(+107%,年化~11%) > 抄底30.5万(+52%) > 定投27.5万(+37%,年化~5%)。其结论「任何让你空仓等待的策略，都意味着你在这条坡上少爬了一段」','CONFIRMED','R106','logs/transcript_v10_睡前投资课_定投还是抄底.txt');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F076','认知','价值100 与自由现金流同样受「回测数据」问题困扰：2024-10 才正式运行，真实样本不足 2 年','博主主动披露：「过往这部分数据是拿着现在的规则用后视镜往回看的」「要等指数完整经历两个牛熊才能有更肯定答案」。编制规则：净利润>0 + 砍三刀(ROE水平/ROE稳定性/FCF率) + 三筛子(PE/股息率/FCF率算术平均)','CONFIRMED','R106','logs/transcript_v14_阿朗讲指数_价值100深度解析.txt');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F079','信号','PE/ERP/PB 各指标预测力远高于股息率，但都只在特定时代有效','vs红利低波未来12月相关性：PE +0.619、ERP +0.517、PB 弱、股息率仅 +0.045（无效）。20年回测Calmar：ERP 0.326、股息率 0.326、PB 0.304、PE 0.304、永不动 0.251','CONFIRMED','R120-R125','logs/_r125_full.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F080','信号','单指标信号全部通不过样本外测试，只有 PB 通过','2006-2015训练→2016-2026验证：PE 0.324(=永不动)、ERP 0.324(=)、股息率 0.324(=)、PB 0.342(>0.324)。PB是唯一样本外有效的','CONFIRMED','R125','logs/_r125_full.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F081','策略','三信号组合（任一卖/两个买）是唯一在所有稳健性测试中及格的方案','全期0.304、含08段0.389、含15段0.529、样本外0.342、换起点2010/2013/2015均有效。单ERP/股息率在这些测试中多处失效','CONFIRMED','R126','logs/_r126_combo.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F082','风险','三信号组合比单股息率更安全：2015少跌11.3pp、最差3年好12.2pp、提款最差剩余多33pp','R127提款测试（4%提款）：A单股息率2015段回撤-42.5%/最差3年-22.0%/15年提款最差剩余176.4%；B组合-31.2%/-9.8%/209.5%。代价年化少1.15pp（15.88% vs 17.03%）','CONFIRMED','R127','logs/_r127_safety.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──

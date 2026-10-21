@@ -43,6 +43,7 @@
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
     <h2>一、核心信号 <span class="tag">绝对股息率阈值决定卫星仓</span></h2>
     <div class="pn-grid" id="pn-signal" style="margin-top:8px">加载中…</div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-combo"></table></div>
     <div class="pn-note" id="pn-signal-note"></div>
   </div>
 
@@ -136,10 +137,31 @@
       kpi('当前状态', s.action || '—',
           '距卖出还需涨 ' + (s.gap_to_sell!=null && dy ? ((dy/s.sell_below-1)*100).toFixed(0)+'%' : '—'), cls);
     $('pn-signal-note').innerHTML =
+      '<b>v2.5 三信号组合：</b>卖出是「任一报警」（宁可早卖），买回是「至少两个说便宜」（避免误判）。' +
+      '加入 ERP 和 PB 后，2015 年那次回撤从 −42.5% 降到 −31.2%，最差 3 年从 −22.0% 改善到 −9.8%，代价是年化少 1.15pp。<br><br>' +
       '<b>股息率 = 每年分红 ÷ 股价。</b>分红不变时，股价涨 → 股息率跌（变贵）→ 卖；股价跌 → 股息率涨（变便宜）→ 买。' +
       '<br><b>规则：股息率 ≤ '+pct(s.sell_below,1)+' 卖卫星仓；≥ '+pct(s.buy_above,1)+' 买回；中间不动。每月检查。</b>' +
       '<br>该信号 20 年只调仓 <b>2 次</b>（2007-10 卖 / 2014-09 买回），不是频繁操作的工具。' +
       '<br><br>⚠️ <b>重大局限</b>：只在「高分红年代」有效。2007-2013 年股息率仅 1.5%~3.5%，永远够不到 4.0% 买回线，会长期空仓。';
+
+    // 一b、三信号组合（v2.5）
+    var cb = d.combo;
+    if (cb && cb.signals) {
+      var ct = ['<tr><th>信号</th><th>当前值</th><th>卖出线</th><th>买回线</th><th>状态</th></tr>'];
+      cb.signals.forEach(function(s){
+        var st = (s.state===null) ? '<span class="pn-chip hint">中间</span>'
+               : (s.state===0 ? '<span class="pn-chip bad">贵 → 报警</span>'
+                              : '<span class="pn-chip ok">便宜</span>');
+        var fmt = function(x){ return x==null?'—':(s.unit==='%' ? (x*100).toFixed(2)+'%' : x.toFixed(2)); };
+        ct.push('<tr><td>'+s.name+'</td><td><b>'+fmt(s.value)+'</b></td>'+
+                '<td>'+fmt(s.sell)+'</td><td>'+fmt(s.buy)+'</td><td>'+st+'</td></tr>');
+      });
+      ct.push('<tr><td colspan="4"><b>报警 '+cb.n_sell+' 个 / 便宜 '+cb.n_buy+' 个'+
+              '（规则：任一报警就卖，至少两个便宜才买）</b></td>'+
+              '<td><span class="pn-chip '+(cb.verdict==='应满仓'?'ok':(cb.verdict==='应空仓'?'bad':'hint'))+
+              '">'+cb.verdict+'</span></td></tr>');
+      $('pn-combo').innerHTML = ct.join('');
+    }
 
     // 二、ERP 温度计
     var e = d.erp;

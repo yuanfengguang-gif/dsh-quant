@@ -80,6 +80,12 @@ def pension_data(asof: str | None = None) -> dict:
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
 
+    # v2.5 三信号组合
+    try:
+        out["combo"] = mp.satellite_combo(cfg, asof)
+    except Exception:
+        out["combo"] = None
+
     # ERP 温度计（仅参考）
     try:
         erp_cfg = cfg["signals"]["erp_thermometer"]

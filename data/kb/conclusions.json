@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-21T20:30:45",
+ "exported_at": "2026-10-21T22:09:17",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-21T20:30:44"
+    "value": "2026-10-21T22:09:17"
    },
    {
     "key": "description",
@@ -940,6 +940,42 @@
     "verdict": "CONFIRMED",
     "rid": "R106",
     "data_pointer": "logs/transcript_v14_阿朗讲指数_价值100深度解析.txt"
+   },
+   {
+    "fid": "F079",
+    "category": "信号",
+    "statement": "PE/ERP/PB 各指标预测力远高于股息率，但都只在特定时代有效",
+    "evidence": "vs红利低波未来12月相关性：PE +0.619、ERP +0.517、PB 弱、股息率仅 +0.045（无效）。20年回测Calmar：ERP 0.326、股息率 0.326、PB 0.304、PE 0.304、永不动 0.251",
+    "verdict": "CONFIRMED",
+    "rid": "R120-R125",
+    "data_pointer": "logs/_r125_full.py"
+   },
+   {
+    "fid": "F080",
+    "category": "信号",
+    "statement": "单指标信号全部通不过样本外测试，只有 PB 通过",
+    "evidence": "2006-2015训练→2016-2026验证：PE 0.324(=永不动)、ERP 0.324(=)、股息率 0.324(=)、PB 0.342(>0.324)。PB是唯一样本外有效的",
+    "verdict": "CONFIRMED",
+    "rid": "R125",
+    "data_pointer": "logs/_r125_full.py"
+   },
+   {
+    "fid": "F081",
+    "category": "策略",
+    "statement": "三信号组合（任一卖/两个买）是唯一在所有稳健性测试中及格的方案",
+    "evidence": "全期0.304、含08段0.389、含15段0.529、样本外0.342、换起点2010/2013/2015均有效。单ERP/股息率在这些测试中多处失效",
+    "verdict": "CONFIRMED",
+    "rid": "R126",
+    "data_pointer": "logs/_r126_combo.py"
+   },
+   {
+    "fid": "F082",
+    "category": "风险",
+    "statement": "三信号组合比单股息率更安全：2015少跌11.3pp、最差3年好12.2pp、提款最差剩余多33pp",
+    "evidence": "R127提款测试（4%提款）：A单股息率2015段回撤-42.5%/最差3年-22.0%/15年提款最差剩余176.4%；B组合-31.2%/-9.8%/209.5%。代价年化少1.15pp（15.88% vs 17.03%）",
+    "verdict": "CONFIRMED",
+    "rid": "R127",
+    "data_pointer": "logs/_r127_safety.py"
    },
    {
     "fid": "F030",

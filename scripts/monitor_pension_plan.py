@@ -275,6 +275,77 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
     }
 
 
+def satellite_combo(cfg: dict, asof: str) -> dict | None:
+    """v2.5 三信号组合：股息率 + ERP + PB
+
+    规则：卖出 = 任一触发；买回 = 至少两个满足
+    """
+    sc = cfg.get("signals", {}).get("satellite_combo", {})
+    if not sc.get("enabled"):
+        return None
+    asof_ts = pd.Timestamp(asof)
+    sigs = []
+
+    def _val(col, code, src=None):
+        if src == "macro.hs300_pb":
+            with conn() as c:
+                d = pd.read_sql_query(
+                    "SELECT date,value FROM macro WHERE key='hs300_pb' ORDER BY date", c)
+            d["date"] = pd.to_datetime(d["date"])
+            d = d[d["date"] <= asof_ts]
+            return float(d["value"].iloc[-1]) if len(d) else None
+        d = load_index(code)
+        d = d[d["date"] <= asof_ts]
+        return float(d[col].iloc[-1]) if len(d) and not pd.isna(d[col].iloc[-1]) else None
+
+    # ① 股息率
+    c1 = sc["signals"]["dividend"]
+    v1 = _val("dy_ttm", c1["index_code"])
+    if v1 is not None:
+        s1 = 0 if v1 <= c1["sell_below"] else (1 if v1 >= c1["buy_above"] else None)
+    else:
+        s1 = None
+    sigs.append({"key": "dividend", "name": c1["name"], "value": v1, "state": s1,
+                 "sell": c1["sell_below"], "buy": c1["buy_above"],
+                 "unit": "%", "fmt": "{:.2%}"})
+
+    # ② ERP（沪深300 PE + 10Y国债）
+    c2 = sc["signals"]["erp"]
+    try:
+        d2 = load_index(c2["index_code"])
+        bd = load_bond()
+        d2 = d2.merge(bd, on="date", how="left")
+        d2 = d2[(d2["date"] <= asof_ts) & d2["bond10y"].notna()]
+        d2["erp"] = 1.0 / d2["pe_ttm"] - d2["bond10y"] / 100.0
+        v2 = float(d2["erp"].iloc[-1]) if len(d2) and d2["pe_ttm"].iloc[-1] > 0 else None
+    except Exception:
+        v2 = None
+    s2 = None if v2 is None else (0 if v2 <= c2["sell_below"] else (1 if v2 >= c2["buy_above"] else None))
+    sigs.append({"key": "erp", "name": c2["name"], "value": v2, "state": s2,
+                 "sell": c2["sell_below"], "buy": c2["buy_above"],
+                 "unit": "%", "fmt": "{:.2%}"})
+
+    # ③ PB
+    c3 = sc["signals"]["pb"]
+    v3 = _val("close", c3.get("index_code"), c3.get("source"))
+    s3 = None if v3 is None else (0 if v3 >= c3["sell_above"] else (1 if v3 <= c3["buy_below"] else None))
+    sigs.append({"key": "pb", "name": c3["name"], "value": v3, "state": s3,
+                 "sell": c3["sell_above"], "buy": c3["buy_below"],
+                 "unit": "", "fmt": "{:.2f}"})
+
+    states = [x["state"] for x in sigs]
+    n_sell = sum(1 for s in states if s == 0)
+    n_buy = sum(1 for s in states if s == 1)
+    if n_sell >= 1:
+        verdict, action = "应空仓", "卖出卫星仓"
+    elif n_buy >= int(sc["rule"]["buy"].split("_")[-1]):
+        verdict, action = "应满仓", "买回卫星仓"
+    else:
+        verdict, action = "维持现状", "不动"
+    return {"signals": sigs, "n_sell": n_sell, "n_buy": n_buy,
+            "verdict": verdict, "action": action, "rule": sc["rule"]}
+
+
 def dividend_level(cfg: dict) -> dict | None:
     """股息率绝对值的历史区间（交叉验证分位信号，因为分位会漂移）"""
     code = cfg["signals"]["dividend_abs"]["index_code"]
@@ -525,38 +596,38 @@ def main() -> int:
 
     L.append("## 二、核心信号（绝对股息率阈值）")
     L.append("")
-    L.append(f"### ① 股息率绝对阈值（管卫星仓）")
+    # ══ v2.5 三信号组合
+    sc_res = satellite_combo(cfg, asof)
+    L.append("### ① 卫星仓择时（三信号组合，v2.5）")
     L.append("")
-    L.append("| 项目 | 数值 |")
-    L.append("|---|---|")
-    L.append(f"| 指数 | {sig['dividend_abs']['index_code']} {sig['dividend_abs']['index_name']} |")
-    L.append(f"| **当前股息率** | **{cur_dy:.2%}** |")
-    L.append(f"| 卖出阈值（太贵） | 股息率 ≤ {exp_th:.1%} |")
-    L.append(f"| 买回阈值（便宜） | 股息率 ≥ {cheap_th:.1%} |")
-    if dy_ok:
-        if cur_dy <= exp_th:
-            st = f"**应空仓**（股息率 {cur_dy:.2%} ≤ {exp_th:.1%}）"
-        elif cur_dy >= cheap_th:
-            st = f"**应满仓**（股息率 {cur_dy:.2%} ≥ {cheap_th:.1%}）"
-        else:
-            st = (f"**维持现状**（股息率 {cur_dy:.2%} 在 {exp_th:.1%}~{cheap_th:.1%} 之间）")
-        L.append(f"| **状态** | {st} |")
-        L.append(f"| 距卖出还需 | 股息率降 {(cur_dy-exp_th)*100:.2f}pp"
-                 f"（股价约需涨 {(cur_dy/exp_th-1)*100:.0f}%） |")
-    L.append(f"| 检查频率 | 每月 |")
+    if sc_res:
+        L.append("| 信号 | 当前值 | 卖出线 | 买回线 | 状态 |")
+        L.append("|---|---|---|---|---|")
+        for s in sc_res["signals"]:
+            v = "—" if s["value"] is None else s["fmt"].format(s["value"])
+            st = "⚪ 中间" if s["state"] is None else ("🔴 贵" if s["state"] == 0 else "🟢 便宜")
+            sv = s["fmt"].format(s["sell"])
+            bv = s["fmt"].format(s["buy"])
+            L.append(f"| {s['name']} | **{v}** | {sv} | {bv} | {st} |")
+        L.append("")
+        L.append(f"| 判定 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| 报警信号数 | {sc_res['n_sell']} 个 |")
+        L.append(f"| 便宜信号数 | {sc_res['n_buy']} 个 |")
+        L.append(f"| 规则 | 卖出={sc_res['rule']['sell']}（任一） / "
+                 f"买回={sc_res['rule']['buy']} |")
+        L.append(f"| **结论** | **{sc_res['verdict']}** → {sc_res['action']} |")
+        L.append("")
+        L.append("> **为什么用三个信号**（R122-R127 验证）：单用股息率只能防 2008；"
+                 "加入 ERP 和 PB 后，2015 年那次的回撤从 −42.5% 降到 −31.2%（少跌 11.3pp），"
+                 "最差 3 年从 −22.0% 改善到 −9.8%。代价是年化少 1.15pp。"
+                 "**这是用「少赚一点」换「各种危机都不被打残」。**")
+        L.append(">")
+        L.append("> **规则解读**：卖出是「任一报警」（保守，宁可早卖）；"
+                 "买回是「至少两个说便宜」（严格，避免误判）。")
+    else:
+        L.append("_配置未启用 satellite_combo_")
     L.append("")
-    L.append("> **实测（R89-R99）**：该信号 19.8 年只调仓 **2 次**（2007-10 卖 / 2014-09 买回）。"
-             "Calmar 0.250（永不动 0.226），年化 13.06%（永不动 12.97%）。")
-    L.append(">")
-    L.append("> **⚠️ 重大局限**：本策略只在「高分红年代」有效。2007-2013 年股息率仅 1.5%~3.5%，"
-             "永远够不到 4.0% 买回线 → 长期空仓；2008 年指数跌 66.2%，股息率也只从 1.56% 涨到 2.15%，"
-             "仍不满足买回。**20 年回测实质是「13 年空仓 + 7 年满仓」。**")
-    L.append(">")
-    L.append("> **卫星仓要「全卖全买」，不要「部分降仓」**："
-             "全卖 −52.2% 回撤优于降到 30% 的 −56.9%。")
-    L.append(">")
-    L.append("> **应急条款：不加**。R97 宽版仅 +0.004 Calmar 但多 8 次摩擦；"
-             "R98 窄版从不触发；R99 回落版产生「买了又卖」冲突。")
 
     L.append("### ② ERP 估值温度计（仅参考，不调仓）")
     L.append("")
