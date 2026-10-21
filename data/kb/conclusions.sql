@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-21 22:09:17
+-- 导出时间：2026-10-21 23:28:13
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T22:09:17');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T23:28:12');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -251,6 +251,8 @@ INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workar
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M13','2026-10-19','东财 ETF 接口偶发 RemoteDisconnected','低','fixed','退化到新浪 fund_etf_category_sina 现价快照');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M16','2026-10-20','股息率数据有「分红季」更新 artefact（6 月平均 +13.45%、7 月 -7.78%）','高','open','已规避：卫星仓改用绝对阈值，并在说明书与面板披露；数据源未修复');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M17','2026-10-20','5 年分位窗口基准被高股息期抬高（2021-2025 把底抬到 4.50%）','高','open','已规避：改用绝对阈值，不再用相对排名');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M19','2026-10-21','给 deck_server.py 加了新路由后未重启服务器，页面 404（/paper 与 /api/paper 都打不开）','高','open','已重启并验证；规则：任何 deck_server 路由改动后必须重启，再浏览器验证一次');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M20','2026-10-21','缺陷台账编号双轨冲突：Markdown 台账是 M1-M11，知识库是 M8-M18，同一编号含义不同','中','open','以知识库 build_research_kb.py 的 DEFECTS 为唯一权威；Markdown 台账改为引用知识库编号');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M18','2026-10-20','择时策略在低分红年代（2007-2013）实质失效（股息率仅 1.5%-3.5%，够不到 4.0% 买回线）','中','open','已披露：说明书与面板均标注「只在高分红年代有效」');
 
 -- ── open_item ──
@@ -264,12 +266,12 @@ CREATE TABLE open_item(
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O01','说明书更新到 v2.4','P1','已完成 2026-10-20：信号①整段重写为绝对阈值，含三条缺陷证据与重大局限披露','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O02','建仓启动时填 config/pension_plan.yaml 的 entry.start_date','P1','目前是 null，监控工具会显示「建仓未启动」','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O03','每季度复核行业集中度（512890 银行 52.5%）','P2','用 ak.fund_portfolio_hold_em 取最新季度','open');
-INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','今天做了 1 个（新博主）；还有 6 个待处理','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O04','剩余 6 个视频的提炼与验证','P2','已完成 2026-10-21：8 个视频全部下载、转写、提炼并验证（见 R106 报告）','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O06','评估东方红红利低波（ROE+预期股息率，费率0.72%，半年再平衡）','P2','光总认为其编制因子优于现有三只；可选替代部分 512890','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O07','监控「账户浮亏转正所需月数」','P2','穷诸葛：一次投入 89 月 vs 分批 14 月；纳入监控工具输出','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O08','验证：股息率分位该用 5 年还是 20 年窗口','P1','已完成 2026-10-20：结论是不用分位（窗口无关），改用绝对阈值；另测六类替代方案均不如现行','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O09','阈值 2.5%/4.0% 更多数据复核','P2','已完成 2026-10-20（R101）：分期间 + 10 年滚动起点 + ±0.2pp 抖动，全部稳健；但确认优势仅来自 2006-2013，2012 年后起算无差异','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O10','配比再决策：现金流 vs 总收益','P1','已决策 2026-10-21（选 A）：维持 40/35/25。理由：保守口径下即使去掉 512890 覆盖也只有 90%，怎么调都覆盖不了，调配比只是心理安慰；512890 总收益最高（13.38%）；分红缺口靠卖份额补（原设计）。转为监控：每年 1 月复核三只 ETF 上年实际分红','done');
-INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O11','把「按月分红是营销说法」写进说明书','P1','实测三只ETF每年只分1-3次，512890完全不分红；分红主要在7月/12月到账，必须保留现金池平滑','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O11','把「按月分红是营销说法」写进说明书','P1','已完成 2026-10-21：v2.5 说明书已写入「按月分红是营销说法」章节','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O12','价值100（国证）列入观察项','P2','编制规则优秀(ROE+FCF+股息率)，但2024-10才正式运行，真实样本不足2年，与FCF同样问题','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');

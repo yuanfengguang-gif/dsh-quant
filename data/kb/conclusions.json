@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-21T22:09:17",
+ "exported_at": "2026-10-21T23:28:13",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-21T22:09:17"
+    "value": "2026-10-21T23:28:12"
    },
    {
     "key": "description",
@@ -1540,6 +1540,22 @@
     "workaround": "已规避：改用绝对阈值，不再用相对排名"
    },
    {
+    "mid": "M19",
+    "discovered": "2026-10-21",
+    "descr": "给 deck_server.py 加了新路由后未重启服务器，页面 404（/paper 与 /api/paper 都打不开）",
+    "severity": "高",
+    "status": "open",
+    "workaround": "已重启并验证；规则：任何 deck_server 路由改动后必须重启，再浏览器验证一次"
+   },
+   {
+    "mid": "M20",
+    "discovered": "2026-10-21",
+    "descr": "缺陷台账编号双轨冲突：Markdown 台账是 M1-M11，知识库是 M8-M18，同一编号含义不同",
+    "severity": "中",
+    "status": "open",
+    "workaround": "以知识库 build_research_kb.py 的 DEFECTS 为唯一权威；Markdown 台账改为引用知识库编号"
+   },
+   {
     "mid": "M18",
     "discovered": "2026-10-20",
     "descr": "择时策略在低分红年代（2007-2013）实质失效（股息率仅 1.5%-3.5%，够不到 4.0% 买回线）",
@@ -1574,8 +1590,8 @@
     "oid": "O04",
     "title": "剩余 6 个视频的提炼与验证",
     "priority": "P2",
-    "detail": "今天做了 1 个（新博主）；还有 6 个待处理",
-    "status": "open"
+    "detail": "已完成 2026-10-21：8 个视频全部下载、转写、提炼并验证（见 R106 报告）",
+    "status": "done"
    },
    {
     "oid": "O06",
@@ -1616,8 +1632,8 @@
     "oid": "O11",
     "title": "把「按月分红是营销说法」写进说明书",
     "priority": "P1",
-    "detail": "实测三只ETF每年只分1-3次，512890完全不分红；分红主要在7月/12月到账，必须保留现金池平滑",
-    "status": "open"
+    "detail": "已完成 2026-10-21：v2.5 说明书已写入「按月分红是营销说法」章节",
+    "status": "done"
    },
    {
     "oid": "O12",
