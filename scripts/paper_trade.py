@@ -105,6 +105,35 @@ def update_etf_cache(c, codes, start, end):
             print(f"  ⚠️ ETF {code} 更新失败（沿用旧缓存）：{e}")
 
 
+def update_bench_remote(start, end):
+    """从网络补基准（H20269 全收益）到 dividend_research.db，失败不致命"""
+    try:
+        import akshare as ak
+        df = ak.stock_zh_index_hist_csindex(symbol="H20269",
+                                           start_date=start.replace("-", ""),
+                                           end_date=end.replace("-", ""))
+        if df is None or len(df) == 0:
+            return 0
+        df.columns = [str(x) for x in df.columns]
+        d = df[["日期", "收盘"]].copy()
+        d.columns = ["date", "close"]
+        d["date"] = pd.to_datetime(d["date"]).dt.strftime("%Y-%m-%d")
+        d["close"] = pd.to_numeric(d["close"], errors="coerce")
+        d = d.dropna()
+        src = BASE / "data" / "cache" / "dividend_research.db"
+        cc = sqlite3.connect(src, timeout=30)
+        cc.execute("CREATE TABLE IF NOT EXISTS idx_daily(code TEXT, date TEXT, open REAL, high REAL, "
+                   "low REAL, close REAL, amount REAL, pe_ttm REAL, PRIMARY KEY(code,date))")
+        cc.executemany(
+            "INSERT OR REPLACE INTO idx_daily(code,date,close) VALUES('H20269',?,?)",
+            [(r.date, float(r.close)) for r in d.itertuples()])
+        cc.commit(); cc.close()
+        return len(d)
+    except Exception as e:
+        print(f"  ⚠️ 基准补数失败（沿用本地）：{type(e).__name__}: {str(e)[:60]}")
+        return 0
+
+
 def fetch_bench(c, start, end):
     """基准：红利低波全收益 H20269（来自 dividend_research.db）"""
     src = BASE / "data" / "cache" / "dividend_research.db"
@@ -162,6 +191,14 @@ def simulate(cfg, c, asof: str):
         (*codes, cfg["start_date"], asof)).fetchall()
     for code, dt, cl in rows:
         px.setdefault(dt, {})[code] = float(cl)
+    # 补齐：某只 ETF 当天停牌/缺数据 → 用最近一次已知价（避免市值算成 0）
+    _last = {}
+    for dt in sorted(px.keys()):
+        for code in codes:
+            if code in px[dt]:
+                _last[code] = px[dt][code]
+            elif code in _last:
+                px[dt][code] = _last[code]
     bd = dict(c.execute("SELECT date,close FROM bench_daily WHERE date>=? AND date<=?",
                         (cfg["start_date"], asof)).fetchall())
     all_dates = sorted(px.keys())
@@ -200,8 +237,14 @@ def simulate(cfg, c, asof: str):
                 cash += shares[code] * amt
         # ── 月度提款
         ym = dt[:7]
+        # 跨了几个月就提几次款（电脑停机多日也能补上）
+        _n_month = 0
         if last_month is not None and ym != last_month:
-            need = mwd
+            _a = int(last_month[:4]) * 12 + int(last_month[5:7])
+            _b = int(ym[:4]) * 12 + int(ym[5:7])
+            _n_month = max(0, _b - _a)
+        if _n_month > 0:
+            need = mwd * _n_month
             if cash >= need:
                 cash -= need
             else:
@@ -308,6 +351,9 @@ def main():
     print("  [1/3] 更新 ETF 日线缓存…")
     update_etf_cache(c, codes, cfg["start_date"], asof)
     print("  [2/3] 更新基准…")
+    _n = update_bench_remote(cfg["start_date"], asof)
+    if _n:
+        print(f"  基准补数 +{_n} 行")
     fetch_bench(c, cfg["start_date"], asof)
     print("  [3/3] 模拟…")
     hist, sched, shares, cash, done = simulate(cfg, c, asof)
