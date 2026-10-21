@@ -268,7 +268,7 @@ pairing_candidates:
     index_name: 中证500
     all_three_win: false
   - index_code: "000919"
-    index_name: 中证价值
+    index_name: 沪深300价值    # 更正：官网全名「沪深300价值指数」
     all_three_win: false
   - index_code: "000933"
     index_name: 中证医药卫生

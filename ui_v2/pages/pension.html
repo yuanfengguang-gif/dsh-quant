@@ -95,6 +95,8 @@
     <h2>九、配对候选与未来任务 <span class="tag">来自配置</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-pairing"></table></div>
     <div class="pn-note" id="pn-explore-note"></div>
+    <h3 style="margin:16px 0 8px;font-size:13px;color:#a1a1aa">待办清单（来自知识库，仅未完成项）</h3>
+    <div style="overflow-x:auto"><table class="pn-tbl" id="pn-tasks"></table></div>
   </div>
 </div>
 
@@ -314,16 +316,36 @@
 
     // 八、配对候选
     var pc = d.pairing_candidates || [];
-    var pct_ = ['<tr><th>指数</th><th>跟踪 ETF</th><th>牛市</th><th>震荡</th><th>熊市</th><th>三市全胜</th><th>备注</th></tr>'];
+    var pct_ = ['<tr><th>指数</th><th>跟踪 ETF</th><th>测试权重</th><th>牛市</th><th>震荡</th><th>熊市</th><th>组合年化</th><th>回撤改善</th><th>三市全胜</th><th>备注</th></tr>'];
     pc.forEach(function(c){
-      pct_.push('<tr><td>'+(c.index_name||'')+'</td><td>'+(c.etf||'—')+'</td>'+
+      pct_.push('<tr><td><b>'+(c.index_code||'')+'</b> '+(c.index_name||'')+'</td>'+
+        '<td>'+(c.etf||'<span style="color:#71717a">未选 ETF</span>')+'</td>'+
+        '<td>'+(c.weight_tested==null?'—':pct(c.weight_tested,0))+'</td>'+
         '<td>'+(c.bull_pp==null?'—':pp(c.bull_pp/100))+'</td>'+
         '<td>'+(c.range_pp==null?'—':pp(c.range_pp/100))+'</td>'+
         '<td>'+(c.bear_pp==null?'—':pp(c.bear_pp/100))+'</td>'+
+        '<td>'+(c.portfolio_ann==null?'—':pct(c.portfolio_ann))+'</td>'+
+        '<td>'+(c.drawdown_improve_pp==null?'—':pp(c.drawdown_improve_pp/100))+'</td>'+
         '<td>'+(c.all_three_win?'<span class="pn-chip ok">是</span>':'<span class="pn-chip bad">否</span>')+'</td>'+
         '<td style="font-size:11px;color:#a1a1aa">'+(c.note||'')+'</td></tr>');
     });
     $('pn-pairing').innerHTML = pct_.join('');
+
+      // 待办清单（知识库 O 系列）
+      var oi = d.open_items || [];
+      if (oi.length) {
+        var ot = ['<tr><th>编号</th><th>优先级</th><th>事项</th><th>说明</th></tr>'];
+        oi.forEach(function(o){
+          var pc2 = o.priority==='P1' ? 'bad' : (o.priority==='P2' ? 'warn' : 'hint');
+          ot.push('<tr><td><b>'+(o.id||'')+'</b></td>'+
+                  '<td><span class="pn-chip '+pc2+'">'+(o.priority||'—')+'</span></td>'+
+                  '<td>'+(o.title||'')+'</td>'+
+                  '<td style="font-size:11px;color:#a1a1aa">'+(o.note||'')+'</td></tr>');
+        });
+        $('pn-tasks').innerHTML = ot.join('');
+      } else {
+        $('pn-tasks').innerHTML = '<tr><td colspan="4">无未完成待办</td></tr>';
+      }
     var ex = d.exploration || {};
     if(ex.status){
       $('pn-explore-note').innerHTML = '<b>探索仓（未来任务，当前不执行）：</b>' +

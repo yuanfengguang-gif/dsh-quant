@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parents[1]
+BASE_DIR = BASE
 
 
 def _load(module_name: str, file_path: Path):
@@ -175,6 +176,21 @@ def pension_data(asof: str | None = None) -> dict:
         out["entry_progress"] = {"started": False}
 
     # 配对候选（来自配置）
+    # 未来任务：知识库待办（O 系列）
+    try:
+        import sqlite3 as _sq3
+        _kb = BASE_DIR / "data" / "cache" / "research_kb.db"
+        _c = _sq3.connect(f"file:{_kb.as_posix()}?mode=ro", uri=True, timeout=15)
+        _rows = _c.execute(
+            "SELECT oid, title, priority, detail, status FROM open_item "
+            "WHERE status != 'done' ORDER BY priority, oid").fetchall()
+        _c.close()
+        out["open_items"] = [{"id": r[0], "title": r[1], "priority": r[2],
+                             "note": r[3], "status": r[4]} for r in _rows]
+    except Exception as _e:
+        out["open_items"] = []
+        out["open_items_error"] = f"{type(_e).__name__}: {_e}"
+
     out["pairing_candidates"] = cfg.get("pairing_candidates", [])
     out["exploration"] = cfg.get("exploration", {})
 
