@@ -126,16 +126,25 @@
       ? al.map(function(a){ return '<div class="pn-alert"><b>'+a.title+'</b>：'+a.detail+'</div>'; }).join('')
       : '';
 
-    // 一、核心信号（绝对股息率阈值）
+    // 一、核心信号（v2.5 三信号汇总）
     var s = d.signal || {};
     var dy = s.dividend_yield;
-    var cls = (dy==null) ? '' : (dy<=s.sell_below ? 'bad' : (dy>=s.buy_above ? 'good' : 'warn'));
-    $('pn-signal').innerHTML =
-      kpi('当前股息率', pct(dy), '每年分红 ÷ 股价', cls) +
-      kpi('卖出线（太贵）', pct(s.sell_below,1), '股息率低于此值 → 卖', 'bad') +
-      kpi('买回线（便宜）', pct(s.buy_above,1), '股息率高于此值 → 买', 'good') +
-      kpi('当前状态', s.action || '—',
-          '距卖出还需涨 ' + (s.gap_to_sell!=null && dy ? ((dy/s.sell_below-1)*100).toFixed(0)+'%' : '—'), cls);
+    var cb0 = d.combo;
+    if (cb0 && cb0.signals) {
+      var vcls = cb0.verdict==='应满仓' ? 'good' : (cb0.verdict==='应空仓' ? 'bad' : 'warn');
+      $('pn-signal').innerHTML =
+        kpi('结论', cb0.verdict, cb0.action, vcls) +
+        kpi('报警信号数', cb0.n_sell + ' 个', '任一报警就卖', cb0.n_sell>0?'bad':'') +
+        kpi('便宜信号数', cb0.n_buy + ' 个', '至少两个才买回', cb0.n_buy>=2?'good':'warn') +
+        kpi('距卖出（股息率口径）', (dy && cb0.signals[0].sell) ?
+             '还需涨 ' + ((dy/cb0.signals[0].sell-1)*100).toFixed(0) + '%' : '—',
+             '股息率 ' + pct(dy) + ' vs 卖出线 ' + pct(cb0.signals[0].sell,1), '');
+    } else {
+      var cls = (dy==null) ? '' : (dy<=s.sell_below ? 'bad' : (dy>=s.buy_above ? 'good' : 'warn'));
+      $('pn-signal').innerHTML =
+        kpi('当前股息率', pct(dy), '每年分红 ÷ 股价', cls) +
+        kpi('当前状态', s.action || '—', '', cls);
+    }
     $('pn-signal-note').innerHTML =
       '<b>v2.5 三信号组合：</b>卖出是「任一报警」（宁可早卖），买回是「至少两个说便宜」（避免误判）。' +
       '加入 ERP 和 PB 后，2015 年那次回撤从 −42.5% 降到 −31.2%，最差 3 年从 −22.0% 改善到 −9.8%，代价是年化少 1.15pp。<br><br>' +
