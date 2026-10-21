@@ -561,23 +561,57 @@ def main() -> int:
     L.append("### ② ERP 估值温度计（仅参考，不调仓）")
     L.append("")
     if not np.isnan(erp_val):
+        _bands = sig["erp_thermometer"].get("bands") or []
+        _band = None
+        for _lo, _hi, _nm, _fhs, _flw in _bands:
+            if _lo <= erp_val < _hi:
+                _band = (_nm, _fhs, _flw, _lo, _hi)
+                break
         L.append("| 项目 | 数值 |")
         L.append("|---|---|")
         L.append(f"| ERP = 1/PE − 10Y国债 | **{erp_val:.2%}** |")
-        L.append(f"| 3 年分位 | **{erp_pct:.0%}** |")
-        if erp_pct >= 0.7:
-            judge = "偏便宜（历史上高 ERP 后收益较好）"
-        elif erp_pct <= 0.3:
-            judge = "偏贵"
-        else:
-            judge = "中性"
-        L.append(f"| 判定 | {judge} |")
+        # 全历史分位（3 年窗口会漂移，两个一起看）
+        _allp = np.nan
+        try:
+            _ev = dz["erp"].dropna().to_numpy(float)
+            if len(_ev) > 200:
+                _allp = float((_ev < erp_val).mean())
+        except Exception:
+            pass
+        L.append(f"| 3 年分位 | {erp_pct:.0%} |")
+        L.append(f"| **全历史分位**（2015 起） | **{_allp:.0%}** |" if not np.isnan(_allp)
+                 else "| 全历史分位 | — |")
+        if _band:
+            L.append(f"| **所处区间** | **{_band[0]}**（{_band[3]*100:.1f}%~{_band[4]*100:.1f}%）|")
         L.append("")
-        L.append("> ⚠️ R41/R42 实测：ERP 有最强预测力（相关系数 0.439）但**做成策略反而降低年化**，"
-                 "因为 ERP 低点与回撤发生点不重合。**只看不用。**")
+        _alo = float(sig["erp_thermometer"].get("alert_below", 0.03))
+        if erp_val < _alo:
+            L.append(f"> 🔴 **预警：ERP {erp_val:.2%} < {_alo:.1%}（很贵区间）。**")
+            L.append(">")
+            L.append("> 历史上该区间之后 12 个月，红利低波平均 **−5.19%**、"
+                     "沪深300 平均 **−19.61%**。")
+            L.append(">")
+            L.append("> 此时应格外谨慎，**不要加仓**。")
+            L.append("")
+        L.append("**ERP 区间对照（2015-2026 实测，2862 日）**")
+        L.append("")
+        L.append("| ERP 区间 | 沪深300 未来12月 | 红利低波 未来12月 |")
+        L.append("|---|---|---|")
+        for _lo, _hi, _nm, _fhs, _flw in _bands:
+            if _fhs is None:
+                continue
+            mark = " ← **当前**" if (_lo <= erp_val < _hi) else ""
+            L.append(f"| {_nm}（{_lo*100:.1f}~{_hi*100:.1f}%） | {_fhs:+.2%} | {_flw:+.2%}{mark} |")
+        L.append("")
+        L.append("> 相关系数：ERP vs 沪深300 未来12月 **+0.546**；vs 红利低波 **+0.517**"
+                 " —— ERP 是有效的领先指标。")
+        L.append("")
     else:
         L.append("_无国债数据（2018 前）_")
     L.append("")
+    L.append("> ⚠️ **用法边界**：ERP 分位做**温和倾斜**会降年化（R41/R42）；"
+             "ERP 绝对值做**极端阈值开关**在沪深300上有效（R105，+6.89pp），但阈值 6.5 就失效、"
+             "对中证红利 0 次触发。**所以：只看不用，当外部环境温度计。**")
 
     L.append("## 三、持仓行业集中度（2026Q2 实测，季度复核）")
     L.append("")
@@ -844,7 +878,7 @@ def main() -> int:
     print(f"  股息率 {cur_dy:.2%}  卖出线 {exp_th:.1%}  买回线 {cheap_th:.1%}" if dy_ok
           else f"  股息率 {cur_dy:.2%}  分位 —")
     if not np.isnan(erp_val):
-        print(f"  ERP {erp_val:.2%}  3年分位 {erp_pct:.0%}（仅参考）")
+        print(f"  ERP {erp_val:.2%}  3年分位 {erp_pct:.0%}  区间 {(_band[0] if '_band' in dir() and _band else '—')}（仅参考）")
     print(f"  加权前三大行业 {wt3:.1%}  加权银行 {wbk:.1%}")
     print(f"\n  报告已写入：{out}")
     return 0

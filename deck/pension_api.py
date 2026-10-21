@@ -33,6 +33,7 @@ def pension_data(asof: str | None = None) -> dict:
     except Exception as e:
         return {"ok": False, "error": f"无法读取配置: {type(e).__name__}: {e}"}
 
+    import numpy as np
     import pandas as pd
     from datetime import date
     asof = asof or date.today().isoformat()
@@ -78,6 +79,41 @@ def pension_data(asof: str | None = None) -> dict:
         }
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
+
+    # ERP 温度计（仅参考）
+    try:
+        erp_cfg = cfg["signals"]["erp_thermometer"]
+        dz = mp.load_index(erp_cfg["index_code"])
+        bond = mp.load_bond()
+        dz = dz.merge(bond, on="date", how="left")
+        dz = dz[(dz["date"] <= pd.Timestamp(asof)) & dz["bond10y"].notna()].reset_index(drop=True)
+        if len(dz) > 300:
+            dz["erp"] = np.where(dz["pe_ttm"] > 0,
+                                 1.0 / dz["pe_ttm"] - dz["bond10y"] / 100.0, np.nan)
+            ev = dz["erp"].dropna()
+            cur_erp = float(ev.iloc[-1])
+            pct3 = float(mp.rolling_pct(dz["erp"].to_numpy(float),
+                                        int(erp_cfg.get("window", 750)))[-1])
+            allp = float((ev.to_numpy(float) < cur_erp).mean())
+            band = None
+            for lo, hi, nm, fhs, flw in (erp_cfg.get("bands") or []):
+                if lo <= cur_erp < hi:
+                    band = {"name": nm, "lo": lo, "hi": hi, "fwd_hs": fhs, "fwd_lw": flw}
+                    break
+            out["erp"] = {
+                "index": erp_cfg["index_code"], "index_name": erp_cfg.get("index_name"),
+                "value": cur_erp, "pct3y": pct3, "pct_all": allp,
+                "band": band, "alert_below": float(erp_cfg.get("alert_below", 0.03)),
+                "alert": cur_erp < float(erp_cfg.get("alert_below", 0.03)),
+                "bands": [{"name": b[2], "lo": b[0], "hi": b[1],
+                           "fwd_hs": b[3], "fwd_lw": b[4]} for b in (erp_cfg.get("bands") or [])],
+                "pe": float(dz["pe_ttm"].iloc[-1]),
+                "bond10y": float(dz["bond10y"].iloc[-1]),
+            }
+        else:
+            out["erp"] = None
+    except Exception:
+        out["erp"] = None
 
     # 股息率绝对值（交叉验证）
     try:

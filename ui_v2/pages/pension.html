@@ -47,44 +47,51 @@
   </div>
 
   <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
-    <h2>二、配比与行业集中度 <span class="tag">按配置权重实时计算</span></h2>
+    <h2>二、ERP 温度计 <span class="tag">外部环境参考 · 不产生交易信号</span></h2>
+    <div class="pn-grid" id="pn-erp" style="margin-top:8px">加载中…</div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-erp-bands"></table></div>
+    <div class="pn-note" id="pn-erp-note"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
+    <h2>三、配比与行业集中度 <span class="tag">按配置权重实时计算</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-assets"></table></div>
     <div class="pn-note" id="pn-ind-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d2" style="margin-top:14px">
-    <h2>三、股息率历史位置 <span class="tag">20 年分布（交叉验证，不参与调仓）</span></h2>
+    <h2>四、股息率历史位置 <span class="tag">20 年分布（交叉验证，不参与调仓）</span></h2>
     <div class="pn-grid" id="pn-divlevel" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-divlevel-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
-    <h2>四、银行强弱监测 <span class="tag">只追踪，不自动调仓</span></h2>
+    <h2>五、银行强弱监测 <span class="tag">只追踪，不自动调仓</span></h2>
     <div class="pn-grid" id="pn-bank" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-bank-trend"></table></div>
     <div class="pn-note" id="pn-bank-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
-    <h2>五、信号历史战绩 <span class="tag">防失效</span></h2>
+    <h2>六、信号历史战绩 <span class="tag">防失效</span></h2>
     <div class="pn-grid" id="pn-track" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-track-recent"></table></div>
     <div class="pn-note" id="pn-track-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>六、建仓进度与回本参考</h2>
+    <h2>七、建仓进度与回本参考</h2>
     <div class="pn-grid" id="pn-entry" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-entry-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>七、ETF 行情 <span class="tag" id="pn-price-src">—</span></h2>
+    <h2>八、ETF 行情 <span class="tag" id="pn-price-src">—</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-prices"></table></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>八、配对候选与未来任务 <span class="tag">来自配置</span></h2>
+    <h2>九、配对候选与未来任务 <span class="tag">来自配置</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-pairing"></table></div>
     <div class="pn-note" id="pn-explore-note"></div>
   </div>
@@ -134,7 +141,38 @@
       '<br>该信号 20 年只调仓 <b>2 次</b>（2007-10 卖 / 2014-09 买回），不是频繁操作的工具。' +
       '<br><br>⚠️ <b>重大局限</b>：只在「高分红年代」有效。2007-2013 年股息率仅 1.5%~3.5%，永远够不到 4.0% 买回线，会长期空仓。';
 
-    // 二、配比
+    // 二、ERP 温度计
+    var e = d.erp;
+    if (e) {
+      var ecls = e.alert ? 'bad' : (e.band && e.band.name === '便宜' ? 'good' : '');
+      $('pn-erp').innerHTML =
+        kpi('沪深300 ERP', pct(e.value), '1/PE − 10年国债', ecls) +
+        kpi('全历史分位', pct(e.pct_all,0), '100% = 史上最便宜', e.pct_all>0.7?'good':'') +
+        kpi('所处区间', e.band ? e.band.name : '—',
+            e.band ? (e.band.lo*100).toFixed(1)+'%~'+(e.band.hi*100).toFixed(1)+'%' : '', ecls) +
+        kpi('PE / 10Y国债', (e.pe||0).toFixed(2)+' / '+(e.bond10y||0).toFixed(2)+'%',
+            '盈利回报率 '+pct(e.pe?1/e.pe:null), '');
+      var eb = ['<tr><th>ERP 区间</th><th>沪深300 未来12月</th><th>红利低波 未来12月</th></tr>'];
+      (e.bands||[]).forEach(function(b){
+        if (b.fwd_hs == null) return;
+        var cur = (e.band && b.name === e.band.name) ? ' style="background:rgba(94,106,210,.12)"' : '';
+        eb.push('<tr'+cur+'><td>'+b.name+'（'+(b.lo*100).toFixed(1)+'~'+(b.hi*100).toFixed(1)+'%）'+
+                (cur?' ← 当前':'')+'</td><td>'+pp(b.fwd_hs)+'</td><td>'+pp(b.fwd_lw)+'</td></tr>');
+      });
+      $('pn-erp-bands').innerHTML = eb.join('');
+      $('pn-erp-note').innerHTML =
+        (e.alert ? '<b style="color:#ef4444">🔴 预警：ERP 低于 '+(e.alert_below*100).toFixed(0)+
+                   '%，历史上该区间之后 12 个月红利低波平均 −5.19%，不要加仓。</b><br>' : '') +
+        '<b>ERP 是什么：</b>买股票比买国债每年多赚多少（＝1/市盈率 − 10年国债收益率）。越高说明股票越便宜。' +
+        '<br><b>实测有效性：</b>ERP 与未来 12 个月收益的相关系数——沪深300 <b>+0.546</b>、红利低波 <b>+0.517</b>。' +
+        '<br><b>但不用它调仓：</b>ERP 分位做温和倾斜会降年化；绝对值做极端开关虽有效（+6.89pp）但阈值 6.5 就失效、对中证红利 0 次触发。' +
+        '<br><b>所以：只看不用，当外部环境温度计。</b>';
+
+    } else {
+      $('pn-erp').innerHTML = '<div class="pn-none">无 ERP 数据（需国债收益率）</div>';
+    }
+
+    // 三、配比
     var rows = ['<tr><th>代码</th><th>名称</th><th>权重</th><th>金额</th><th>前三大行业</th><th>银行占比</th><th>判定</th></tr>'];
     (d.assets||[]).forEach(function(a){
       var ok3 = (a.top3_industry!=null && a.top3_industry < 0.5);
