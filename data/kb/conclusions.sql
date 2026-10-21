@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-21 20:26:14
+-- 导出时间：2026-10-21 20:30:45
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T20:26:13');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T20:30:44');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -265,7 +265,7 @@ INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O0
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O07','监控「账户浮亏转正所需月数」','P2','穷诸葛：一次投入 89 月 vs 分批 14 月；纳入监控工具输出','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O08','验证：股息率分位该用 5 年还是 20 年窗口','P1','已完成 2026-10-20：结论是不用分位（窗口无关），改用绝对阈值；另测六类替代方案均不如现行','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O09','阈值 2.5%/4.0% 更多数据复核','P2','已完成 2026-10-20（R101）：分期间 + 10 年滚动起点 + ±0.2pp 抖动，全部稳健；但确认优势仅来自 2006-2013，2012 年后起算无差异','done');
-INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O10','配比再决策：现金流 vs 总收益','P1','现行40/35/25 现金分红覆盖仅106%(余量293元/月)，512890(25%)完全不发现金但总收益最高(13.38%)。若提到55/40/5 覆盖可到135%，但总收益下降。需用户权衡','open');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O10','配比再决策：现金流 vs 总收益','P1','已决策 2026-10-21（选 A）：维持 40/35/25。理由：保守口径下即使去掉 512890 覆盖也只有 90%，怎么调都覆盖不了，调配比只是心理安慰；512890 总收益最高（13.38%）；分红缺口靠卖份额补（原设计）。转为监控：每年 1 月复核三只 ETF 上年实际分红','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O11','把「按月分红是营销说法」写进说明书','P1','实测三只ETF每年只分1-3次，512890完全不分红；分红主要在7月/12月到账，必须保留现金池平滑','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O12','价值100（国证）列入观察项','P2','编制规则优秀(ROE+FCF+股息率)，但2024-10才正式运行，真实样本不足2年，与FCF同样问题','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');
