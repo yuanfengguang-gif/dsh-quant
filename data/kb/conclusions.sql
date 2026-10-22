@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-21 23:28:13
+-- 导出时间：2026-10-22 09:55:03
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-21T23:28:12');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T09:55:02');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -140,6 +140,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F080','信号','单指标信号全部通不过样本外测试，只有 PB 通过','2006-2015训练→2016-2026验证：PE 0.324(=永不动)、ERP 0.324(=)、股息率 0.324(=)、PB 0.342(>0.324)。PB是唯一样本外有效的','CONFIRMED','R125','logs/_r125_full.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F081','策略','三信号组合（任一卖/两个买）是唯一在所有稳健性测试中及格的方案','全期0.304、含08段0.389、含15段0.529、样本外0.342、换起点2010/2013/2015均有效。单ERP/股息率在这些测试中多处失效','CONFIRMED','R126','logs/_r126_combo.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F082','风险','三信号组合比单股息率更安全：2015少跌11.3pp、最差3年好12.2pp、提款最差剩余多33pp','R127提款测试（4%提款）：A单股息率2015段回撤-42.5%/最差3年-22.0%/15年提款最差剩余176.4%；B组合-31.2%/-9.8%/209.5%。代价年化少1.15pp（15.88% vs 17.03%）','CONFIRMED','R127','logs/_r127_safety.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F083','策略','加入 10% 黄金 ETF 可同时提高年化、降低回撤、改善提款安全性（2016-2026 实测）','红利100%→8.86%/回撤-27.5%/8年提款最差剩余127.0%；红利90%+黄金10%→9.24%/-25.1%/138.8%；红利85%+15%→9.43%/-23.9%/145.0%；红利80%+20%→9.61%/-22.6%/151.4%。分期间：2017-2020 +1.3pp、2021-2026 +3.0pp，两段都为正','CONFIRMED','R132','logs/_r132_gold_swap_fixed.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F084','数据','黄金 518880 与纳指 513100 均为上交所 A 股 ETF，A 股账户可直接买','518880 黄金ETF华安跟踪上金所Au99.99（人民币）；513100 纳指ETF国泰跟踪纳斯达克100（QDII，美元资产折人民币）。513100 vs QQQ 十年：21.21% vs 19.90%（+1.31pp/年，来自人民币汇率）；回撤 -28.6% vs -35.6%','CONFIRMED','R131','logs/_r131_etf_identity_and_gold.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -231,6 +233,7 @@ INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','202
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E21','2026-10-21','现金流覆盖率算错：报 105.9%，实际 67-78%','三处错误：515450 年数用 5.80 年（实际 6.76）、515100 把 3.5 年补发当年度分红摊平、净值取值错误。后果：差点得出「分红能覆盖生活费」的错误结论','已修正为四口径披露（99.8%/77.6%/67.1%/15.3%），并加 R111 除息日净值交叉验证');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E22','2026-10-21','比较「红利 ETF vs 黄金」时用了不复权收盘价，漏掉 5.4-5.9%/年分红','把 515100 算成 4.72%/年、515450 算成 5.67%/年（价格口径），据此得出「512890 比黄金好、换黄金是亏的」的错误结论。全收益口径下红利低波是 8.86%、黄金是 11.83%，结论反转','已改用全收益指数（H20955/H20269）重算；规则：任何「分红资产 vs 无分红资产」的比较必须用全收益口径，或用 ETF 价格 + 分红单独累加');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E19','2026-10-20','把 5 年分位信号当作可靠工具用了多轮，未先检验股息率数据本身质量','股息率月度变化 81.6% 来自分红数据更新（非股价），5 年分位因此产生假信号：2025-09 在最便宜时判定卖出','改为绝对阈值 2.5%/4.0%；新增第九章「股息率历史位置」交叉验证');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E18','2026-10-20','用窗口依赖的回测结论（R68 的 2014-2026 窗口）指导配比调整，把 515100 权重从 40% 提到 55%','515100 的优势只在 2014-2018；2019 年后消失。新配比在真实 ETF 数据（2020-2026）上少赚 4.9 万，20 年全收益也略差','退回 40/35/25；新增「银行强弱监测」只追踪不自动调仓');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E17','2026-10-19','用「全仓 0/1」测信号，与「底仓永不动」结构不符','差点把 16.61%/-42.5% 当成本方案预期','用正确 70/30 结构重算');
