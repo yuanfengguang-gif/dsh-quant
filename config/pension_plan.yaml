@@ -45,7 +45,7 @@ constraints:
 #
 # 重要提醒：
 #   ① 512890 归零 ≠ 放弃「红利低波」类别 —— 515100 + 515450 仍是红利低波
-#   ② GLD / QQQ 需美股账户；A股替代为 518880 + 513100（长周期无法验证）
+#   ② 黄金用 518880（A股，择时有效）；纳指 QQQ 需美股账户，A股替代为 513100（有QDII额度限制）
 #   ③ 20 年回撤仍有 -54.5%（150万 → 68万），红利资产固有特性，优化消除不了
 assets:
   - code: "515100"
@@ -66,13 +66,13 @@ assets:
     market: sh
     top3_industry: 0.583
     bank_share: 0.525
-  - code: "GLD"
-    name: 黄金ETF-SPDR（美股）
+  - code: "518880"
+    name: 黄金ETF华安
     weight: 0.10
-    market: us
+    market: sh
     asset_class: gold
     pays_dividend: false
-    note: "需美股账户；A股替代品 518880 黄金ETF华安"
+    note: "A股可直接买，无汇率风险；黄金择时(MA10/15+TIPS)只在这只上有效（R143 实测 +0.368，GLD 仅 +0.017）"
   - code: "QQQ"
     name: 纳指100ETF-Invesco（美股）
     weight: 0.15

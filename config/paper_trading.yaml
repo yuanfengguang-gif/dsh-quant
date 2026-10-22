@@ -28,10 +28,10 @@ sim:
       name: "红利低波ETF华泰柏瑞"
       weight: 0.00              # v2.6 换出
       market: cn
-    - code: "GLD"
-      name: "黄金ETF-SPDR（美股）"
+    - code: "518880"
+      name: "黄金ETF华安"
       weight: 0.10
-      market: us
+      market: cn
     - code: "QQQ"
       name: "纳指100ETF-Invesco（美股）"
       weight: 0.15

@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-22 16:52:38
+-- 导出时间：2026-10-22 17:20:38
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T16:52:38');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T17:20:38');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -154,6 +154,7 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F094','认知','用准确 TIPS 后，金价与实际利率同期相关从 -0.20 提升到 -0.47（GLD）/ -0.28（518880），但仍无法预测下月金价','GLD：同期 vs TIPS变化 -0.468、vs 公式变化 -0.198；预测 下月金价 vs TIPS水平 +0.197（符号反）、vs TIPS3月变化 +0.029。518880：同期 -0.279 vs -0.147；预测 +0.144 / -0.028。结论：相关≠可预测','CONFIRMED','R150','logs/_r150_tips_fixed.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F095','信号','黄金双条件「MA10/15 且 TIPS 3月下行」把回撤从 -16.8% 改善到 -10.7%（用少赚4.7pp换少跌6.1pp）','518880 2013-2026：单MA10/15 年化11.22%/回撤-16.8%/Calmar0.669；双条件 6.54%/-10.7%/0.610；或TIPS6月下行 12.20%/-19.6%/0.622。已采纳双条件（养老更看重回撤）','CONFIRMED','R150','logs/_r150_tips_fixed.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F096','数据','中国央行黄金储备公开数据是按市价折算的美元价值，不是购金量，无法用于因子（与金价同期相关 +0.891）','隐含持仓反推得 1843→2411 吨（官方约2300吨，口径对），但去污染失败：隐含盎司变化 vs 金价变化 +0.891、预测下月金价 vs 购金量 +0.016。需 SAFE 万盎司原始数据才能干净分离','CONFIRMED','R149-R151','logs/_r151_cb_pred.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F097','策略','黄金 10% 从 GLD 换成 518880（A股），使择时规则真正生效','同一套 MA10/15+TIPS 规则：518880 改善 +0.368，GLD 仅 +0.017。换后额外好处：无汇率风险、A股交易时段、可直接买。最终配比 515100 40 / 515450 35 / 512890 0 / 518880 10 / QQQ 15','CONFIRMED','R143+R150+v2.9','config/pension_plan.yaml');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──

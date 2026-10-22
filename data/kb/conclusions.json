@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-22T16:52:38",
+ "exported_at": "2026-10-22T17:20:38",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-22T16:52:38"
+    "value": "2026-10-22T17:20:38"
    },
    {
     "key": "description",
@@ -1102,6 +1102,15 @@
     "verdict": "CONFIRMED",
     "rid": "R149-R151",
     "data_pointer": "logs/_r151_cb_pred.py"
+   },
+   {
+    "fid": "F097",
+    "category": "策略",
+    "statement": "黄金 10% 从 GLD 换成 518880（A股），使择时规则真正生效",
+    "evidence": "同一套 MA10/15+TIPS 规则：518880 改善 +0.368，GLD 仅 +0.017。换后额外好处：无汇率风险、A股交易时段、可直接买。最终配比 515100 40 / 515450 35 / 512890 0 / 518880 10 / QQQ 15",
+    "verdict": "CONFIRMED",
+    "rid": "R143+R150+v2.9",
+    "data_pointer": "config/pension_plan.yaml"
    },
    {
     "fid": "F030",
