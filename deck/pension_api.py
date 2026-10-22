@@ -85,6 +85,13 @@ def pension_data(asof: str | None = None) -> dict:
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
 
+    # 黄金择时（MA10/MA15）
+    try:
+        out["gold_timing"] = mp.gold_timing_signal(cfg, asof)
+    except Exception as e:
+        out["gold_timing"] = None
+        out["gold_timing_error"] = f"{type(e).__name__}: {e}"
+
     # v2.5 三信号组合
     try:
         out["combo"] = mp.satellite_combo(cfg, asof)

@@ -95,6 +95,10 @@
     <h2>九、配对候选与未来任务 <span class="tag">来自配置</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-pairing"></table></div>
     <div class="pn-note" id="pn-explore-note"></div>
+    <h3 style="margin:16px 0 8px;font-size:13px;color:#a1a1aa">黄金择时（MA10/MA15）</h3>
+    <div class="pn-grid" id="pn-gold" style="margin-top:4px">加载中…</div>
+    <div class="pn-note" id="pn-gold-note"></div>
+
     <h3 style="margin:16px 0 8px;font-size:13px;color:#a1a1aa">待办清单（来自知识库，仅未完成项）</h3>
     <div style="overflow-x:auto"><table class="pn-tbl" id="pn-tasks"></table></div>
   </div>
@@ -339,6 +343,29 @@
         '<td style="font-size:11px;color:#a1a1aa">'+(c.note||'')+'</td></tr>');
     });
     $('pn-pairing').innerHTML = pct_.join('');
+
+      // 黄金择时（MA10/MA15）
+      var g = d.gold_timing;
+      if (g) {
+        $('pn-gold').innerHTML =
+          kpi('518880 黄金ETF华安', g.close.toFixed(3), '最新收盘 ' + g.last_date, '') +
+          kpi('MA' + g.fast + ' / MA' + g.slow,
+              g.ma_fast.toFixed(3) + ' / ' + g.ma_slow.toFixed(3),
+              (g.ma_fast > g.ma_slow ? 'MA10 > MA15 向上' : 'MA10 < MA15 向下'),
+              g.ma_fast > g.ma_slow ? 'good' : 'warn') +
+          kpi('是否持有黄金', g.hold ? '持有' : '不持有', g.action, g.hold ? 'good' : 'bad');
+        $('pn-gold-note').innerHTML =
+          '<b>规则：</b>518880 收盘价 > MA' + g.fast + ' 且 MA' + g.fast + ' > MA' + g.slow +
+          ' → 持有黄金 10%；否则这 10% 转到 <b>' + (g.idle_name || '货币ETF') + '</b>。' +
+          '<br><b>实测（2013-2026，64 个配置搜索）：</b>年化 11.22%、最大回撤 −16.8%、Calmar 0.669；' +
+          '买入持有 9.20% / −30.5% / 0.301。滚动 2 年胜率 72%，三只 A 股黄金 ETF 一致改善 +0.358~+0.372。' +
+          '<br><b>⚠️ 必须接受：</b>① 只在 A 股黄金 ETF 有效，美股 GLD 几乎无效（+0.017）；' +
+          '② 上涨年跑输（2022-2025 连续 4 年，2025 输 20.8pp），下跌年才保护' +
+          '（2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp）。' +
+          '<br><b>定位：这是保险，不是收益引擎。</b>';
+      } else {
+        $('pn-gold').innerHTML = '<div class="pn-none">未启用或取数失败</div>';
+      }
 
       // 待办清单（知识库 O 系列）
       var oi = d.open_items || [];

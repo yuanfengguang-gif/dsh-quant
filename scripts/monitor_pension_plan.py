@@ -275,6 +275,60 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
     }
 
 
+def gold_timing_signal(cfg: dict, asof: str) -> dict | None:
+    """黄金择时：518880 收盘价 > MA10 且 MA10 > MA15 → 持有；否则转货币ETF
+
+    R144-R145 验证：全期 Calmar 0.669 vs 买入持有 0.301；
+    滚动2年胜率 72%；三只A股黄金ETF一致（+0.358~+0.372）
+    """
+    gt = cfg.get("gold_timing", {})
+    if not gt.get("enabled"):
+        return None
+    code = str(gt["etf_code"])
+    fast = int(gt.get("fast_ma", 10))
+    slow = int(gt.get("slow_ma", 15))
+    asof_ts = pd.Timestamp(asof)
+
+    # 取 518880 日线：优先本地 paper.db 缓存，缺则网络补
+    d = None
+    try:
+        pc = sqlite3.connect(f"file:{(BASE / 'data' / 'cache' / 'paper.db').as_posix()}?mode=ro",
+                             uri=True, timeout=15)
+        d = pd.read_sql_query(
+            "SELECT date,close FROM etf_daily WHERE code=? ORDER BY date", pc, params=(code,))
+        pc.close()
+        d["date"] = pd.to_datetime(d["date"])
+        d = d.set_index("date")["close"].astype(float)
+    except Exception:
+        d = None
+    if d is None or len(d) < slow + 30:
+        try:
+            import akshare as ak
+            sym = ("sh" if code.startswith(("5", "6")) else "sz") + code
+            df = ak.fund_etf_hist_sina(symbol=sym)
+            df.columns = [str(c) for c in df.columns]
+            dd = df[["date", "close"]].copy()
+            dd["date"] = pd.to_datetime(dd["date"])
+            dd["close"] = pd.to_numeric(dd["close"], errors="coerce")
+            d = dd.dropna().set_index("date")["close"].astype(float)
+        except Exception:
+            return None
+    d = d[d.index <= asof_ts]
+    if len(d) < slow + 5:
+        return None
+
+    close = float(d.iloc[-1])
+    mf = float(d.rolling(fast).mean().iloc[-1])
+    ms = float(d.rolling(slow).mean().iloc[-1])
+    hold = bool(close > mf and mf > ms)
+    return {"code": code, "name": gt.get("etf_name", ""),
+            "close": close, "ma_fast": mf, "ma_slow": ms,
+            "fast": fast, "slow": slow, "hold": hold,
+            "last_date": str(d.index[-1])[:10],
+            "idle_to": gt.get("idle_to"), "idle_name": gt.get("idle_name"),
+            "action": "持有黄金" if hold else f"转货币ETF（{gt.get('idle_name','')}）"}
+
+
 def satellite_combo(cfg: dict, asof: str) -> dict | None:
     """v2.5 三信号组合：股息率 + ERP + PB
 
@@ -695,7 +749,32 @@ def main() -> int:
              "ERP 绝对值做**极端阈值开关**在沪深300上有效（R105，+6.89pp），但阈值 6.5 就失效、"
              "对中证红利 0 次触发。**所以：只看不用，当外部环境温度计。**")
 
-    L.append("## 三、持仓行业集中度（2026Q2 实测，季度复核）")
+    # ── 黄金择时（MA10/MA15）
+    _gt = gold_timing_signal(cfg, asof)
+    L.append("## 三、黄金择时（MA10/MA15）")
+    L.append("")
+    if _gt:
+        L.append("| 项目 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| 标的 | **{_gt['code']} {_gt['name']}** |")
+        L.append(f"| 最新收盘 | {_gt['close']:.3f}（{_gt['last_date']}） |")
+        L.append(f"| MA{_gt['fast']} | {_gt['ma_fast']:.3f} |")
+        L.append(f"| MA{_gt['slow']} | {_gt['ma_slow']:.3f} |")
+        L.append(f"| **结论** | **{_gt['action']}** |")
+        L.append("")
+        L.append(f"> 规则：收盘价 > MA{_gt['fast']} 且 MA{_gt['fast']} > MA{_gt['slow']} → 持有黄金；否则这 10% 转货币ETF")
+        L.append(">")
+        L.append("> R144-R145 验证（64 个配置搜索）：年化 11.22%、回撤 −16.8%、Calmar 0.669；"
+                 "买入持有为 9.20%/−30.5%/0.301。滚动 2 年胜率 72%；三只 A 股黄金 ETF 一致改善 +0.358~+0.372。")
+        L.append(">")
+        L.append("> ⚠️ 只在 A 股黄金 ETF 有效（美股 GLD 几乎无效）；"
+                 "上涨年跑输（2022-2025 连续 4 年，2025 输 20.8pp），"
+                 "下跌年才保护（2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp）。")
+        L.append("")
+    else:
+        L.append("_未启用或取数失败_")
+        L.append("")
+    L.append("## 四、持仓行业集中度（2026Q2 实测，季度复核）")
     L.append("")
     L.append("| 代码 | 名称 | 权重 | 前三大行业 | 银行占比 | 判定 |")
     L.append("|---|---|---|---|---|---|")
@@ -721,7 +800,7 @@ def main() -> int:
     L.append(f"| **加权** | — | 100% | **{wt3:.1%}** | **{wbk:.1%}** | {'✅' if wt3 < 0.5 else '⚠️'} |")
     L.append("")
 
-    L.append("## 四、ETF 最新价")
+    L.append("## 五、ETF 最新价")
     L.append("")
     L.append(f"数据来源：{price_src}")
     L.append("")
@@ -735,7 +814,7 @@ def main() -> int:
         L.append("_行情取数失败（网络或接口问题），**不影响信号判断**_")
     L.append("")
 
-    L.append("## 五、建仓进度")
+    L.append("## 六、建仓进度")
     if not progress:
         L.append("")
         L.append("**未启动** —— `config/pension_plan.yaml` 的 `entry.start_date` 还是 null。")
@@ -879,7 +958,7 @@ def main() -> int:
 
     # ── 价格异常报警
     alerts = price_alerts(cfg, asof)
-    L.append("## 十一、异常报警")
+    L.append("## 十二、异常报警")
     L.append("")
     if alerts:
         for a, b in alerts:
@@ -893,7 +972,7 @@ def main() -> int:
 
     # ── 持仓健康（现金池 / 权重漂移 / 提款购买力）
     ph = portfolio_health(cfg, asof)
-    L.append("## 十二、持仓健康（需填 config/portfolio_state.yaml）")
+    L.append("## 十三、持仓健康（需填 config/portfolio_state.yaml）")
     L.append("")
     if not ph:
         L.append("**未填写持仓数据** —— `config/portfolio_state.yaml` 里的 `holdings` 和 `cash` 都是空的。")
