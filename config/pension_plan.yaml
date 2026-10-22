@@ -346,11 +346,19 @@ gold_timing:
   etf_name: "黄金ETF华安"
   fast_ma: 10
   slow_ma: 15
-  rule: "MA10 > MA15 → 持有黄金；否则转货币ETF(511990)"
+  rule: "MA10 > MA15 且 TIPS实际收益率3个月下行 → 持有黄金；否则转货币ETF(511990)"
   idle_to: "511990"
   idle_name: "货币ETF华宝添益"
   check_freq: monthly
-  note: "R144-R145 验证；只在 A 股黄金 ETF 有效，美股 GLD 无效"
+  require_both: true         # 两个条件都要满足（方案B）
+  tips:
+    enabled: true
+    name: "美国10年期TIPS实际收益率"
+    source: "美国财政部 daily_treasury_real_yield_curve（官方口径）"
+    file: "data/cache/tips10y.csv"
+    lookback_days: 63        # 3个月下行
+    fetch_script: "scripts/fetch_tips.py"
+  note: "R144-R145+R150 验证；只在 A 股黄金 ETF 有效，美股 GLD 无效"
 
 # 银行强弱监测（用户 2026-10-20：只追踪，不自动调仓）
 bank_monitor:

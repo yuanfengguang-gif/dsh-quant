@@ -320,11 +320,42 @@ def gold_timing_signal(cfg: dict, asof: str) -> dict | None:
     close = float(d.iloc[-1])
     mf = float(d.rolling(fast).mean().iloc[-1])
     ms = float(d.rolling(slow).mean().iloc[-1])
-    # 必须只用 MA 交叉！加「收盘>MA10」会把 Calmar 从 0.669 打到 0.301（E25）
-    hold = bool(mf > ms)
+    # 条件①：必须只用 MA 交叉（加「收盘>MA10」会把 Calmar 从 0.669 打到 0.301，E25）
+    cond_ma = bool(mf > ms)
+
+    # 条件②：TIPS 实际收益率 3 个月下行（方案B，R150 实测回撤从 -16.8% 改善到 -10.7%）
+    tips_now = tips_prev = None
+    cond_tips = None
+    _tc = gt.get("tips") or {}
+    if _tc.get("enabled"):
+        try:
+            _f = BASE / _tc.get("file", "data/cache/tips10y.csv")
+            _td = pd.read_csv(_f, parse_dates=["date"]).set_index("date")["tips10y"].astype(float)
+            _td = _td[_td.index <= asof_ts].sort_index()
+            _lb = int(_tc.get("lookback_days", 63))
+            if len(_td) > _lb + 5:
+                tips_now = float(_td.iloc[-1])
+                _target = _td.index[-1] - pd.Timedelta(days=_lb)
+                _before = _td[_td.index <= _target]
+                tips_prev = float(_before.iloc[-1]) if len(_before) else None
+                if tips_prev is not None:
+                    cond_tips = bool(tips_now < tips_prev)
+        except Exception:
+            tips_now = tips_prev = cond_tips = None
+
+    if gt.get("require_both", True):
+        hold = bool(cond_ma and cond_tips) if cond_tips is not None else bool(cond_ma)
+    else:
+        hold = bool(cond_ma)
     return {"code": code, "name": gt.get("etf_name", ""),
             "close": close, "ma_fast": mf, "ma_slow": ms,
-            "fast": fast, "slow": slow, "hold": hold,
+            "fast": fast, "slow": slow,
+            "cond_ma": cond_ma, "cond_tips": cond_tips,
+            "tips_now": tips_now, "tips_prev": tips_prev,
+            "tips_name": _tc.get("name", "TIPS实际收益率"),
+            "tips_lookback": int(_tc.get("lookback_days", 63)),
+            "require_both": bool(gt.get("require_both", True)),
+            "hold": hold,
             "last_date": str(d.index[-1])[:10],
             "idle_to": gt.get("idle_to"), "idle_name": gt.get("idle_name"),
             "action": "持有黄金" if hold else f"转货币ETF（{gt.get('idle_name','')}）"}
@@ -752,25 +783,38 @@ def main() -> int:
 
     # ── 黄金择时（MA10/MA15）
     _gt = gold_timing_signal(cfg, asof)
-    L.append("## 三、黄金择时（MA10/MA15）")
+    L.append("## 三、黄金择时（MA10/15 + TIPS 双条件）")
     L.append("")
     if _gt:
+        _lb_m = _gt["tips_lookback"] // 21
+        L.append("| 条件 | 当前值 | 判定 |")
+        L.append("|---|---|---|")
+        L.append(f"| ① MA{_gt['fast']} > MA{_gt['slow']} | "
+                 f"{_gt['ma_fast']:.3f} vs {_gt['ma_slow']:.3f} | "
+                 f"{'✅ 满足' if _gt['cond_ma'] else '❌ 不满足'} |")
+        if _gt.get("tips_now") is not None and _gt.get("tips_prev") is not None:
+            L.append(f"| ② {_gt['tips_name']} {_lb_m}个月下行 | "
+                     f"{_gt['tips_prev']:.2f}% → {_gt['tips_now']:.2f}% | "
+                     f"{'✅ 满足' if _gt['cond_tips'] else '❌ 不满足'} |")
+        else:
+            L.append(f"| ② {_gt['tips_name']} | 取数失败 | ⚠️ 只用条件① |")
+        L.append("")
         L.append("| 项目 | 数值 |")
         L.append("|---|---|")
         L.append(f"| 标的 | **{_gt['code']} {_gt['name']}** |")
         L.append(f"| 最新收盘 | {_gt['close']:.3f}（{_gt['last_date']}） |")
-        L.append(f"| MA{_gt['fast']} | {_gt['ma_fast']:.3f} |")
-        L.append(f"| MA{_gt['slow']} | {_gt['ma_slow']:.3f} |")
         L.append(f"| **结论** | **{_gt['action']}** |")
         L.append("")
-        L.append(f"> 规则：MA{_gt['fast']} > MA{_gt['slow']} → 持有黄金；否则这 10% 转货币ETF")
+        L.append("> **规则**：两个条件**都要**满足才持有黄金 10%，否则转货币ETF。"
+                 "（R150 实测：单 MA 年化 11.22%/回撤 −16.8%/Calmar 0.669；"
+                 "双条件年化 6.54%/**回撤 −10.7%**/Calmar 0.610 —— 用少赚 4.7pp 换少跌 6.1pp）")
         L.append(">")
-        L.append("> R144-R145 验证（64 个配置搜索）：年化 11.22%、回撤 −16.8%、Calmar 0.669；"
-                 "买入持有为 9.20%/−30.5%/0.301。滚动 2 年胜率 72%；三只 A 股黄金 ETF 一致改善 +0.358~+0.372。")
+        L.append("> **为什么用 TIPS 而不是「名义10Y−CPI」**：两者相关只有 0.489，"
+                 "公式波动是 TIPS 的 1.9 倍、最低到 −6.34%（TIPS 只到 −1.19%）。"
+                 "用 TIPS 后金价与它的同期相关从 −0.20 提升到 −0.47（GLD）/ −0.28（518880）。")
         L.append(">")
-        L.append("> ⚠️ 只在 A 股黄金 ETF 有效（美股 GLD 几乎无效）；"
-                 "上涨年跑输（2022-2025 连续 4 年，2025 输 20.8pp），"
-                 "下跌年才保护（2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp）。")
+        L.append("> ⚠️ **只在 A 股黄金 ETF 有效**（美股 GLD 几乎无效）；"
+                 "**上涨年跑输**（2025 年输 20.8pp），**下跌年才保护**。定位是保险。")
         L.append("")
     else:
         L.append("_未启用或取数失败_")

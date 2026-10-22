@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-22 16:04:48
+-- 导出时间：2026-10-22 16:52:38
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T16:04:47');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T16:52:38');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -150,6 +150,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F090','认知','黄金择时是「上涨年跑输、下跌年保护」，不是提高收益的策略','MA10/15逐年：2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp（下跌年赢）；2022 -7.2pp、2024 -11.7pp、2025 -20.8pp（上涨年输）。2025+2026两年合计策略+50.4% vs 持有+37.8%','CONFIRMED','R145','logs/_r145_plateau.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F091','认知','黄金与实际利率方向确实相反，但相关性很弱（月频 -0.15~-0.20），且「变化」比「水平」更重要','518880：日频 金价涨跌vs实际利率变化 +0.018、月频 -0.147、月频vs水平 -0.010；GLD：日频 -0.141、月频 -0.198。策略：实际利率<0 → Calmar 0.147（差）；实际利率3月变化<0 → 0.474（+0.173）；6月变化<0 → 0.479（+0.178）。结论：方向对但弱，做信号不如 MA10/15（0.669），与 MA 叠加反而更差','CONFIRMED','R146','logs/_r146_realrate_gold.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F092','数据','A 股黄金 ETF 与 COMEX 期货同日相关性仅 0.28，但隔夜滞后达 0.63','GC vs GLD 同日 0.9704（几乎完全联动）；GC vs 518880 同日仅 0.2830；518880 今日 vs COMEX 昨日 = 0.6335。原因：A股15:00收盘，COMEX夜盘，时段不重叠','CONFIRMED','R146','logs/_r146_realrate_gold.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F093','数据','官方 10 年期 TIPS 实际收益率已接入（美国财政部，2003 起 5955 行），与「名义−CPI」公式相关仅 0.489','TIPS 均值0.93%/区间-1.19~3.15%/标准差1.02；公弽? 公式均值0.48%/区间-6.34~5.66%/标准差1.94。公式用已实现通胀、TIPS用市场预期通胀，波动是1.9倍。数据源 home.treasury.gov daily_treasury_real_yield_curve；脚本 scripts/fetch_tips.py，已加入每日任务','CONFIRMED','R149-R150','logs/_r149_tips_and_cb.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F094','认知','用准确 TIPS 后，金价与实际利率同期相关从 -0.20 提升到 -0.47（GLD）/ -0.28（518880），但仍无法预测下月金价','GLD：同期 vs TIPS变化 -0.468、vs 公式变化 -0.198；预测 下月金价 vs TIPS水平 +0.197（符号反）、vs TIPS3月变化 +0.029。518880：同期 -0.279 vs -0.147；预测 +0.144 / -0.028。结论：相关≠可预测','CONFIRMED','R150','logs/_r150_tips_fixed.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F095','信号','黄金双条件「MA10/15 且 TIPS 3月下行」把回撤从 -16.8% 改善到 -10.7%（用少赚4.7pp换少跌6.1pp）','518880 2013-2026：单MA10/15 年化11.22%/回撤-16.8%/Calmar0.669；双条件 6.54%/-10.7%/0.610；或TIPS6月下行 12.20%/-19.6%/0.622。已采纳双条件（养老更看重回撤）','CONFIRMED','R150','logs/_r150_tips_fixed.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F096','数据','中国央行黄金储备公开数据是按市价折算的美元价值，不是购金量，无法用于因子（与金价同期相关 +0.891）','隐含持仓反推得 1843→2411 吨（官方约2300吨，口径对），但去污染失败：隐含盎司变化 vs 金价变化 +0.891、预测下月金价 vs 购金量 +0.016。需 SAFE 万盎司原始数据才能干净分离','CONFIRMED','R149-R151','logs/_r151_cb_pred.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
