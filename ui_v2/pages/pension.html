@@ -33,71 +33,119 @@
 <body style="background:var(--bg);margin:0">
 <div id="sidebar"></div>
 <div class="v2-wrap">
-  <div class="v2-h"><span class="bar"></span><h1>养老方案</h1>
+  <div class="v2-h"><span class="bar"></span><h1>养老方案</h1><span class="tag" style="background:rgba(94,106,210,.18);color:#a5b4fc">v2.8</span>
     <span class="sub">红利低波 · 卫星仓择时 · 银行追踪 · 建仓进度</span>
     <span id="pn-asof" class="tag" style="margin-left:auto">—</span>
   </div>
 
   <div id="pn-alerts"></div>
 
+  <div class="v2-card anim-fade-in-up" style="margin-top:14px;border-color:rgba(94,106,210,.35)">
+    <h2>一、当前生效规则 <span class="tag">v2.8 · 2026-10-21 生效</span></h2>
+    <div style="overflow-x:auto;margin-top:8px">
+      <table class="pn-tbl">
+        <tr><th style="width:110px">模块</th><th>规则</th><th style="width:150px">依据</th></tr>
+        <tr>
+          <td><b>资产配比</b></td>
+          <td><b>515100 红利低波100ETF景顺 40%</b> ｜ <b>515450 红利低波50ETF南方 35%</b> ｜
+              <b>512890 红利低波ETF华泰柏瑞 0%（已换出）</b> ｜
+              <b>GLD 黄金 10%</b> ｜ <b>QQQ 纳指 15%</b></td>
+          <td>R137-R138<br>20.8 年含 2008</td>
+        </tr>
+        <tr>
+          <td><b>卫星仓择时</b></td>
+          <td>卖出＝<b>任一</b>报警（红利低波股息率≤2.5% ／ 沪深300 ERP≤0.5% ／ PB≥2.1）；<br>
+              买回＝<b>至少两个</b>说便宜（股息率≥4.0% ／ ERP≥3.5% ／ PB≤1.5）；每月检查</td>
+          <td>R122-R127</td>
+        </tr>
+        <tr>
+          <td><b>黄金择时</b></td>
+          <td>① 518880 的 MA10 &gt; MA15 <b>且</b> ② 10年期 TIPS 实际收益率 3 个月下行 ——
+              两个都满足才持有黄金；否则转 511990 货币ETF；每月检查</td>
+          <td>R144-R150</td>
+        </tr>
+        <tr>
+          <td><b>底仓</b></td>
+          <td>70% 底仓永不动；卫星仓 30% 受信号控制；<b>只买 ETF，不加杠杆，不做空</b></td>
+          <td>用户硬约束</td>
+        </tr>
+        <tr>
+          <td><b>生活费</b></td>
+          <td>每月从货币ETF取 5,000 元；现金池目标 12 个月（6 万）；现金不足时按比例卖份额</td>
+          <td>4% 提款率</td>
+        </tr>
+      </table>
+    </div>
+    <div class="pn-note">
+      <b>这一块是唯一权威的规则来源</b> —— 下面各节都是它的实时状态。若本表与你记的不一致，以
+      <code>config/pension_plan.yaml</code> 为准，并告诉我。
+    </div>
+  </div>
+
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>一、卫星仓核心信号 <span class="tag">三信号组合 · 任一报警就卖 · 至少两个便宜才买</span></h2>
+    <h2>二、卫星仓核心信号 <span class="tag">三信号组合 · 任一报警就卖 · 至少两个便宜才买</span></h2>
     <div class="pn-grid" id="pn-signal" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-combo"></table></div>
     <div class="pn-note" id="pn-signal-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
-    <h2>二、ERP 温度计 <span class="tag">外部环境参考 · 不产生交易信号</span></h2>
+    <h2>三、黄金择时 <span class="tag">MA10/15 + TIPS 3月下行 · 双条件</span></h2>
+    <div style="margin-top:8px">
+    <div class="pn-grid" id="pn-gold" style="margin-top:4px">加载中…</div>
+    <div class="pn-note" id="pn-gold-note"></div>
+    </div>
+    <div class="pn-note" id="pn-gold-warn" style="border-left-color:#f59e0b"></div>
+  </div>
+
+  <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
+    <h2>四、ERP 温度计 <span class="tag">外部环境参考 · 不产生交易信号</span></h2>
     <div class="pn-grid" id="pn-erp" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-erp-bands"></table></div>
     <div class="pn-note" id="pn-erp-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
-    <h2>三、配比与行业集中度 <span class="tag">按配置权重实时计算</span></h2>
+    <h2>五、配比与行业集中度 <span class="tag">按配置权重实时计算</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-assets"></table></div>
     <div class="pn-note" id="pn-ind-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d2" style="margin-top:14px">
-    <h2>四、股息率历史位置 <span class="tag">20 年分布（交叉验证，不参与调仓）</span></h2>
+    <h2>六、股息率历史位置 <span class="tag">20 年分布（交叉验证，不参与调仓）</span></h2>
     <div class="pn-grid" id="pn-divlevel" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-divlevel-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
-    <h2>五、银行强弱监测 <span class="tag">只追踪，不自动调仓</span></h2>
+    <h2>七、银行强弱监测 <span class="tag">只追踪，不自动调仓</span></h2>
     <div class="pn-grid" id="pn-bank" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-bank-trend"></table></div>
     <div class="pn-note" id="pn-bank-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d3" style="margin-top:14px">
-    <h2>六、信号历史战绩 <span class="tag">防失效</span></h2>
+    <h2>八、信号历史战绩 <span class="tag">防失效</span></h2>
     <div class="pn-grid" id="pn-track" style="margin-top:8px">加载中…</div>
     <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-track-recent"></table></div>
     <div class="pn-note" id="pn-track-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>七、建仓进度与回本参考</h2>
+    <h2>九、建仓进度与回本参考</h2>
     <div class="pn-grid" id="pn-entry" style="margin-top:8px">加载中…</div>
     <div class="pn-note" id="pn-entry-note"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>八、ETF 行情 <span class="tag" id="pn-price-src">—</span></h2>
+    <h2>十、ETF 行情 <span class="tag" id="pn-price-src">—</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-prices"></table></div>
   </div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px">
-    <h2>九、配对候选与未来任务 <span class="tag">来自配置</span></h2>
+    <h2>十一、配对候选与未来任务 <span class="tag">来自配置</span></h2>
     <div style="overflow-x:auto;margin-top:8px"><table class="pn-tbl" id="pn-pairing"></table></div>
     <div class="pn-note" id="pn-explore-note"></div>
-    <h3 style="margin:16px 0 8px;font-size:13px;color:#a1a1aa">黄金择时（MA10/MA15）</h3>
-    <div class="pn-grid" id="pn-gold" style="margin-top:4px">加载中…</div>
-    <div class="pn-note" id="pn-gold-note"></div>
 
     <h3 style="margin:16px 0 8px;font-size:13px;color:#a1a1aa">待办清单（来自知识库，仅未完成项）</h3>
     <div style="overflow-x:auto"><table class="pn-tbl" id="pn-tasks"></table></div>
@@ -320,11 +368,22 @@
     // 七、价格
     var pr = d.prices || {};
     $('pn-price-src').textContent = pr.source || '—';
-    var pt = ['<tr><th>代码</th><th>名称</th><th>价格</th></tr>'];
+    var pt = ['<tr><th>代码</th><th>名称</th><th>价格</th><th>币种 / 说明</th></tr>'];
     (d.assets||[]).forEach(function(a){
-      pt.push('<tr><td>'+a.code+'</td><td>'+a.name+'</td><td>'+
-        ((pr.data&&pr.data[a.code])?pr.data[a.code].toFixed(3):'—')+'</td></tr>');
+      var isCN = /^\d{6}$/.test(a.code);
+      var v = (pr.data && pr.data[a.code]!=null) ? pr.data[a.code] : null;
+      var pxTxt = (v==null) ? '—' : (isCN ? v.toFixed(3) : v.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}));
+      var note = isCN ? '人民币元 / 份' : '人民币元 / 股（美元收盘 × 中行中间价）';
+      pt.push('<tr><td>'+a.code+'</td><td>'+a.name+'</td><td>'+pxTxt+'</td>'+
+        '<td style="color:#a1a1aa;font-size:12px">'+note+'</td></tr>');
     });
+    if (pr.data) {
+      var _miss = (d.assets||[]).filter(function(a){ return pr.data[a.code]==null; });
+      if (_miss.length) {
+        pt.push('<tr><td colspan="4" style="color:#f59e0b;font-size:12px">⚠️ 未取到价格：' +
+          _miss.map(function(a){return a.code;}).join('、') + '</td></tr>');
+      }
+    }
     $('pn-prices').innerHTML = pt.join('');
 
     // 八、配对候选
@@ -374,6 +433,31 @@
           '<br><b>定位：这是保险，不是收益引擎。</b>';
       } else {
         $('pn-gold').innerHTML = '<div class="pn-none">未启用或取数失败</div>';
+
+      }
+
+      // ⚠️ GLD vs 518880 冲突提示（配置里持有 GLD，但择时规则只在 518880 上有效）
+      var _w = $('pn-gold-warn');
+      if (_w) {
+        var _holdsGLD = (d.assets||[]).some(function(a){ return a.code==='GLD' && a.weight>0; });
+        if (_holdsGLD) {
+          _w.innerHTML =
+            '⚠️ <b>这里有一个需要你决定的矛盾</b>：配置里的黄金 10% 是 <b>GLD（美股黄金ETF）</b>，' +
+            '但上面这套 MA10/15 + TIPS 规则<b>只在 A 股 518880 黄金ETF华安上有效</b>。' +
+            '<br>实测对比（同一套规则，2013-2026）：<b>518880 改善 +0.368</b>，' +
+            '<b>GLD 只有 +0.017</b>（几乎无效）。' +
+            '<br><b>三个选择：</b>' +
+            '<br>① 把黄金 10% 从 GLD 换成 <b>518880</b> → 择时生效（推荐，且无汇率风险、A 股可直接买）' +
+            '<br>② 继续持有 GLD → <b>择时无效，应改为常持 10%</b>（不要用这套规则）' +
+            '<br>③ 两边都买 → 规则会自相矛盾，不建议' +
+            '<br><b>请告诉我选哪个，我再改配置。</b>';
+          _w.style.borderLeftColor = '#ef4444';
+          _w.style.color = '#fca5a5';
+        } else {
+          _w.innerHTML = '✅ 黄金 10% 已使用 518880，与上面的择时规则一致。';
+          _w.style.borderLeftColor = '#22c55e';
+          _w.style.color = '#86efac';
+        }
       }
 
       // 待办清单（知识库 O 系列）

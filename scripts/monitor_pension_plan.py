@@ -94,8 +94,35 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
     except Exception:
         return out, "akshare 不可用"
 
+    # 路径 0：美股标的（GLD / QQQ 等非 6 位数字代码）—— 取美元收盘，按中行中间价折人民币
+    usd_codes = [c for c in codes if not (len(str(c)) == 6 and str(c).isdigit())]
+    if usd_codes:
+        try:
+            _fx = None
+            _f = BASE / "data" / "cache" / "usdcny.csv"
+            if _f.exists():
+                _fxd = pd.read_csv(_f, index_col=0, parse_dates=True).iloc[:, 0]
+                _fxd = _fxd[_fxd.index <= pd.Timestamp(asof)]
+                if len(_fxd):
+                    _fx = float(_fxd.iloc[-1])
+            for c in usd_codes:
+                try:
+                    _df = ak.stock_us_daily(symbol=str(c))
+                    _df.columns = [str(x) for x in _df.columns]
+                    _df["date"] = pd.to_datetime(_df["date"])
+                    _df = _df[_df["date"] <= pd.Timestamp(asof)]
+                    if len(_df):
+                        _u = float(_df["close"].iloc[-1])
+                        out[c] = round(_u * _fx, 3) if _fx else _u
+                except Exception:
+                    pass
+            if usd_codes and all(c in out for c in usd_codes):
+                src = "美股收盘 × 中行中间价（人民币）"
+        except Exception:
+            pass
+
     # 路径 1：东财历史（可取 asof 当日）
-    for c in codes:
+    for c in [x for x in codes if len(str(x)) == 6 and str(x).isdigit()]:
         try:
             df = ak.fund_etf_hist_em(symbol=c, period="daily", adjust="")
             df.columns = [str(x) for x in df.columns]
@@ -105,8 +132,10 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
                 out[c] = float(df["收盘"].iloc[-1])
         except Exception:
             pass
-    if out:
-        return out, "东财历史（asof 当日收盘）"
+    # 只有「全部 A 股代码都取到」才提前返回，否则继续走新浪兜底
+    _a_codes = [x for x in codes if len(str(x)) == 6 and str(x).isdigit()]
+    if _a_codes and all(c in out for c in _a_codes):
+        return out, "东财历史 + 美股折人民币" if usd_codes else "东财历史（asof 当日收盘）"
 
     # 路径 2：新浪现价快照（只能取最新）
     try:
