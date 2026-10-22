@@ -700,12 +700,24 @@ def main() -> int:
     L.append("| 代码 | 名称 | 权重 | 前三大行业 | 银行占比 | 判定 |")
     L.append("|---|---|---|---|---|---|")
     for a in cfg["assets"]:
+        w_ = a.get("weight", 0)
+        if w_ <= 0:
+            L.append(f"| {a['code']} | {a['name']} | 0% | — | — | 已换出 |")
+            continue
+        ac = a.get("asset_class")
+        if ac in ("gold", "equity_us"):
+            lab = "黄金（无行业）" if ac == "gold" else "美股（非A股行业）"
+            L.append(f"| {a['code']} | {a['name']} | {w_:.0%} | {lab} | — | ➖ |")
+            continue
         t3 = a.get("top3_industry", np.nan)
         bk = a.get("bank_share", np.nan)
         ok = "✅" if (not np.isnan(t3) and t3 < 0.5) else "⚠️"
-        L.append(f"| {a['code']} | {a['name']} | {a['weight']:.0%} | {t3:.1%} | {bk:.1%} | {ok} |")
-    wt3 = sum(a["weight"] * a.get("top3_industry", 0) for a in cfg["assets"])
-    wbk = sum(a["weight"] * a.get("bank_share", 0) for a in cfg["assets"])
+        L.append(f"| {a['code']} | {a['name']} | {w_:.0%} | {t3:.1%} | {bk:.1%} | {ok} |")
+    # 加权只统计 A 股资产（GLD/QQQ 无行业归属），并按 A 股权重归一
+    _a = [x for x in cfg["assets"] if x.get("weight", 0) > 0 and x.get("asset_class") is None]
+    _aw = sum(x["weight"] for x in _a) or 1.0
+    wt3 = sum(x["weight"] * (x.get("top3_industry") or 0) for x in _a) / _aw
+    wbk = sum(x["weight"] * (x.get("bank_share") or 0) for x in _a) / _aw
     L.append(f"| **加权** | — | 100% | **{wt3:.1%}** | **{wbk:.1%}** | {'✅' if wt3 < 0.5 else '⚠️'} |")
     L.append("")
 

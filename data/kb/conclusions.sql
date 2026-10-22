@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-22 09:55:03
+-- 导出时间：2026-10-22 12:15:08
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T09:55:02');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T12:15:07');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -142,6 +142,9 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F082','风险','三信号组合比单股息率更安全：2015少跌11.3pp、最差3年好12.2pp、提款最差剩余多33pp','R127提款测试（4%提款）：A单股息率2015段回撤-42.5%/最差3年-22.0%/15年提款最差剩余176.4%；B组合-31.2%/-9.8%/209.5%。代价年化少1.15pp（15.88% vs 17.03%）','CONFIRMED','R127','logs/_r127_safety.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F083','策略','加入 10% 黄金 ETF 可同时提高年化、降低回撤、改善提款安全性（2016-2026 实测）','红利100%→8.86%/回撤-27.5%/8年提款最差剩余127.0%；红利90%+黄金10%→9.24%/-25.1%/138.8%；红利85%+15%→9.43%/-23.9%/145.0%；红利80%+20%→9.61%/-22.6%/151.4%。分期间：2017-2020 +1.3pp、2021-2026 +3.0pp，两段都为正','CONFIRMED','R132','logs/_r132_gold_swap_fixed.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F084','数据','黄金 518880 与纳指 513100 均为上交所 A 股 ETF，A 股账户可直接买','518880 黄金ETF华安跟踪上金所Au99.99（人民币）；513100 纳指ETF国泰跟踪纳斯达克100（QDII，美元资产折人民币）。513100 vs QQQ 十年：21.21% vs 19.90%（+1.31pp/年，来自人民币汇率）；回撤 -28.6% vs -35.6%','CONFIRMED','R131','logs/_r131_etf_identity_and_gold.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F085','策略','配比改为 40/35/0/10/15（512890换出，加 GLD 10% + QQQ 15%），年化升、回撤降、现金流不损失','2006-2026（20.8年含2008）：现行40/35/25 → 年化16.56%/回撤-66.2%/2008年-57.5%/提款最差72.2%；新方案 → 16.79%/-54.5%/-46.3%/96.6%。现金分红率4.31%（覆盖率108% vs 现行106%）。关键：512890完全不发现金，砍它换黄金/纳指不损失任何分红','CONFIRMED','R137-R138','logs/_r138_cashflow_neutral.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F086','认知','10年窗口严重高估纳指与黄金：20年口径下纳指13.96%、黄金8.93%','纳指（折人民币）10年19.83%/20年13.96%；黄金10年11.83%/20年8.93%；红利低波10年8.86%/20年16.56%。结论：用2016-2026看，纳指黄金是超级牛市；拉长到2006，红利低波收益最高','CONFIRMED','R137','logs/_r137_long_window.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F087','风险','v18三等分组合20年看并非收益更高，而是回撤更好：年化15.16%(低于红利16.56%)但回撤-34.6%(vs -66.2%)','2008年 v18 -24.4% vs 红利 -57.5%；最差3年 v18 +2.5% vs 红利 -25.1%。但现金分红率仅1.58%（覆盖率39%），需每年卖3万份额，违背「底仓永不动」','CONFIRMED','R137','logs/_r137_long_window.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -254,7 +257,7 @@ INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workar
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M13','2026-10-19','东财 ETF 接口偶发 RemoteDisconnected','低','fixed','退化到新浪 fund_etf_category_sina 现价快照');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M16','2026-10-20','股息率数据有「分红季」更新 artefact（6 月平均 +13.45%、7 月 -7.78%）','高','open','已规避：卫星仓改用绝对阈值，并在说明书与面板披露；数据源未修复');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M17','2026-10-20','5 年分位窗口基准被高股息期抬高（2021-2025 把底抬到 4.50%）','高','open','已规避：改用绝对阈值，不再用相对排名');
-INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M19','2026-10-21','给 deck_server.py 加了新路由后未重启服务器，页面 404（/paper 与 /api/paper 都打不开）','高','open','已重启并验证；规则：任何 deck_server 路由改动后必须重启，再浏览器验证一次');
+INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M19','2026-10-21','改 deck_server 路由或任何被它 import 的模块后未重启，页面 404 / 显示旧内容','高','open','规则：deck_server.py 路由改动、或 pension_api.py 等被 import 的模块改动，都必须重启；Python 会缓存 sys.modules，改文件不重启等于没改');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M20','2026-10-21','缺陷台账编号双轨冲突：Markdown 台账是 M1-M11，知识库是 M8-M18，同一编号含义不同','中','open','以知识库 build_research_kb.py 的 DEFECTS 为唯一权威；Markdown 台账改为引用知识库编号');
 INSERT OR REPLACE INTO [defect_log] (mid,discovered,descr,severity,status,workaround) VALUES('M18','2026-10-20','择时策略在低分红年代（2007-2013）实质失效（股息率仅 1.5%-3.5%，够不到 4.0% 买回线）','中','open','已披露：说明书与面板均标注「只在高分红年代有效」');
 
@@ -276,5 +279,6 @@ INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O0
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O09','阈值 2.5%/4.0% 更多数据复核','P2','已完成 2026-10-20（R101）：分期间 + 10 年滚动起点 + ±0.2pp 抖动，全部稳健；但确认优势仅来自 2006-2013，2012 年后起算无差异','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O10','配比再决策：现金流 vs 总收益','P1','已决策 2026-10-21（选 A）：维持 40/35/25。理由：保守口径下即使去掉 512890 覆盖也只有 90%，怎么调都覆盖不了，调配比只是心理安慰；512890 总收益最高（13.38%）；分红缺口靠卖份额补（原设计）。转为监控：每年 1 月复核三只 ETF 上年实际分红','done');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O11','把「按月分红是营销说法」写进说明书','P1','已完成 2026-10-21：v2.5 说明书已写入「按月分红是营销说法」章节','done');
+INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O13','确认 GLD / SLV 现有持仓金额，与实际配置对齐','P1','用户 2026-10-21 告知已持有 GLD 与 SLV；需金额才能算出真实配置比例（是否超出 10% 目标）','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O12','价值100（国证）列入观察项','P2','编制规则优秀(ROE+FCF+股息率)，但2024-10才正式运行，真实样本不足2年，与FCF同样问题','open');
 INSERT OR REPLACE INTO [open_item] (oid,title,priority,detail,status) VALUES('O05','继续挖新择时信号（已不建议）','P3','13 个测完只 1 个可用，边际收益很低','paused');

@@ -45,11 +45,15 @@ def pension_data(asof: str | None = None) -> dict:
 
     # 配比 + 行业集中度（来自配置，不硬编码）
     assets = cfg.get("assets", [])
-    tot_top3 = sum(a.get("weight", 0) * a.get("top3_industry", 0) for a in assets)
-    tot_bank = sum(a.get("weight", 0) * a.get("bank_share", 0) for a in assets)
+    # 加权只统计 A 股资产（GLD/QQQ 无行业归属），按 A 股权重归一
+    _a = [x for x in assets if x.get("weight", 0) > 0 and x.get("asset_class") is None]
+    _aw = sum(x.get("weight", 0) for x in _a) or 1.0
+    tot_top3 = sum(x.get("weight", 0) * (x.get("top3_industry") or 0) for x in _a) / _aw
+    tot_bank = sum(x.get("weight", 0) * (x.get("bank_share") or 0) for x in _a) / _aw
     out["assets"] = [{
         "code": a.get("code"), "name": a.get("name"), "weight": a.get("weight"),
         "top3_industry": a.get("top3_industry"), "bank_share": a.get("bank_share"),
+        "asset_class": a.get("asset_class"),
         "amount": int(round(cfg["plan"]["capital"] * a.get("weight", 0))),
     } for a in assets]
     out["portfolio_industry"] = {"top3": tot_top3, "bank": tot_bank}

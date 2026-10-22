@@ -48,6 +48,39 @@ def db():
     return c
 
 
+def fetch_us(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
+    """美股 ETF：取美元价，按当日中行中间价折成人民币（这样下游代码不用改）"""
+    import akshare as ak
+    fx_path = BASE / "data" / "cache" / "usdcny.csv"
+    last = None
+    for k in range(retries):
+        try:
+            df = ak.stock_us_daily(symbol=code)
+            df.columns = [str(c) for c in df.columns]
+            df["date"] = pd.to_datetime(df["date"])
+            s = df.set_index("date")["close"].astype(float)
+            s = s[(s.index >= pd.Timestamp(start)) & (s.index <= pd.Timestamp(end))]
+            if len(s) == 0:
+                raise RuntimeError("区间无数据")
+            # 汇率
+            if fx_path.exists():
+                fx = pd.read_csv(fx_path, index_col=0, parse_dates=True).iloc[:, 0]
+            else:
+                f = ak.currency_boc_sina(symbol="美元", start_date="20050101", end_date="20261021")
+                f.columns = [str(c) for c in f.columns]
+                f["日期"] = pd.to_datetime(f["日期"])
+                fx = f.set_index("日期")["央行中间价"].astype(float) / 100.0
+                fx_path.parent.mkdir(parents=True, exist_ok=True)
+                fx.to_csv(fx_path)
+            fxs = fx.reindex(s.index).ffill().bfill()
+            cny = (s * fxs).dropna()
+            return pd.DataFrame({"date": cny.index.strftime("%Y-%m-%d"), "close": cny.to_numpy()})
+        except Exception as e:
+            last = e
+            time.sleep(2 + 2 * k)
+    raise RuntimeError(f"{code}(US) 取数失败：{type(last).__name__}: {last}")
+
+
 def fetch_etf(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
     """取 ETF 日线（不复权收盘价）。主源新浪（全历史），备源东财。"""
     import akshare as ak
@@ -86,8 +119,9 @@ def fetch_etf(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame
     raise RuntimeError(f"{code} 取数失败：{type(last).__name__}: {last}")
 
 
-def update_etf_cache(c, codes, start, end):
-    """增量更新 ETF 缓存"""
+def update_etf_cache(c, codes, start, end, markets=None):
+    """增量更新 ETF 缓存；markets: {code: 'cn'|'us'}"""
+    markets = markets or {}
     for code in codes:
         row = c.execute("SELECT MAX(date) FROM etf_daily WHERE code=?", (code,)).fetchone()
         have = row[0] if row and row[0] else None
@@ -95,7 +129,7 @@ def update_etf_cache(c, codes, start, end):
         if s > end:
             continue
         try:
-            d = fetch_etf(code, s, end)
+            d = (fetch_us if markets.get(code) == "us" else fetch_etf)(code, s, end)
             if len(d):
                 c.executemany("INSERT OR REPLACE INTO etf_daily(code,date,close) VALUES(?,?,?)",
                               [(code, r.date, float(r.close)) for r in d.itertuples()])
@@ -349,7 +383,8 @@ def main():
     print("=" * 78)
     codes = [x["code"] for x in cfg["assets"]]
     print("  [1/3] 更新 ETF 日线缓存…")
-    update_etf_cache(c, codes, cfg["start_date"], asof)
+    _mk = {a["code"]: a.get("market", "cn") for a in cfg["assets"]}
+    update_etf_cache(c, codes, cfg["start_date"], asof, _mk)
     print("  [2/3] 更新基准…")
     _n = update_bench_remote(cfg["start_date"], asof)
     if _n:

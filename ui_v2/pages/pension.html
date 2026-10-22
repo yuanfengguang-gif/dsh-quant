@@ -208,10 +208,19 @@
     // 三、配比
     var rows = ['<tr><th>代码</th><th>名称</th><th>权重</th><th>金额</th><th>前三大行业</th><th>银行占比</th><th>判定</th></tr>'];
     (d.assets||[]).forEach(function(a){
-      var ok3 = (a.top3_industry!=null && a.top3_industry < 0.5);
+      var isNonA = (a.asset_class==='gold' || a.asset_class==='equity_us');
+      var isZero = (a.weight===0);
+      var c3 = isZero ? '—' : (isNonA ? (a.asset_class==='gold' ? '黄金（无行业）' : '美股（非A股）') : pct(a.top3_industry,1));
+      var c4 = (isZero||isNonA) ? '—' : pct(a.bank_share,1);
+      var c5 = isZero ? '<span class="pn-chip hint">已换出</span>'
+             : (isNonA ? '<span class="pn-chip hint">➖</span>'
+             : ((a.top3_industry!=null && a.top3_industry < 0.5)
+                ? '<span class="pn-chip ok">合格</span>' : '<span class="pn-chip warn">偏高</span>'));
+      var ok3 = true;
       rows.push('<tr><td>'+a.code+'</td><td>'+a.name+'</td><td>'+pct(a.weight,0)+'</td><td>'+wan(a.amount)+'</td>'+
-        '<td>'+pct(a.top3_industry,1)+'</td><td>'+pct(a.bank_share,1)+'</td>'+
-        '<td>'+(ok3?'<span class="pn-chip ok">合格</span>':'<span class="pn-chip warn">偏高</span>')+'</td></tr>');
+        '<td>'+c3+'</td><td>'+c4+'</td>'+ 
+          
+        '<td>'+c5+'</td></tr>');
     });
     var pi = d.portfolio_industry || {};
     rows.push('<tr><td colspan="2"><b>加权组合</b></td><td>100%</td><td>'+wan(d.plan.capital)+'</td>'+

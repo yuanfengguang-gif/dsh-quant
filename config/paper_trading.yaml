@@ -4,7 +4,7 @@
 #      「10 万立即 + 140 万等 12 个月」不同 —— 目的是给真实建仓做对照基准。
 
 sim:
-  name: "养老模拟盘 · 一周全额建仓"
+  name: "养老模拟盘 v2.6 · 一周全额建仓"
   capital: 1500000              # 总本金（元）
   cash_pool_months: 12          # 现金池月数（12 个月 × 月提款额）
   monthly_withdrawal: 5000      # 每月提款（元）
@@ -19,12 +19,23 @@ sim:
     - code: "515100"
       name: "红利低波100ETF景顺"
       weight: 0.40
+      market: cn
     - code: "515450"
       name: "红利低波50ETF南方"
       weight: 0.35
+      market: cn
     - code: "512890"
       name: "红利低波ETF华泰柏瑞"
-      weight: 0.25
+      weight: 0.00              # v2.6 换出
+      market: cn
+    - code: "GLD"
+      name: "黄金ETF-SPDR（美股）"
+      weight: 0.10
+      market: us
+    - code: "QQQ"
+      name: "纳指100ETF-Invesco（美股）"
+      weight: 0.15
+      market: us
 
   benchmark:
     code: "H20269"

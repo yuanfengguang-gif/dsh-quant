@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-22T09:55:03",
+ "exported_at": "2026-10-22T12:15:08",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-22T09:55:02"
+    "value": "2026-10-22T12:15:07"
    },
    {
     "key": "description",
@@ -996,6 +996,33 @@
     "data_pointer": "logs/_r131_etf_identity_and_gold.py"
    },
    {
+    "fid": "F085",
+    "category": "策略",
+    "statement": "配比改为 40/35/0/10/15（512890换出，加 GLD 10% + QQQ 15%），年化升、回撤降、现金流不损失",
+    "evidence": "2006-2026（20.8年含2008）：现行40/35/25 → 年化16.56%/回撤-66.2%/2008年-57.5%/提款最差72.2%；新方案 → 16.79%/-54.5%/-46.3%/96.6%。现金分红率4.31%（覆盖率108% vs 现行106%）。关键：512890完全不发现金，砍它换黄金/纳指不损失任何分红",
+    "verdict": "CONFIRMED",
+    "rid": "R137-R138",
+    "data_pointer": "logs/_r138_cashflow_neutral.py"
+   },
+   {
+    "fid": "F086",
+    "category": "认知",
+    "statement": "10年窗口严重高估纳指与黄金：20年口径下纳指13.96%、黄金8.93%",
+    "evidence": "纳指（折人民币）10年19.83%/20年13.96%；黄金10年11.83%/20年8.93%；红利低波10年8.86%/20年16.56%。结论：用2016-2026看，纳指黄金是超级牛市；拉长到2006，红利低波收益最高",
+    "verdict": "CONFIRMED",
+    "rid": "R137",
+    "data_pointer": "logs/_r137_long_window.py"
+   },
+   {
+    "fid": "F087",
+    "category": "风险",
+    "statement": "v18三等分组合20年看并非收益更高，而是回撤更好：年化15.16%(低于红利16.56%)但回撤-34.6%(vs -66.2%)",
+    "evidence": "2008年 v18 -24.4% vs 红利 -57.5%；最差3年 v18 +2.5% vs 红利 -25.1%。但现金分红率仅1.58%（覆盖率39%），需每年卖3万份额，违背「底仓永不动」",
+    "verdict": "CONFIRMED",
+    "rid": "R137",
+    "data_pointer": "logs/_r137_long_window.py"
+   },
+   {
     "fid": "F030",
     "category": "认知",
     "statement": "博主给的数据基本可信，但指标解释常出错",
@@ -1567,10 +1594,10 @@
    {
     "mid": "M19",
     "discovered": "2026-10-21",
-    "descr": "给 deck_server.py 加了新路由后未重启服务器，页面 404（/paper 与 /api/paper 都打不开）",
+    "descr": "改 deck_server 路由或任何被它 import 的模块后未重启，页面 404 / 显示旧内容",
     "severity": "高",
     "status": "open",
-    "workaround": "已重启并验证；规则：任何 deck_server 路由改动后必须重启，再浏览器验证一次"
+    "workaround": "规则：deck_server.py 路由改动、或 pension_api.py 等被 import 的模块改动，都必须重启；Python 会缓存 sys.modules，改文件不重启等于没改"
    },
    {
     "mid": "M20",
@@ -1659,6 +1686,13 @@
     "priority": "P1",
     "detail": "已完成 2026-10-21：v2.5 说明书已写入「按月分红是营销说法」章节",
     "status": "done"
+   },
+   {
+    "oid": "O13",
+    "title": "确认 GLD / SLV 现有持仓金额，与实际配置对齐",
+    "priority": "P1",
+    "detail": "用户 2026-10-21 告知已持有 GLD 与 SLV；需金额才能算出真实配置比例（是否超出 10% 目标）",
+    "status": "open"
    },
    {
     "oid": "O12",
