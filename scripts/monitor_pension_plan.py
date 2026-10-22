@@ -276,7 +276,7 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
 
 
 def gold_timing_signal(cfg: dict, asof: str) -> dict | None:
-    """黄金择时：518880 收盘价 > MA10 且 MA10 > MA15 → 持有；否则转货币ETF
+    """黄金择时：518880 的 MA10 > MA15 → 持有；否则转货币ETF
 
     R144-R145 验证：全期 Calmar 0.669 vs 买入持有 0.301；
     滚动2年胜率 72%；三只A股黄金ETF一致（+0.358~+0.372）
@@ -320,7 +320,8 @@ def gold_timing_signal(cfg: dict, asof: str) -> dict | None:
     close = float(d.iloc[-1])
     mf = float(d.rolling(fast).mean().iloc[-1])
     ms = float(d.rolling(slow).mean().iloc[-1])
-    hold = bool(close > mf and mf > ms)
+    # 必须只用 MA 交叉！加「收盘>MA10」会把 Calmar 从 0.669 打到 0.301（E25）
+    hold = bool(mf > ms)
     return {"code": code, "name": gt.get("etf_name", ""),
             "close": close, "ma_fast": mf, "ma_slow": ms,
             "fast": fast, "slow": slow, "hold": hold,
@@ -762,7 +763,7 @@ def main() -> int:
         L.append(f"| MA{_gt['slow']} | {_gt['ma_slow']:.3f} |")
         L.append(f"| **结论** | **{_gt['action']}** |")
         L.append("")
-        L.append(f"> 规则：收盘价 > MA{_gt['fast']} 且 MA{_gt['fast']} > MA{_gt['slow']} → 持有黄金；否则这 10% 转货币ETF")
+        L.append(f"> 规则：MA{_gt['fast']} > MA{_gt['slow']} → 持有黄金；否则这 10% 转货币ETF")
         L.append(">")
         L.append("> R144-R145 验证（64 个配置搜索）：年化 11.22%、回撤 −16.8%、Calmar 0.669；"
                  "买入持有为 9.20%/−30.5%/0.301。滚动 2 年胜率 72%；三只 A 股黄金 ETF 一致改善 +0.358~+0.372。")

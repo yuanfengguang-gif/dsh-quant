@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-22 15:55:10
+-- 导出时间：2026-10-22 16:04:48
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T15:55:09');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T16:04:47');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -148,6 +148,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F088','信号','黄金 MA10/15 择时在 A 股黄金 ETF 上显著有效：Calmar 0.669 vs 买入持有 0.301','2013-2026：年化11.22%/回撤-16.8%/Calmar 0.669；买入持有 9.20%/-30.5%/0.301。滚动2年胜率72%，样本外Calmar 0.966(vs 0.472)，三只ETF一致改善 +0.358~+0.372（518880/159934/518800）。64个配置搜索排名第1；参数高原（fast 7-12 x slow 14-18 全在0.54-0.71）；6个窗口全胜','CONFIRMED','R144-R145','logs/_r144_gold_strategy_search.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F089','信号','黄金择时只在 A 股 ETF 有效，美股 GLD 上几乎无效','同窗口同策略：518880 Calmar +0.368、159934 +0.358、518800 +0.372；GLD 仅 +0.017（MA10/30 甚至 -0.217）。原因推测：518880 有10%涨跌停限制极端波动、跟踪上海金(人民币)与GLD(美元)波动结构不同','CONFIRMED','R143','logs/_r143_gold_ma_rigorous.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F090','认知','黄金择时是「上涨年跑输、下跌年保护」，不是提高收益的策略','MA10/15逐年：2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp（下跌年赢）；2022 -7.2pp、2024 -11.7pp、2025 -20.8pp（上涨年输）。2025+2026两年合计策略+50.4% vs 持有+37.8%','CONFIRMED','R145','logs/_r145_plateau.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F091','认知','黄金与实际利率方向确实相反，但相关性很弱（月频 -0.15~-0.20），且「变化」比「水平」更重要','518880：日频 金价涨跌vs实际利率变化 +0.018、月频 -0.147、月频vs水平 -0.010；GLD：日频 -0.141、月频 -0.198。策略：实际利率<0 → Calmar 0.147（差）；实际利率3月变化<0 → 0.474（+0.173）；6月变化<0 → 0.479（+0.178）。结论：方向对但弱，做信号不如 MA10/15（0.669），与 MA 叠加反而更差','CONFIRMED','R146','logs/_r146_realrate_gold.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F092','数据','A 股黄金 ETF 与 COMEX 期货同日相关性仅 0.28，但隔夜滞后达 0.63','GC vs GLD 同日 0.9704（几乎完全联动）；GC vs 518880 同日仅 0.2830；518880 今日 vs COMEX 昨日 = 0.6335。原因：A股15:00收盘，COMEX夜盘，时段不重叠','CONFIRMED','R146','logs/_r146_realrate_gold.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -239,6 +241,7 @@ INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','202
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E21','2026-10-21','现金流覆盖率算错：报 105.9%，实际 67-78%','三处错误：515450 年数用 5.80 年（实际 6.76）、515100 把 3.5 年补发当年度分红摊平、净值取值错误。后果：差点得出「分红能覆盖生活费」的错误结论','已修正为四口径披露（99.8%/77.6%/67.1%/15.3%），并加 R111 除息日净值交叉验证');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E25','2026-10-21','把验证过的规则写错：验证的是 MA10>MA15，配置里写成「收盘>MA10 且 MA10>MA15」','规则 B（加收盘>MA10）年化仅 5.95%、Calmar 0.301（等于买入持有，毫无改善）、调仓 411 次；规则 A（仅 MA10>MA15）年化 11.22%、Calmar 0.669、调仓 227 次。差点交付一个无效策略','已改配置/监控/面板/说明书四处；R147 专项对照五种写法；教训：实现规则时必须逐字对照验证过的代码，不能凭记忆改写');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E23','2026-10-21','答「黄金用什么策略」时只测慢速趋势（MA120/200/250）+ GLD，漏掉快速均线 + A股ETF','据此得出「黄金不该择时」的错误结论，被用户当场以实战经验反驳。补测后发现 MA10/15 在 518880 上 Calmar 0.669 vs 买入持有 0.301，且三只ETF与6个窗口一致','已改为「先做系统性策略搜索（64个配置×8大类）+ 多标的多窗口交叉验证」再下结论；教训：单一策略类别 + 单一标的下结论是危险的');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E24','2026-10-21','年化公式写成 末值^(1/年数)-1，漏了除起点','对归一化净值序列无害，但对原始价格序列会算出荒谬结果（GLD 56.64%/年）','改为 (末值/起点)^(1/年数)-1；已在 R143 修正');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E22','2026-10-21','比较「红利 ETF vs 黄金」时用了不复权收盘价，漏掉 5.4-5.9%/年分红','把 515100 算成 4.72%/年、515450 算成 5.67%/年（价格口径），据此得出「512890 比黄金好、换黄金是亏的」的错误结论。全收益口径下红利低波是 8.86%、黄金是 11.83%，结论反转','已改用全收益指数（H20955/H20269）重算；规则：任何「分红资产 vs 无分红资产」的比较必须用全收益口径，或用 ETF 价格 + 分红单独累加');

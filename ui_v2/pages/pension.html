@@ -355,7 +355,7 @@
               g.ma_fast > g.ma_slow ? 'good' : 'warn') +
           kpi('是否持有黄金', g.hold ? '持有' : '不持有', g.action, g.hold ? 'good' : 'bad');
         $('pn-gold-note').innerHTML =
-          '<b>规则：</b>518880 收盘价 > MA' + g.fast + ' 且 MA' + g.fast + ' > MA' + g.slow +
+          '<b>规则：</b>518880 的 MA' + g.fast + ' > MA' + g.slow +
           ' → 持有黄金 10%；否则这 10% 转到 <b>' + (g.idle_name || '货币ETF') + '</b>。' +
           '<br><b>实测（2013-2026，64 个配置搜索）：</b>年化 11.22%、最大回撤 −16.8%、Calmar 0.669；' +
           '买入持有 9.20% / −30.5% / 0.301。滚动 2 年胜率 72%，三只 A 股黄金 ETF 一致改善 +0.358~+0.372。' +
