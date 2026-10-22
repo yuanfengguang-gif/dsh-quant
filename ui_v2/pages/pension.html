@@ -33,7 +33,7 @@
 <body style="background:var(--bg);margin:0">
 <div id="sidebar"></div>
 <div class="v2-wrap">
-  <div class="v2-h"><span class="bar"></span><h1>养老方案</h1><span class="tag" style="background:rgba(94,106,210,.18);color:#a5b4fc">v2.8</span>
+  <div class="v2-h"><span class="bar"></span><h1>养老方案</h1><span class="tag" style="background:rgba(94,106,210,.18);color:#a5b4fc">v3.0</span>
     <span class="sub">红利低波 · 卫星仓择时 · 银行追踪 · 建仓进度</span>
     <span id="pn-asof" class="tag" style="margin-left:auto">—</span>
   </div>
@@ -41,16 +41,16 @@
   <div id="pn-alerts"></div>
 
   <div class="v2-card anim-fade-in-up" style="margin-top:14px;border-color:rgba(94,106,210,.35)">
-    <h2>一、当前生效规则 <span class="tag">v2.8 · 2026-10-21 生效</span></h2>
+    <h2>一、当前生效规则 <span class="tag">v3.0 · 2026-10-21 生效</span></h2>
     <div style="overflow-x:auto;margin-top:8px">
       <table class="pn-tbl">
         <tr><th style="width:110px">模块</th><th>规则</th><th style="width:150px">依据</th></tr>
         <tr>
           <td><b>资产配比</b></td>
           <td><b>515100 红利低波100ETF景顺 40%</b> ｜ <b>515450 红利低波50ETF南方 35%</b> ｜
-              <b>512890 红利低波ETF华泰柏瑞 0%（已换出）</b> ｜
-              <b>GLD 黄金 10%</b> ｜ <b>QQQ 纳指 15%</b></td>
-          <td>R137-R138<br>20.8 年含 2008</td>
+              <b>512890 红利低波ETF华泰柏瑞 0%（已换出）</b> ｜ <b>QQQ 纳指100ETF 25%</b>
+              <br><span style="color:#a1a1aa;font-size:12px">黄金不在本组合内 —— 你已有<b>实物黄金</b>长期持有，见第三节监控看板</span></td>
+          <td>R137-R138<br>R152（20.8 年）</td>
         </tr>
         <tr>
           <td><b>卫星仓择时</b></td>
@@ -59,10 +59,11 @@
           <td>R122-R127</td>
         </tr>
         <tr>
-          <td><b>黄金择时</b></td>
-          <td>① 518880 的 MA10 &gt; MA15 <b>且</b> ② 10年期 TIPS 实际收益率 3 个月下行 ——
-              两个都满足才持有黄金；否则转 511990 货币ETF；每月检查</td>
-          <td>R144-R150</td>
+          <td><b>实物黄金</b></td>
+          <td><b>不在本组合内，长期持有，不设买卖规则。</b>
+              下面的「实物黄金监控看板」提供趋势、实际利率、距高点回撤、长期风险收益，
+              <b>用于判断贵不贵、急不急，不产生交易指令</b></td>
+          <td>R143-R153</td>
         </tr>
         <tr>
           <td><b>底仓</b></td>
@@ -90,12 +91,10 @@
   </div>
 
   <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
-    <h2>三、黄金择时 <span class="tag">MA10/15 + TIPS 3月下行 · 双条件</span></h2>
+    <h2>三、实物黄金监控 <span class="tag">只描述环境 · 不产生买卖指令 · 不影响组合</span></h2>
     <div style="margin-top:8px">
-    <div class="pn-grid" id="pn-gold" style="margin-top:4px">加载中…</div>
-    <div class="pn-note" id="pn-gold-note"></div>
+    <div style="margin-top:8px"><div class="pn-note" style="border-left-color:#5e6ad2">你已配置<b>实物黄金长期持有</b>。这一节只帮你判断「贵不贵、急不急」，<b>不产生买卖指令</b>，也不影响上面的组合配置。</div><div class="pn-grid" id="pn-gold" style="margin-top:10px">加载中…</div><div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="pn-gold-tbl"></table></div></div>
     </div>
-    <div class="pn-note" id="pn-gold-warn" style="border-left-color:#f59e0b"></div>
   </div>
 
   <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
@@ -264,7 +263,8 @@
       var isZero = (a.weight===0);
       var c3 = isZero ? '—' : (isNonA ? (a.asset_class==='gold' ? '黄金（无行业）' : '美股（非A股）') : pct(a.top3_industry,1));
       var c4 = (isZero||isNonA) ? '—' : pct(a.bank_share,1);
-      var c5 = isZero ? '<span class="pn-chip hint">已换出</span>'
+      var zeroLabel = (a.asset_class==='gold') ? '移出（持实物）' : '已换出';
+      var c5 = isZero ? '<span class="pn-chip hint">'+zeroLabel+'</span>'
              : (isNonA ? '<span class="pn-chip hint">➖</span>'
              : ((a.top3_industry!=null && a.top3_industry < 0.5)
                 ? '<span class="pn-chip ok">合格</span>' : '<span class="pn-chip warn">偏高</span>'));
@@ -403,61 +403,45 @@
     });
     $('pn-pairing').innerHTML = pct_.join('');
 
-      // 黄金择时（MA10/MA15）
-      var g = d.gold_timing;
+      // 实物黄金监控看板（v3.0：黄金已移出组合，只看不用）
+      var g = d.gold_dashboard;
       if (g) {
-        var lm = Math.round((g.tips_lookback||63)/21);
-        var tipsTxt = (g.tips_now==null) ? '取数失败'
-            : (g.tips_prev.toFixed(2) + '% → ' + g.tips_now.toFixed(2) + '%');
+        var lm = 3;
+        var tnow = (g.tips_now==null) ? '—' : g.tips_now.toFixed(2)+'%';
+        var t3 = (g.tips_3m==null) ? null : (g.tips_now - g.tips_3m);
+        var t3txt = (t3==null) ? '—' : (g.tips_3m.toFixed(2)+'% → '+tnow+'（'+(t3>0?'+':'')+t3.toFixed(2)+'pp）');
+        var tPct = (g.tips_pctile==null) ? '—' : (g.tips_pctile*100).toFixed(0)+'%';
         $('pn-gold').innerHTML =
-          kpi('① MA' + g.fast + ' > MA' + g.slow,
-              g.ma_fast.toFixed(3) + ' / ' + g.ma_slow.toFixed(3),
-              (g.cond_ma ? '✅ 满足' : '❌ 不满足'), g.cond_ma ? 'good' : 'bad') +
-          kpi('② TIPS ' + lm + '月下行', tipsTxt,
-              (g.cond_tips==null ? '⚠️ 取数失败' : (g.cond_tips ? '✅ 满足' : '❌ 不满足')),
-              g.cond_tips ? 'good' : 'bad') +
-          kpi('结论', g.hold ? '持有黄金' : '不持有', g.action, g.hold ? 'good' : 'bad');
-        $('pn-gold-note').innerHTML =
-          '<b>规则（两个条件都要满足）：</b>① 518880 的 MA' + g.fast + ' > MA' + g.slow + '（趋势向上）；' +
-          '② 10 年期 TIPS 实际收益率 3 个月下行（宏观转松）。满足 → 持有黄金 10%；否则这 10% 转到 <b>' + (g.idle_name || '货币ETF') + '</b>。' +
-          '<br><b>实测（518880，2013-2026）：</b>' +
-          '<b>单 MA10/15</b> 年化 11.22%、回撤 −16.8%、Calmar 0.669；' +
-          '<b>双条件</b> 年化 6.54%、<b>回撤仅 −10.7%</b>、Calmar 0.610；买入持有 9.20% / −30.5% / 0.301。' +
-          '<br><b>为什么双条件：</b>黄金这 10% 是保险，保险的价值在最坏情况，不在牛市多赚 —— ' +
-          '用少赚 4.7pp 换少跌 6.1pp。' +
-          '<br><b>为什么用 TIPS 不用「名义−CPI」：</b>两者相关只有 0.489，公式波动是 TIPS 的 1.9 倍、' +
-          '最低到 −6.34%（TIPS 只到 −1.19%）。用 TIPS 后金价与它的同期相关从 −0.20 提升到 −0.47。' +
-          '<br><b>⚠️ 必须接受：</b>① 只在 A 股黄金 ETF 有效，美股 GLD 几乎无效（+0.017）；' +
-          '② 上涨年跑输（2022-2025 连续 4 年，2025 输 20.8pp），下跌年才保护' +
-          '（2013 +11.2pp、2015 +7.0pp、2021 +6.1pp、2026 +23.0pp）。' +
-          '<br><b>定位：这是保险，不是收益引擎。</b>';
+          kpi('518880 黄金ETF华安', g.close.toFixed(3),
+              '最新收盘 ' + g.last_date, '') +
+          kpi('短期趋势 MA10/MA15', g.trend_short==='up' ? '向上' : '向下',
+              g.ma10.toFixed(3) + ' / ' + g.ma15.toFixed(3),
+              g.trend_short==='up' ? 'good' : 'bad') +
+          kpi('长期趋势 MA60/MA200', g.trend_long==='up' ? '向上' : '向下',
+              g.ma60.toFixed(3) + ' / ' + g.ma200.toFixed(3),
+              g.trend_long==='up' ? 'good' : 'bad') +
+          kpi('距历史高点', (g.dd_from_high*100).toFixed(1)+'%',
+              '高点 ' + g.high.toFixed(3) + '（' + g.high_date + '）',
+              g.dd_from_high < -0.15 ? 'good' : 'warn') +
+          kpi('10年期 TIPS 实际利率', tnow,
+              '3 个月：' + (t3txt||'—'), (t3==null? '' : (t3>0?'bad':'good'))) +
+          kpi('TIPS 历史分位', tPct, '2003 年以来（100%=最紧）', 'warn') +
+          kpi('综合环境', g.verdict, '评分 ' + (g.score>0?'+':'') + g.score,
+              g.verdict==='偏多' ? 'good' : (g.verdict==='偏空' ? 'bad' : 'warn'));
+
+        var tr = ['<tr><th>指标</th><th>数值</th><th>说明</th></tr>'];
+        function row(a,b,c2){ tr.push('<tr><td>'+a+'</td><td><b>'+b+'</b></td><td style="color:#a1a1aa">'+c2+'</td></tr>'); }
+        row('统计窗口', g.years.toFixed(1)+' 年', '用 518880 自己的历史');
+        row('年化收益', (g.annual*100).toFixed(2)+'%', '长期平均每年涨多少');
+        row('最大回撤', (g.mdd*100).toFixed(1)+'%', '最惨的时候从高点跌多少');
+        row('每承受 1 元最坏亏损换来', (g.annual/Math.abs(g.mdd)).toFixed(2)+' 元年收益', '数值越高越划算');
+        row('最好年份', (g.best_year*100).toFixed(1)+'%', String(g.best_year_y)+' 年');
+        row('最差年份', (g.worst_year*100).toFixed(1)+'%', String(g.worst_year_y)+' 年');
+        row('亏损年份占比', g.neg_years+' / '+g.n_years+'（'+(g.neg_years/Math.max(g.n_years,1)*100).toFixed(0)+'%）', '持有多数年份是赚的');
+        (g.reasons||[]).forEach(function(r){ row('环境因素', r, ''); });
+        $('pn-gold-tbl').innerHTML = tr.join('');
       } else {
-        $('pn-gold').innerHTML = '<div class="pn-none">未启用或取数失败</div>';
-
-      }
-
-      // ⚠️ GLD vs 518880 冲突提示（配置里持有 GLD，但择时规则只在 518880 上有效）
-      var _w = $('pn-gold-warn');
-      if (_w) {
-        var _holdsGLD = (d.assets||[]).some(function(a){ return a.code==='GLD' && a.weight>0; });
-        if (_holdsGLD) {
-          _w.innerHTML =
-            '⚠️ <b>这里有一个需要你决定的矛盾</b>：配置里的黄金 10% 是 <b>GLD（美股黄金ETF）</b>，' +
-            '但上面这套 MA10/15 + TIPS 规则<b>只在 A 股 518880 黄金ETF华安上有效</b>。' +
-            '<br>实测对比（同一套规则，2013-2026）：<b>518880 改善 +0.368</b>，' +
-            '<b>GLD 只有 +0.017</b>（几乎无效）。' +
-            '<br><b>三个选择：</b>' +
-            '<br>① 把黄金 10% 从 GLD 换成 <b>518880</b> → 择时生效（推荐，且无汇率风险、A 股可直接买）' +
-            '<br>② 继续持有 GLD → <b>择时无效，应改为常持 10%</b>（不要用这套规则）' +
-            '<br>③ 两边都买 → 规则会自相矛盾，不建议' +
-            '<br><b>请告诉我选哪个，我再改配置。</b>';
-          _w.style.borderLeftColor = '#ef4444';
-          _w.style.color = '#fca5a5';
-        } else {
-          _w.innerHTML = '✅ 黄金 10% 已使用 518880，与上面的择时规则一致。';
-          _w.style.borderLeftColor = '#22c55e';
-          _w.style.color = '#86efac';
-        }
+        $('pn-gold').innerHTML = '<div class="pn-none">看板未启用或取数失败</div>';
       }
 
       // 待办清单（知识库 O 系列）

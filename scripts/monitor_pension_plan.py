@@ -304,6 +304,118 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
     }
 
 
+def gold_dashboard(cfg: dict, asof: str) -> dict | None:
+    """实物黄金监控看板 —— 只描述环境，不产生交易指令
+
+    用户 2026-10-21：已配置实物黄金长期持有，组合里不再持有黄金 ETF，
+    但保留指标看板用于判断实物黄金的风险与收益。
+
+    返回 6 组指标：短期趋势 / 长期趋势 / 实际利率 / 距高点位置 / 长期风险收益 / 综合评估
+    """
+    gt = cfg.get("gold_timing", {})
+    if not gt.get("enabled"):
+        return None
+    code = str(gt.get("etf_code", "518880"))
+    asof_ts = pd.Timestamp(asof)
+
+    # 价格
+    d = None
+    try:
+        pc = sqlite3.connect(f"file:{(BASE / 'data' / 'cache' / 'paper.db').as_posix()}?mode=ro",
+                             uri=True, timeout=15)
+        d = pd.read_sql_query("SELECT date,close FROM etf_daily WHERE code=? ORDER BY date",
+                              pc, params=(code,))
+        pc.close()
+        d["date"] = pd.to_datetime(d["date"])
+        d = d.set_index("date")["close"].astype(float)
+    except Exception:
+        d = None
+    if d is None or len(d) < 260:
+        try:
+            import akshare as ak
+            sym = ("sh" if code.startswith(("5", "6")) else "sz") + code
+            df = ak.fund_etf_hist_sina(symbol=sym)
+            df.columns = [str(c) for c in df.columns]
+            dd = df[["date", "close"]].copy()
+            dd["date"] = pd.to_datetime(dd["date"])
+            dd["close"] = pd.to_numeric(dd["close"], errors="coerce")
+            d = dd.dropna().set_index("date")["close"].astype(float)
+        except Exception:
+            return None
+    d = d[d.index <= asof_ts].sort_index()
+    if len(d) < 260:
+        return None
+
+    close = float(d.iloc[-1])
+    g = lambda n: float(d.rolling(n).mean().iloc[-1])
+    ma10, ma15, ma60, ma200 = g(10), g(15), g(60), g(200)
+
+    peak_series = d.cummax()
+    dd_now = float(d.iloc[-1] / peak_series.iloc[-1] - 1)
+    hi = float(d.max()); hi_date = str(d.idxmax())[:10]
+
+    # TIPS
+    tn = t3 = t6 = tpct = None
+    _tc = gt.get("tips") or {}
+    if _tc.get("enabled"):
+        try:
+            _f = BASE / _tc.get("file", "data/cache/tips10y.csv")
+            _td = pd.read_csv(_f, parse_dates=["date"]).set_index("date")["tips10y"].astype(float)
+            _td = _td[_td.index <= asof_ts].sort_index()
+            if len(_td) > 130:
+                tn = float(_td.iloc[-1])
+                _b3 = _td[_td.index <= _td.index[-1] - pd.Timedelta(days=63)]
+                _b6 = _td[_td.index <= _td.index[-1] - pd.Timedelta(days=126)]
+                t3 = float(_b3.iloc[-1]) if len(_b3) else None
+                t6 = float(_b6.iloc[-1]) if len(_b6) else None
+                tpct = float((_td < tn).mean())
+        except Exception:
+            pass
+
+    # 长期风险收益
+    yrs = (d.index[-1] - d.index[0]).days / 365.25
+    ann = (d.iloc[-1] / d.iloc[0]) ** (1 / yrs) - 1 if yrs > 0 else np.nan
+    mdd = float((d / d.cummax() - 1).min())
+    ye = d.resample("YE").last().pct_change().dropna()
+    best_y = (float(ye.max()), int(ye.idxmax().year)) if len(ye) else (np.nan, None)
+    worst_y = (float(ye.min()), int(ye.idxmin().year)) if len(ye) else (np.nan, None)
+    neg_years = int((ye < 0).sum())
+    n_years = len(ye)
+
+    # 综合评估（只描述环境）
+    score, reasons = 0, []
+    if ma10 > ma15:
+        score += 1; reasons.append("短期趋势向上")
+    else:
+        score -= 1; reasons.append("短期趋势向下")
+    if ma60 > ma200:
+        score += 1; reasons.append("长期趋势向上")
+    else:
+        score -= 1; reasons.append("长期趋势向下")
+    if tn is not None and t3 is not None:
+        if tn < t3:
+            score += 1; reasons.append("实际利率下行（利多）")
+        else:
+            score -= 1; reasons.append("实际利率上行（利空）")
+    if dd_now < -0.15:
+        score += 1; reasons.append(f"已从高点回落 {abs(dd_now):.0%}（不追高）")
+    else:
+        reasons.append(f"距高点仅 {abs(dd_now):.0%}")
+    verdict = "偏多" if score >= 2 else ("中性" if score >= -1 else "偏空")
+
+    return {"code": code, "name": gt.get("etf_name", ""), "last_date": str(d.index[-1])[:10],
+            "close": close, "ma10": ma10, "ma15": ma15, "ma60": ma60, "ma200": ma200,
+            "trend_short": "up" if ma10 > ma15 else "down",
+            "trend_long": "up" if ma60 > ma200 else "down",
+            "high": hi, "high_date": hi_date, "dd_from_high": dd_now,
+            "tips_now": tn, "tips_3m": t3, "tips_6m": t6, "tips_pctile": tpct,
+            "annual": ann, "mdd": mdd, "years": yrs,
+            "best_year": best_y[0], "best_year_y": best_y[1],
+            "worst_year": worst_y[0], "worst_year_y": worst_y[1],
+            "neg_years": neg_years, "n_years": n_years,
+            "score": score, "verdict": verdict, "reasons": reasons}
+
+
 def gold_timing_signal(cfg: dict, asof: str) -> dict | None:
     """黄金择时：518880 的 MA10 > MA15 → 持有；否则转货币ETF
 
@@ -812,38 +924,66 @@ def main() -> int:
 
     # ── 黄金择时（MA10/MA15）
     _gt = gold_timing_signal(cfg, asof)
-    L.append("## 三、黄金择时（MA10/15 + TIPS 双条件）")
+    # ── 实物黄金监控看板（只描述环境，不产生交易指令）
+    _gd = gold_dashboard(cfg, asof)
+    L.append("## 三、实物黄金监控看板")
     L.append("")
-    if _gt:
-        _lb_m = _gt["tips_lookback"] // 21
-        L.append("| 条件 | 当前值 | 判定 |")
+    if _gd:
+        L.append("> **用途**：你已配置实物黄金长期持有。这一节只帮你判断「贵不贵、急不急」，"
+                 "**不产生买卖指令**，也不影响上面的组合。")
+        L.append("")
+        L.append("### （1）趋势")
+        L.append("")
+        L.append("| 项目 | 数值 | 方向 |")
         L.append("|---|---|---|")
-        L.append(f"| ① MA{_gt['fast']} > MA{_gt['slow']} | "
-                 f"{_gt['ma_fast']:.3f} vs {_gt['ma_slow']:.3f} | "
-                 f"{'✅ 满足' if _gt['cond_ma'] else '❌ 不满足'} |")
-        if _gt.get("tips_now") is not None and _gt.get("tips_prev") is not None:
-            L.append(f"| ② {_gt['tips_name']} {_lb_m}个月下行 | "
-                     f"{_gt['tips_prev']:.2f}% → {_gt['tips_now']:.2f}% | "
-                     f"{'✅ 满足' if _gt['cond_tips'] else '❌ 不满足'} |")
-        else:
-            L.append(f"| ② {_gt['tips_name']} | 取数失败 | ⚠️ 只用条件① |")
+        L.append(f"| {_gd['code']} {_gd['name']} 最新收盘 | **{_gd['close']:.3f}**（{_gd['last_date']}） | — |")
+        L.append(f"| 短期 MA10 / MA15 | {_gd['ma10']:.3f} / {_gd['ma15']:.3f} | "
+                 f"{'向上' if _gd['trend_short']=='up' else '向下'} |")
+        L.append(f"| 长期 MA60 / MA200 | {_gd['ma60']:.3f} / {_gd['ma200']:.3f} | "
+                 f"{'向上' if _gd['trend_long']=='up' else '向下'} |")
+        L.append("")
+        L.append("### （2）位置")
+        L.append("")
+        L.append(f"- 历史高点 **{_gd['high']:.3f}**（{_gd['high_date']}）")
+        L.append(f"- 当前距高点 **{_gd['dd_from_high']:+.1%}** "
+                 f"{'（已回落较多，不算追高）' if _gd['dd_from_high'] < -0.15 else '（贴近高点，追高需谨慎）'}")
+        L.append("")
+        L.append("### （3）实际利率（黄金的核心驱动）")
         L.append("")
         L.append("| 项目 | 数值 |")
         L.append("|---|---|")
-        L.append(f"| 标的 | **{_gt['code']} {_gt['name']}** |")
-        L.append(f"| 最新收盘 | {_gt['close']:.3f}（{_gt['last_date']}） |")
-        L.append(f"| **结论** | **{_gt['action']}** |")
+        if _gd["tips_now"] is not None:
+            L.append(f"| 10 年期 TIPS 实际收益率 | **{_gd['tips_now']:.2f}%** |")
+            if _gd["tips_3m"] is not None:
+                _d3 = _gd["tips_now"] - _gd["tips_3m"]
+                L.append(f"| 3 个月前 | {_gd['tips_3m']:.2f}%（变化 {_d3:+.2f}pp，"
+                         f"{'下行=利多' if _d3 < 0 else '上行=利空'}） |")
+            if _gd["tips_6m"] is not None:
+                _d6 = _gd["tips_now"] - _gd["tips_6m"]
+                L.append(f"| 6 个月前 | {_gd['tips_6m']:.2f}%（变化 {_d6:+.2f}pp） |")
+            if _gd["tips_pctile"] is not None:
+                L.append(f"| 历史分位 | **{_gd['tips_pctile']:.0%}**（2003 年以来；100%=最紧、0%=最松） |")
+        else:
+            L.append("| TIPS | 取数失败 |")
         L.append("")
-        L.append("> **规则**：两个条件**都要**满足才持有黄金 10%，否则转货币ETF。"
-                 "（R150 实测：单 MA 年化 11.22%/回撤 −16.8%/Calmar 0.669；"
-                 "双条件年化 6.54%/**回撤 −10.7%**/Calmar 0.610 —— 用少赚 4.7pp 换少跌 6.1pp）")
-        L.append(">")
-        L.append("> **为什么用 TIPS 而不是「名义10Y−CPI」**：两者相关只有 0.489，"
-                 "公式波动是 TIPS 的 1.9 倍、最低到 −6.34%（TIPS 只到 −1.19%）。"
-                 "用 TIPS 后金价与它的同期相关从 −0.20 提升到 −0.47（GLD）/ −0.28（518880）。")
-        L.append(">")
-        L.append("> ⚠️ **只在 A 股黄金 ETF 有效**（美股 GLD 几乎无效）；"
-                 "**上涨年跑输**（2025 年输 20.8pp），**下跌年才保护**。定位是保险。")
+        L.append("### （4）长期风险收益（它自己的历史表现）")
+        L.append("")
+        L.append("| 指标 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| 统计窗口 | {_gd['years']:.1f} 年 |")
+        L.append(f"| 年化收益 | **{_gd['annual']:.2%}** |")
+        L.append(f"| 最大回撤 | **{_gd['mdd']:.1%}** |")
+        L.append(f"| 每承受 1 元最坏亏损换来的年收益 | {_gd['annual']/abs(_gd['mdd']):.2f} 元 |")
+        L.append(f"| 最好年份 | {_gd['best_year']:+.1%}（{_gd['best_year_y']}） |")
+        L.append(f"| 最差年份 | {_gd['worst_year']:+.1%}（{_gd['worst_year_y']}） |")
+        L.append(f"| 亏损年份占比 | {_gd['neg_years']}/{_gd['n_years']}（{_gd['neg_years']/max(_gd['n_years'],1):.0%}） |")
+        L.append("")
+        L.append(f"### （5）综合环境：**{_gd['verdict']}**（评分 {_gd['score']:+d}）")
+        L.append("")
+        for r in _gd["reasons"]:
+            L.append(f"- {r}")
+        L.append("")
+        L.append("> ⚠️ **这是环境描述，不是买卖指令。** 实物黄金长期持有，看板只用于判断贵不贵、急不急。")
         L.append("")
     else:
         L.append("_未启用或取数失败_")
@@ -855,7 +995,8 @@ def main() -> int:
     for a in cfg["assets"]:
         w_ = a.get("weight", 0)
         if w_ <= 0:
-            L.append(f"| {a['code']} | {a['name']} | 0% | — | — | 已换出 |")
+            _lab = "移出（持实物）" if a.get("asset_class") == "gold" else "已换出"
+            L.append(f"| {a['code']} | {a['name']} | 0% | — | — | {_lab} |")
             continue
         ac = a.get("asset_class")
         if ac in ("gold", "equity_us"):

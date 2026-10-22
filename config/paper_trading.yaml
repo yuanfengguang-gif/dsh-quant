@@ -4,7 +4,7 @@
 #      「10 万立即 + 140 万等 12 个月」不同 —— 目的是给真实建仓做对照基准。
 
 sim:
-  name: "养老模拟盘 v2.6 · 一周全额建仓"
+  name: "养老模拟盘 v3.0 · 一周全额建仓"
   capital: 1500000              # 总本金（元）
   cash_pool_months: 12          # 现金池月数（12 个月 × 月提款额）
   monthly_withdrawal: 5000      # 每月提款（元）
@@ -30,11 +30,11 @@ sim:
       market: cn
     - code: "518880"
       name: "黄金ETF华安"
-      weight: 0.10
+      weight: 0.00
       market: cn
     - code: "QQQ"
       name: "纳指100ETF-Invesco（美股）"
-      weight: 0.15
+      weight: 0.25
       market: us
 
   benchmark:

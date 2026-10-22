@@ -85,12 +85,17 @@ def pension_data(asof: str | None = None) -> dict:
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
 
-    # 黄金择时（MA10/MA15）
+    # 实物黄金监控看板（v3.0：黄金已移出组合，只保留看板）
+    try:
+        out["gold_dashboard"] = mp.gold_dashboard(cfg, asof)
+    except Exception as e:
+        out["gold_dashboard"] = None
+        out["gold_dashboard_error"] = f"{type(e).__name__}: {e}"
+    # 兼容旧字段
     try:
         out["gold_timing"] = mp.gold_timing_signal(cfg, asof)
-    except Exception as e:
+    except Exception:
         out["gold_timing"] = None
-        out["gold_timing_error"] = f"{type(e).__name__}: {e}"
 
     # v2.5 三信号组合
     try:
