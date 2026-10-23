@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-23T16:05:30",
+ "exported_at": "2026-10-23T16:11:42",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-23T16:05:29"
+    "value": "2026-10-23T16:11:41"
    },
    {
     "key": "description",
@@ -1133,10 +1133,10 @@
    {
     "fid": "F100",
     "category": "数据",
-    "statement": "A股/ETF 日线主源改为腾讯 K 线：当日收盘后即可取，东财 RemoteDisconnected 时仍可用",
-    "evidence": "腾讯 /appstock/app/fqkline/get，param={symbol},day,,,{count},（末尾空=不复权），三入口 web.ifzq.gtimg.cn / proxy.finance.qq.com/ifzqgtimg / ifzq.gtimg.cn 互备；字段顺序 [date,open,close,high,low,volume]。实测 10-23：东财三只全 RemoteDisconnected，腾讯四只全部取到",
+    "statement": "A股/ETF 数据源优先级：通达信盘后包 → 腾讯 K 线 → 新浪 → 东财（东财最差，10-22/10-23 连续 RemoteDisconnected）",
+    "evidence": "通达信官网盘后包 https://www.tdx.com.cn/products/data/data/g4day/{ymd}.zip，每交易日一个全市场包约2.6MB，含昨收/开高低收/量/额；字段偏移 block[4:12]昨收 [12:20]开 [20:28]高 [28:36]低 [36:44]收（务必用36:44，误用28:36会拿到最低价）。实测 10-22 四只ETF收盘价与腾讯一分不差；当日包通常数小时后才发布，未发布时404需由腾讯补缺",
     "verdict": "CONFIRMED",
-    "rid": "R157",
+    "rid": "R157-R158",
     "data_pointer": "scripts/paper_trade.py"
    },
    {
@@ -1146,6 +1146,15 @@
     "evidence": "usdcny.csv 最新 10-21、QQQ 有 10-22 时，reindex 后汇率 NaN，原代码 dropna() 把整行删掉 → 美股价格永远更新不进来。修复：fxs.fillna(最后一个可用汇率)",
     "verdict": "CONFIRMED",
     "rid": "R157",
+    "data_pointer": "scripts/paper_trade.py"
+   },
+   {
+    "fid": "F102",
+    "category": "数据",
+    "statement": "单一数据源会因单日缺失而「部分成功」：通达信包未发布时必须与腾讯合并补缺，不能只取第一个成功的结果",
+    "evidence": "10-23 通达信包 404（未发布），若只用它则 10-21/10-22 两天返回后被当成成功，10-23 静默丢失；改为「通达信优先 + 腾讯补缺、同日以通达信为准」后三天全齐",
+    "verdict": "CONFIRMED",
+    "rid": "R158",
     "data_pointer": "scripts/paper_trade.py"
    },
    {

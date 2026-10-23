@@ -88,6 +88,99 @@ def fetch_us(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
     raise RuntimeError(f"{code}(US) 取数失败：{type(last).__name__}: {last}")
 
 
+_TDX_PKG_URL = "https://www.tdx.com.cn/products/data/data/g4day/{ymd}.zip"
+_TDX_CACHE_DIR = BASE / "data" / "cache" / "tdx_pkg"
+
+
+def _tdx_day_closes(ymd: str) -> dict | None:
+    """下载并解析通达信官网某一交易日的盘后包，返回 {6位代码: 收盘价}。
+
+    非交易日 / 当日包尚未发布（官网 404）返回 None；不抛错。
+    解析结果按日缓存到 data/cache/tdx_pkg/{ymd}.json，避免重复下载 2.6MB。
+    """
+    import json, io, zipfile, struct, math
+    import requests
+
+    cf = _TDX_CACHE_DIR / f"{ymd}.json"
+    if cf.exists():
+        try:
+            return json.loads(cf.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    url = _TDX_PKG_URL.format(ymd=ymd)
+    r = requests.get(url, timeout=(10, 90))
+    if r.status_code == 404:
+        return None                       # 非交易日或尚未发布
+    if r.status_code != 200 or not r.content.startswith(b"PK"):
+        raise RuntimeError(f"通达信盘后包 {ymd} 异常：HTTP {r.status_code}，非 zip")
+
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    names = set(z.namelist())
+    short = ymd[2:]
+    out = {}
+    for mkt in ("sh", "sz", "bj"):
+        cn, mn = f"{mkt}{short}.cod", f"{mkt}{short}.md1"
+        if cn not in names or mn not in names:
+            continue
+        cod, md1 = z.read(cn), z.read(mn)
+        if len(cod) % 150 or len(md1) % 512:
+            continue
+        for off in range(0, len(cod), 150):
+            rec = cod[off:off + 150]
+            code = rec[0:6].rstrip(b"\x00 ").decode("ascii", "replace")
+            if len(code) != 6 or not code.isdigit():
+                continue
+            seq = struct.unpack("<H", rec[32:34])[0]
+            blk = md1[seq * 512:(seq + 1) * 512]
+            if len(blk) != 512:
+                continue
+            close = struct.unpack("<d", blk[36:44])[0]     # 收盘价（不是最低价！）
+            if math.isfinite(close) and close > 0:
+                out[code] = round(float(close), 4)
+
+    if not out:
+        return None
+    _TDX_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cf.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    return out
+
+
+def fetch_etf_tdx(code: str, start: str, end: str,
+                  max_days: int = 40, retries: int = 2) -> pd.DataFrame:
+    """通达信官网盘后包 —— A 股 / ETF 的【第一优先数据源】
+
+    每个交易日一个全市场包（约 2.6MB），按日缓存解析结果。
+    区间工作日数超过 max_days 时不走这条（避免一次下载上百个包），
+    交给腾讯 K 线（历史更深）。区间内无数据返回空表，不抛错。
+    """
+    d0, d1 = pd.Timestamp(start), pd.Timestamp(end)
+    days = [d for d in pd.date_range(d0, d1, freq="B")]
+    if not days or len(days) > max_days:
+        return pd.DataFrame(columns=["date", "close"])
+
+    rows, last_err = [], None
+    for d in days:
+        ymd = d.strftime("%Y%m%d")
+        closes = None
+        for k in range(retries):
+            try:
+                closes = _tdx_day_closes(ymd)
+                break
+            except Exception as e:
+                last_err = e
+                time.sleep(1 + k)
+        if closes and str(code) in closes:
+            rows.append({"date": d.strftime("%Y-%m-%d"), "close": float(closes[str(code)])})
+
+    if rows:
+        return pd.DataFrame(rows).drop_duplicates("date").sort_values("date").reset_index(drop=True)
+    if last_err is not None and len(days) == 1:
+        # 单日且每个包都下载失败 → 视为真失败，让上层走备选
+        raise RuntimeError(f"{code} 通达信盘后包取数失败：{type(last_err).__name__}: {last_err}")
+    return pd.DataFrame(columns=["date", "close"])
+
+
 def fetch_etf_tencent(code: str, start: str, end: str, count: int = 640,
                       retries: int = 3) -> pd.DataFrame:
     """腾讯 K 线（不复权）—— A 股 / ETF 的【主数据源】
@@ -155,21 +248,30 @@ def fetch_etf(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame
 
     last = None
     for k in range(retries):
-        # ① 腾讯（主源，遵循工作区数据源优先级：通达信/腾讯优先，东财仅兜底）
+        # ① 通达信官网盘后包（第一优先）+ ② 腾讯 K 线（第二优先，同时补齐通达信当日包未发布的那天）
+        d_tdx = d_tx = None
         try:
-            d = fetch_etf_tencent(code, start, end)
-            if d is not None:
-                return d
+            d_tdx = fetch_etf_tdx(code, start, end)
         except Exception as e:
             last = e
-        # ② 新浪（备源，全历史且不封 IP）
+        try:
+            d_tx = fetch_etf_tencent(code, start, end)
+        except Exception as e:
+            last = e
+        frames = [x for x in (d_tdx, d_tx) if x is not None and len(x)]
+        if frames:
+            merged = pd.concat(frames, ignore_index=True)
+            merged = (merged.drop_duplicates("date", keep="first")
+                            .sort_values("date").reset_index(drop=True))
+            return merged
+        # ③ 新浪（全历史，不封 IP）
         try:
             d = _sina()
-            if d is not None:
+            if d is not None and len(d):
                 return d
         except Exception as e:
             last = e
-        # ③ 东财（末位兜底）
+        # ④ 东财（末位兜底）
         try:
             d = _em()
             if d is not None and len(d):

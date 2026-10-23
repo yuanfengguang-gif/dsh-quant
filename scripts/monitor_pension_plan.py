@@ -86,17 +86,45 @@ def load_bond() -> pd.DataFrame:
 
 
 def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
-    """取 ETF 价格。优先东财历史（可取任意日），失败退化到新浪现价快照。
-    返回 (价格字典, 数据来源说明)"""
-    out, src = {}, ""
+    """取 ETF 价格。返回 (价格字典, 数据来源说明)
+
+    优先级（用户 2026-10-23 明确）：通达信盘后包 → 腾讯 K 线 → 新浪 → 东财
+    美股标的另走「美股收盘 × 中行中间价」。
+    """
+    out: dict = {}
+    labels: list[str] = []
+    a_codes = [c for c in codes if len(str(c)) == 6 and str(c).isdigit()]
+    us_codes = [c for c in codes if c not in a_codes]
+
     try:
         import akshare as ak
     except Exception:
-        return out, "akshare 不可用"
+        ak = None
 
-    # 路径 0：美股标的（GLD / QQQ 等非 6 位数字代码）—— 取美元收盘，按中行中间价折人民币
-    usd_codes = [c for c in codes if not (len(str(c)) == 6 and str(c).isdigit())]
-    if usd_codes:
+    # ── A 股 / ETF：复用 paper_trade 的统一链路（通达信 → 腾讯 → 新浪 → 东财）
+    a_ok = False
+    if a_codes:
+        try:
+            import paper_trade as _pt
+            _d = str(pd.Timestamp(asof).date())
+            got = 0
+            for c in a_codes:
+                try:
+                    _df = _pt.fetch_etf(str(c), _d, _d)
+                    if _df is not None and len(_df):
+                        out[c] = float(_df["close"].iloc[-1])
+                        got += 1
+                except Exception:
+                    pass
+            if got == len(a_codes):
+                a_ok = True
+                labels.append("通达信盘后包 / 腾讯 K 线")
+        except Exception:
+            pass
+
+    # ── 美股：取美元收盘，按中行中间价折人民币
+    us_ok = False
+    if us_codes and ak is not None:
         try:
             _fx = None
             _f = BASE / "data" / "cache" / "usdcny.csv"
@@ -105,7 +133,8 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
                 _fxd = _fxd[_fxd.index <= pd.Timestamp(asof)]
                 if len(_fxd):
                     _fx = float(_fxd.iloc[-1])
-            for c in usd_codes:
+            got = 0
+            for c in us_codes:
                 try:
                     _df = ak.stock_us_daily(symbol=str(c))
                     _df.columns = [str(x) for x in _df.columns]
@@ -114,44 +143,50 @@ def get_etf_prices(codes: list[str], asof: str) -> tuple[dict, str]:
                     if len(_df):
                         _u = float(_df["close"].iloc[-1])
                         out[c] = round(_u * _fx, 3) if _fx else _u
+                        got += 1
                 except Exception:
                     pass
-            if usd_codes and all(c in out for c in usd_codes):
-                src = "美股收盘 × 中行中间价（人民币）"
+            if got == len(us_codes):
+                us_ok = True
+                labels.append("美股收盘 × 中行中间价")
         except Exception:
             pass
 
-    # 路径 1：东财历史（可取 asof 当日）
-    for c in [x for x in codes if len(str(x)) == 6 and str(x).isdigit()]:
+    if a_ok and (us_ok or not us_codes):
+        return out, " + ".join(labels) + "（asof 当日收盘）"
+
+    # ── 兜底：东财历史
+    if ak is not None:
+        for c in a_codes:
+            if c in out:
+                continue
+            try:
+                df = ak.fund_etf_hist_em(symbol=c, period="daily", adjust="")
+                df.columns = [str(x) for x in df.columns]
+                df["日期"] = pd.to_datetime(df["日期"])
+                df = df[df["日期"] <= pd.Timestamp(asof)]
+                if len(df):
+                    out[c] = float(df["收盘"].iloc[-1])
+            except Exception:
+                pass
+        if a_codes and all(c in out for c in a_codes):
+            return out, "东财历史（兜底）" + (" + 美股折人民币" if us_codes else "")
+
+        # ── 最后兜底：新浪现价快照（只能取最新）
         try:
-            df = ak.fund_etf_hist_em(symbol=c, period="daily", adjust="")
-            df.columns = [str(x) for x in df.columns]
-            df["日期"] = pd.to_datetime(df["日期"])
-            df = df[df["日期"] <= pd.Timestamp(asof)]
-            if len(df):
-                out[c] = float(df["收盘"].iloc[-1])
+            snap = ak.fund_etf_category_sina(symbol="ETF基金")
+            snap.columns = [str(x) for x in snap.columns]
+            snap["code6"] = snap["代码"].astype(str).str.extract(r"(\d{6})")[0]
+            px = dict(zip(snap["code6"], pd.to_numeric(snap["最新价"], errors="coerce")))
+            for c in a_codes:
+                if c in px and not pd.isna(px[c]):
+                    out[c] = float(px[c])
+            if out:
+                return out, "新浪现价快照（非 asof 当日）"
         except Exception:
             pass
-    # 只有「全部 A 股代码都取到」才提前返回，否则继续走新浪兜底
-    _a_codes = [x for x in codes if len(str(x)) == 6 and str(x).isdigit()]
-    if _a_codes and all(c in out for c in _a_codes):
-        return out, "东财历史 + 美股折人民币" if usd_codes else "东财历史（asof 当日收盘）"
 
-    # 路径 2：新浪现价快照（只能取最新）
-    try:
-        snap = ak.fund_etf_category_sina(symbol="ETF基金")
-        snap.columns = [str(x) for x in snap.columns]
-        snap["code6"] = snap["代码"].astype(str).str.extract(r"(\d{6})")[0]
-        px = dict(zip(snap["code6"], pd.to_numeric(snap["最新价"], errors="coerce")))
-        for c in codes:
-            if c in px and not pd.isna(px[c]):
-                out[c] = float(px[c])
-        if out:
-            return out, "新浪现价快照（非 asof 当日）"
-    except Exception:
-        pass
-
-    return out, "取数失败（东财+新浪均不可用）"
+    return out, "取数失败（通达信/腾讯/东财/新浪均不可用）"
 
 
 def bank_strength(cfg: dict) -> dict | None:

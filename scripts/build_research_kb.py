@@ -508,15 +508,19 @@ FINDINGS = [
      "距高点 11.904(2026-01-29) 回撤 -29.3%，TIPS 2.76% 较3个月前 +0.41pp 上行。"
      "13.2年年化9.20%/回撤-30.5%/13年中3年亏损。综合评估：偏空(-2)",
      "CONFIRMED", "R153", "logs/_r153_gold_dashboard.py"),
-    ("F100", "数据", "A股/ETF 日线主源改为腾讯 K 线：当日收盘后即可取，东财 RemoteDisconnected 时仍可用",
-     "腾讯 /appstock/app/fqkline/get，param={symbol},day,,,{count},（末尾空=不复权），"
-     "三入口 web.ifzq.gtimg.cn / proxy.finance.qq.com/ifzqgtimg / ifzq.gtimg.cn 互备；"
-     "字段顺序 [date,open,close,high,low,volume]。实测 10-23：东财三只全 RemoteDisconnected，腾讯四只全部取到",
-     "CONFIRMED", "R157", "scripts/paper_trade.py"),
+    ("F100", "数据", "A股/ETF 数据源优先级：通达信盘后包 → 腾讯 K 线 → 新浪 → 东财（东财最差，10-22/10-23 连续 RemoteDisconnected）",
+     "通达信官网盘后包 https://www.tdx.com.cn/products/data/data/g4day/{ymd}.zip，每交易日一个全市场包约2.6MB，"
+     "含昨收/开高低收/量/额；字段偏移 block[4:12]昨收 [12:20]开 [20:28]高 [28:36]低 [36:44]收（务必用36:44，"
+     "误用28:36会拿到最低价）。实测 10-22 四只ETF收盘价与腾讯一分不差；当日包通常数小时后才发布，未发布时404需由腾讯补缺",
+     "CONFIRMED", "R157-R158", "scripts/paper_trade.py"),
     ("F101", "数据", "央行中间价比美股晚 1 天：美股折人民币时必须用最近可用汇率前值延续，否则整行被 dropna 删掉",
      "usdcny.csv 最新 10-21、QQQ 有 10-22 时，reindex 后汇率 NaN，原代码 dropna() 把整行删掉 → "
      "美股价格永远更新不进来。修复：fxs.fillna(最后一个可用汇率)",
      "CONFIRMED", "R157", "scripts/paper_trade.py"),
+    ("F102", "数据", "单一数据源会因单日缺失而「部分成功」：通达信包未发布时必须与腾讯合并补缺，不能只取第一个成功的结果",
+     "10-23 通达信包 404（未发布），若只用它则 10-21/10-22 两天返回后被当成成功，10-23 静默丢失；"
+     "改为「通达信优先 + 腾讯补缺、同日以通达信为准」后三天全齐",
+     "CONFIRMED", "R158", "scripts/paper_trade.py"),
     ("F030", "认知", "博主给的数据基本可信，但指标解释常出错",
      "柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现",
      "PARTIAL", "R31", "reports/R31_第三个视频验证_柒明东东.md"),
