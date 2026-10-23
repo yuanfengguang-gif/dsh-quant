@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-22T17:35:49",
+ "exported_at": "2026-10-23T16:05:30",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-22T17:35:48"
+    "value": "2026-10-23T16:05:29"
    },
    {
     "key": "description",
@@ -1131,6 +1131,24 @@
     "data_pointer": "logs/_r153_gold_dashboard.py"
    },
    {
+    "fid": "F100",
+    "category": "数据",
+    "statement": "A股/ETF 日线主源改为腾讯 K 线：当日收盘后即可取，东财 RemoteDisconnected 时仍可用",
+    "evidence": "腾讯 /appstock/app/fqkline/get，param={symbol},day,,,{count},（末尾空=不复权），三入口 web.ifzq.gtimg.cn / proxy.finance.qq.com/ifzqgtimg / ifzq.gtimg.cn 互备；字段顺序 [date,open,close,high,low,volume]。实测 10-23：东财三只全 RemoteDisconnected，腾讯四只全部取到",
+    "verdict": "CONFIRMED",
+    "rid": "R157",
+    "data_pointer": "scripts/paper_trade.py"
+   },
+   {
+    "fid": "F101",
+    "category": "数据",
+    "statement": "央行中间价比美股晚 1 天：美股折人民币时必须用最近可用汇率前值延续，否则整行被 dropna 删掉",
+    "evidence": "usdcny.csv 最新 10-21、QQQ 有 10-22 时，reindex 后汇率 NaN，原代码 dropna() 把整行删掉 → 美股价格永远更新不进来。修复：fxs.fillna(最后一个可用汇率)",
+    "verdict": "CONFIRMED",
+    "rid": "R157",
+    "data_pointer": "scripts/paper_trade.py"
+   },
+   {
     "fid": "F030",
     "category": "认知",
     "statement": "博主给的数据基本可信，但指标解释常出错",
@@ -1612,6 +1630,20 @@
     "what": "现金流覆盖率算错：报 105.9%，实际 67-78%",
     "impact": "三处错误：515450 年数用 5.80 年（实际 6.76）、515100 把 3.5 年补发当年度分红摊平、净值取值错误。后果：差点得出「分红能覆盖生活费」的错误结论",
     "fix": "已修正为四口径披露（99.8%/77.6%/67.1%/15.3%），并加 R111 除息日净值交叉验证"
+   },
+   {
+    "eid": "E26",
+    "edate": "2026-10-23",
+    "what": "一直用 akshare 的东财/新浪接口取 A 股行情，没查工作区的 a-stock-data 工具包",
+    "impact": "该工具包明确规定「通达信/腾讯优先，东财只用于其独有数据」。我在 10-22、10-23 两次被东财 RemoteDisconnected 卡住，误报「取数失败」并让模拟盘停更两天；换成腾讯 K 线后一次通过。用户指出后才发现",
+    "fix": "已把腾讯 K 线设为 A股/ETF 主源（新浪备、东财末位）；后续取 A 股数据先查 a-stock-data/SKILL.md"
+   },
+   {
+    "eid": "E27",
+    "edate": "2026-10-23",
+    "what": "持仓快照用「全表最大日期」取价，美股当日无行时被记成 0，QQQ 14 万市值凭空消失",
+    "impact": "page 显示 QQQ 30 股 × 价格 0.000 = 市值 0；实际应为 4733.47",
+    "fix": "改为按「每只标的各自最近可用价 ≤ 快照日」取；修正后 40.1/35.1/24.8 与目标一致"
    },
    {
     "eid": "E25",

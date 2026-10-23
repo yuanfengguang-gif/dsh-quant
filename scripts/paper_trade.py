@@ -61,7 +61,8 @@ def fetch_us(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
             s = df.set_index("date")["close"].astype(float)
             s = s[(s.index >= pd.Timestamp(start)) & (s.index <= pd.Timestamp(end))]
             if len(s) == 0:
-                raise RuntimeError("区间无数据")
+                # 美股当日尚未收盘 / 数据未更新 → 正常返回空表，不当作失败
+                return pd.DataFrame(columns=["date", "close"])
             # 汇率
             if fx_path.exists():
                 fx = pd.read_csv(fx_path, index_col=0, parse_dates=True).iloc[:, 0]
@@ -72,13 +73,59 @@ def fetch_us(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
                 fx = f.set_index("日期")["央行中间价"].astype(float) / 100.0
                 fx_path.parent.mkdir(parents=True, exist_ok=True)
                 fx.to_csv(fx_path)
-            fxs = fx.reindex(s.index).ffill().bfill()
+            fxs = fx.reindex(s.index).ffill()
+            # 央行中间价通常比美股晚 1 天发布；缺失时沿用最近一个可用汇率，
+            # 否则 dropna 会把整行删掉，导致美股价格永远更新不进来（R157 修复）
+            if fxs.isna().any():
+                fxs = fxs.fillna(float(fx.dropna().iloc[-1]))
             cny = (s * fxs).dropna()
+            if len(cny) == 0:
+                raise RuntimeError("人民币折算后为空")
             return pd.DataFrame({"date": cny.index.strftime("%Y-%m-%d"), "close": cny.to_numpy()})
         except Exception as e:
             last = e
             time.sleep(2 + 2 * k)
     raise RuntimeError(f"{code}(US) 取数失败：{type(last).__name__}: {last}")
+
+
+def fetch_etf_tencent(code: str, start: str, end: str, count: int = 640,
+                      retries: int = 3) -> pd.DataFrame:
+    """腾讯 K 线（不复权）—— A 股 / ETF 的【主数据源】
+
+    依据工作区 a-stock-data §1.2：腾讯是 mootdx K 线失效后的主力源，
+    零鉴权、不封 IP、当日收盘后即可取到当天数据；东财只用于其独有数据。
+
+    返回列 date(str) / close(float)。区间内无数据时返回空表（不抛错）。
+    """
+    import requests
+    hosts = ["https://web.ifzq.gtimg.cn", "https://proxy.finance.qq.com/ifzqgtimg",
+             "https://ifzq.gtimg.cn"]
+    sym = ("sh" if str(code).startswith(("5", "6")) else "sz") + str(code)
+    param = f"{sym},day,,,{int(count)},"          # 末尾空 = 不复权
+    last_err = None
+    for k in range(retries):
+        for h in hosts:
+            try:
+                r = requests.get(h + "/appstock/app/fqkline/get", params={"param": param},
+                                 headers={"Referer": "https://gu.qq.com/"}, timeout=(8, 20))
+                if r.status_code != 200 or not r.text.strip():
+                    raise RuntimeError(f"HTTP {r.status_code}")
+                payload = r.json()
+                node = (payload.get("data") or {}).get(sym) or {}
+                items = node.get("day") or node.get("qfqday") or []
+                rows = []
+                for it in items:
+                    d = str(it[0])[:10]
+                    if start <= d <= end:
+                        rows.append({"date": d, "close": float(it[2])})
+                if rows:
+                    df = pd.DataFrame(rows).drop_duplicates("date").sort_values("date")
+                    return df.reset_index(drop=True)
+                return pd.DataFrame(columns=["date", "close"])   # 当日行情尚未生成
+            except Exception as e:
+                last_err = e
+        time.sleep(2 + 2 * k)
+    raise RuntimeError(f"{code} 腾讯取数失败：{type(last_err).__name__}: {last_err}")
 
 
 def fetch_etf(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame:
@@ -108,13 +155,27 @@ def fetch_etf(code: str, start: str, end: str, retries: int = 4) -> pd.DataFrame
 
     last = None
     for k in range(retries):
-        for fn in (_sina, _em):
-            try:
-                d = fn()
-                if d is not None and len(d):
-                    return d
-            except Exception as e:
-                last = e
+        # ① 腾讯（主源，遵循工作区数据源优先级：通达信/腾讯优先，东财仅兜底）
+        try:
+            d = fetch_etf_tencent(code, start, end)
+            if d is not None:
+                return d
+        except Exception as e:
+            last = e
+        # ② 新浪（备源，全历史且不封 IP）
+        try:
+            d = _sina()
+            if d is not None:
+                return d
+        except Exception as e:
+            last = e
+        # ③ 东财（末位兜底）
+        try:
+            d = _em()
+            if d is not None and len(d):
+                return d
+        except Exception as e:
+            last = e
         time.sleep(2 + 2 * k)
     raise RuntimeError(f"{code} 取数失败：{type(last).__name__}: {last}")
 
@@ -235,6 +296,7 @@ def simulate(cfg, c, asof: str):
                 px[dt][code] = _last[code]
     bd = dict(c.execute("SELECT date,close FROM bench_daily WHERE date>=? AND date<=?",
                         (cfg["start_date"], asof)).fetchall())
+    _last_bench = None   # 基准数据可能比行情晚一天发布，用前值延续
     all_dates = sorted(px.keys())
 
     # 分红表
@@ -299,6 +361,10 @@ def simulate(cfg, c, asof: str):
         b = bd.get(dt)
         if b is not None and bench0 is None:
             bench0 = float(b)
+        if b is not None:
+            _last_bench = float(b)
+        else:
+            b = _last_bench
         bench = (float(b) / bench0) if (b is not None and bench0) else np.nan
         pos = "建仓中" if len(done) < len(plan) else "满仓"
         hist.append({"date": dt, "invested": mv, "cash": cash, "total": total,
@@ -379,7 +445,7 @@ def main():
         print("  已清空净值历史")
 
     print("=" * 78)
-    print(f"【养老模拟盘】{cfg['name']}   截至 {asof}")
+    print(f"【养老模拟盘】{cfg['name']}   运行日 {asof}")
     print("=" * 78)
     codes = [x["code"] for x in cfg["assets"]]
     print("  [1/3] 更新 ETF 日线缓存…")
@@ -405,8 +471,12 @@ def main():
 
     # 持久化当日持仓
     _last_px = {}
-    _rows = c.execute("""SELECT code,close FROM etf_daily WHERE date=(
-        SELECT MAX(date) FROM etf_daily)""").fetchall()
+    # 按「每只标的各自最近可用价」取，不能用全表最大日期：
+    # 美股当日未收盘时该日没有行，会被记成 0，导致持仓市值凭空消失（E27）
+    _rows = c.execute("""SELECT e.code, e.close FROM etf_daily e
+        WHERE e.date = (SELECT MAX(date) FROM etf_daily
+                        WHERE code = e.code AND date <= ?)""",
+                      (hist[-1]["date"],)).fetchall()
     for _c, _cl in _rows:
         _last_px[_c] = float(_cl)
     c.execute("DELETE FROM holdings WHERE date=?", (hist[-1]["date"],))
@@ -432,6 +502,8 @@ def main():
 
     last = hist[-1]
     print("-" * 78)
+    if last["date"] != asof:
+        print(f"  数据截至 {last['date']}（运行日 {asof}，当日行情尚未生成，属正常）")
     print(f"  总资产 {last['total']:,.0f} 元   净值 {last['nav']:.4f}   "
           f"盈亏 {last['total']-cfg['capital']:+,.0f} 元")
     print(f"  持仓 {last['invested']:,.0f}   现金 {last['cash']:,.0f}   天数 {len(hist)}")

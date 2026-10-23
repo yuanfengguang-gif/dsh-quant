@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-22 17:35:49
+-- 导出时间：2026-10-23 16:05:30
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-22T17:35:48');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-23T16:05:29');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -157,6 +157,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F097','策略','黄金 10% 从 GLD 换成 518880（A股），使择时规则真正生效','同一套 MA10/15+TIPS 规则：518880 改善 +0.368，GLD 仅 +0.017。换后额外好处：无汇率风险、A股交易时段、可直接买。最终配比 515100 40 / 515450 35 / 512890 0 / 518880 10 / QQQ 15','CONFIRMED','R143+R150+v2.9','config/pension_plan.yaml');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F098','策略','黄金移出组合、10%给纳指后反而更好：年化 17.43% vs 含黄金 16.79%','R152（2006-2026，20.8年含2008）：红利75+纳指25 = 17.43%/-54.1%/Calmar0.322/2008年-46.5%/覆盖109%/提款最差114.8%；含黄金10%的v2.9 = 16.79%/-54.5%/0.308/-46.3%/108%/96.6%。原因：黄金20年8.93%/-46.2%，纳指13.96%/-30.1% —— 收益更高且回撤更小。最终配比 515100 40 / 515450 35 / 512890 0 / QQQ 25','CONFIRMED','R152','logs/_r152_no_gold.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F099','数据','实物黄金监控看板指标：TIPS 当前 2.76% 处 2003 年以来 99% 分位（最紧），对黄金是历史级逆风','2026-10-21：518880 8.412，MA10 8.522 < MA15 8.575（短期向下），MA60 8.843 < MA200 9.455（长期向下），距高点 11.904(2026-01-29) 回撤 -29.3%，TIPS 2.76% 较3个月前 +0.41pp 上行。13.2年年化9.20%/回撤-30.5%/13年中3年亏损。综合评估：偏空(-2)','CONFIRMED','R153','logs/_r153_gold_dashboard.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F100','数据','A股/ETF 日线主源改为腾讯 K 线：当日收盘后即可取，东财 RemoteDisconnected 时仍可用','腾讯 /appstock/app/fqkline/get，param={symbol},day,,,{count},（末尾空=不复权），三入口 web.ifzq.gtimg.cn / proxy.finance.qq.com/ifzqgtimg / ifzq.gtimg.cn 互备；字段顺序 [date,open,close,high,low,volume]。实测 10-23：东财三只全 RemoteDisconnected，腾讯四只全部取到','CONFIRMED','R157','scripts/paper_trade.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F101','数据','央行中间价比美股晚 1 天：美股折人民币时必须用最近可用汇率前值延续，否则整行被 dropna 删掉','usdcny.csv 最新 10-21、QQQ 有 10-22 时，reindex 后汇率 NaN，原代码 dropna() 把整行删掉 → 美股价格永远更新不进来。修复：fxs.fillna(最后一个可用汇率)','CONFIRMED','R157','scripts/paper_trade.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
@@ -248,6 +250,8 @@ INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E14','202
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E15','2026-10-19','对已是分位的序列又算一次分位（双重平滑）','把 S1 从 9.10%/-53.8% 误报成 13.58%/-36.4%','用单次分位重跑');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E16','2026-10-19','未验证就往脚本加「连续2个月过滤」提示','若照做损失 0.6-2.4pp 年化','已删除并改为实测表述');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E21','2026-10-21','现金流覆盖率算错：报 105.9%，实际 67-78%','三处错误：515450 年数用 5.80 年（实际 6.76）、515100 把 3.5 年补发当年度分红摊平、净值取值错误。后果：差点得出「分红能覆盖生活费」的错误结论','已修正为四口径披露（99.8%/77.6%/67.1%/15.3%），并加 R111 除息日净值交叉验证');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E26','2026-10-23','一直用 akshare 的东财/新浪接口取 A 股行情，没查工作区的 a-stock-data 工具包','该工具包明确规定「通达信/腾讯优先，东财只用于其独有数据」。我在 10-22、10-23 两次被东财 RemoteDisconnected 卡住，误报「取数失败」并让模拟盘停更两天；换成腾讯 K 线后一次通过。用户指出后才发现','已把腾讯 K 线设为 A股/ETF 主源（新浪备、东财末位）；后续取 A 股数据先查 a-stock-data/SKILL.md');
+INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E27','2026-10-23','持仓快照用「全表最大日期」取价，美股当日无行时被记成 0，QQQ 14 万市值凭空消失','page 显示 QQQ 30 股 × 价格 0.000 = 市值 0；实际应为 4733.47','改为按「每只标的各自最近可用价 ≤ 快照日」取；修正后 40.1/35.1/24.8 与目标一致');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E25','2026-10-21','把验证过的规则写错：验证的是 MA10>MA15，配置里写成「收盘>MA10 且 MA10>MA15」','规则 B（加收盘>MA10）年化仅 5.95%、Calmar 0.301（等于买入持有，毫无改善）、调仓 411 次；规则 A（仅 MA10>MA15）年化 11.22%、Calmar 0.669、调仓 227 次。差点交付一个无效策略','已改配置/监控/面板/说明书四处；R147 专项对照五种写法；教训：实现规则时必须逐字对照验证过的代码，不能凭记忆改写');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E23','2026-10-21','答「黄金用什么策略」时只测慢速趋势（MA120/200/250）+ GLD，漏掉快速均线 + A股ETF','据此得出「黄金不该择时」的错误结论，被用户当场以实战经验反驳。补测后发现 MA10/15 在 518880 上 Calmar 0.669 vs 买入持有 0.301，且三只ETF与6个窗口一致','已改为「先做系统性策略搜索（64个配置×8大类）+ 多标的多窗口交叉验证」再下结论；教训：单一策略类别 + 单一标的下结论是危险的');
 INSERT OR REPLACE INTO [error_log] (eid,edate,what,impact,fix) VALUES('E24','2026-10-21','年化公式写成 末值^(1/年数)-1，漏了除起点','对归一化净值序列无害，但对原始价格序列会算出荒谬结果（GLD 56.64%/年）','改为 (末值/起点)^(1/年数)-1；已在 R143 修正');
