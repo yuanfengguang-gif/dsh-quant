@@ -446,6 +446,85 @@ gold_switch:
     fallback: "A 不强制买入"
     panel: "A 接入面板"
 
+# ═══════════════════════════════════════════════════════════════════════════
+# 危机信号仪表盘（v3.2，用户 2026-10-26 要求扩充信号 + 加美股信号，选 A 方案）
+# ═══════════════════════════════════════════════════════════════════════════
+# 指标库共 25 个（scripts/build_crisis_indicators.py 生成 indicators25.csv），
+# 面板精选 15 个分三组 + 3 个合成。全部统一方向：数值越大＝压力越大。
+#
+# 领先性实测（logs/_r178_rank_indicators.py，10 次危机，月频）：
+#   最强领先：垃圾债vs国债(-4月/67%)、新兴vs美股(-3月/70%)、波动率分位(-2月/70%)、
+#            美元动量(-2月/60%)、信用利差(-2月/50%)
+#   ⚠️ 只有 2–4 个月，且危机前 6 个月的分位普遍仅 26%–75%（接近抛硬币）
+#   ⚠️ 所有合成指标触发时，A股已平均跌 30%–42%
+#   → 结论：这些信号不能预测危机，只能确认「已经在跌」。定位是体检报告，不是预警雷达。
+crisis_monitor:
+  enabled: true
+  name: "危机信号仪表盘"
+  data_file: "data/cache/crisis/indicators25.csv"
+  build_script: "scripts/build_crisis_indicators.py"
+  refresh: monthly
+  # ── 三组精选指标（每组 5 个）
+  groups:
+    - key: lead
+      name: "领先组"
+      note: "实测领先 2–4 个月；数值高＝压力大"
+      items:
+        - "6_垃圾债vs国债(HYG/IEF)"
+        - "15_新兴vs美股(EEM/SPY)"
+        - "2_波动率分位"
+        - "9_美元动量"
+        - "4_信用利差(HYG/LQD)"
+    - key: us_structure
+      name: "美股结构组"
+      note: "内部结构先坏、表层后坏；这是加美股信号的主要价值"
+      items:
+        - "14_周期vs防御(XLY/XLP)"
+        - "13_金融股相对(XLF/SPY)"
+        - "5_垃圾债动能"
+        - "11_等权vs市值权(RSP/SPY)"
+        - "12_高beta vs低波(SPHB/SPLV)"
+    - key: cn
+      name: "A股本土组"
+      note: "A 股自己的杠杆、估值、投机程度"
+      items:
+        - "20_两融余额分位"
+        - "21_两融3月变化"
+        - "22_全A市盈率分位"
+        - "23_全A市净率分位"
+        - "24_沪深300成交额分位"
+  # ── 三个合成
+  composites:
+    - key: us_all
+      name: "美股综合"
+      note: "19 个美股指标等权平均"
+      members: ["1_回撤","2_波动率分位","3_低于MA10M","4_信用利差(HYG/LQD)","5_垃圾债动能",
+                "6_垃圾债vs国债(HYG/IEF)","7_曲线10Y2Y","8_TIPS实际利率","9_美元动量",
+                "10_小盘vs大盘(IWM/SPY)","11_等权vs市值权(RSP/SPY)","12_高beta vs低波(SPHB/SPLV)",
+                "13_金融股相对(XLF/SPY)","14_周期vs防御(XLY/XLP)","15_新兴vs美股(EEM/SPY)",
+                "16_资产相关性","17_VIX代理(VXX)","18_铜金比(CPER/GLD)","19_原油动能"]
+    - key: cn_all
+      name: "A股综合"
+      note: "6 个 A 股本土指标等权平均"
+      members: ["20_两融余额分位","21_两融3月变化","22_全A市盈率分位",
+                "23_全A市净率分位","24_沪深300成交额分位","25_沪深300回撤"]
+    - key: lead5
+      name: "领先5合成"
+      note: "5 个领先指标的合成；危机前 6 个月即开始上升"
+      members: ["6_垃圾债vs国债(HYG/IEF)","15_新兴vs美股(EEM/SPY)","2_波动率分位",
+                "9_美元动量","4_信用利差(HYG/LQD)"]
+  # ── 阈值
+  thresholds:
+    calm: 0.40
+    watch: 0.60
+    alert: 0.75
+    danger: 0.85
+  # ── 分歧提示（内部 vs 表层）
+  divergence:
+    internal: ["14_周期vs防御(XLY/XLP)","13_金融股相对(XLF/SPY)","5_垃圾债动能"]
+    surface: ["4_信用利差(HYG/LQD)","2_波动率分位"]
+    gap_threshold: 0.25      # 内部与表层分位差超过 25pp 视为「内部分化」
+
 # 银行强弱监测（用户 2026-10-20：只追踪，不自动调仓）
 bank_monitor:
   enabled: true

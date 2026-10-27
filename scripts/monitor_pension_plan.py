@@ -339,6 +339,128 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
     }
 
 
+def crisis_monitor_data(cfg: dict, asof: str) -> dict | None:
+    """危机信号仪表盘：15 个精选指标（三组）+ 3 个合成 + 内部/表面对比
+
+    数据来自 data/cache/crisis/indicators25.csv（月频，由 build_crisis_indicators.py 生成）。
+    指标方向统一为「数值越大＝压力越大」。分位按全历史计算。
+    """
+    cm = cfg.get("crisis_monitor", {})
+    if not cm.get("enabled"):
+        return None
+    f = BASE / cm.get("data_file", "data/cache/crisis/indicators25.csv")
+    if not f.exists():
+        return None
+    try:
+        F = pd.read_csv(f, index_col=0, parse_dates=True)
+    except Exception:
+        return None
+    if F.empty:
+        return None
+    # 月频数据索引是月末；用「按月份比较」而不是按日期，否则月中调用会丢掉当月那一行
+    try:
+        asof_p = pd.Timestamp(asof).to_period("M")
+        F = F[F.index.to_period("M") <= asof_p]
+    except Exception:
+        F = F[F.index <= pd.Timestamp(asof)]
+    if F.empty:
+        return None
+
+    def pctile(col):
+        if col not in F.columns:
+            return None, None
+        s = F[col].dropna()
+        if len(s) < 24:
+            return None, None
+        return float(s.iloc[-1]), float((s < s.iloc[-1]).mean())
+
+    TH = cm.get("thresholds", {})
+    t_watch = float(TH.get("watch", 0.60))
+    t_alert = float(TH.get("alert", 0.75))
+    t_danger = float(TH.get("danger", 0.85))
+
+    def flag(pv):
+        if pv is None:
+            return "—"
+        if pv >= t_danger:
+            return "danger"
+        if pv >= t_alert:
+            return "alert"
+        if pv >= t_watch:
+            return "watch"
+        return "calm"
+
+    groups = []
+    for g in cm.get("groups", []):
+        items = []
+        for name in g.get("items", []):
+            if name not in F.columns:
+                continue
+            v, pv = pctile(name)
+            items.append({"name": name, "value": v, "pct": pv, "flag": flag(pv)})
+        if items:
+            vals = [x["pct"] for x in items if x["pct"] is not None]
+            avg = float(np.mean(vals)) if vals else None
+            groups.append({"key": g.get("key"), "name": g.get("name"),
+                           "note": g.get("note", ""), "items": items,
+                           "avg_pct": avg, "flag": flag(avg)})
+
+    composites = []
+    for c in cm.get("composites", []):
+        mem = [m for m in c.get("members", []) if m in F.columns]
+        if not mem:
+            continue
+        P = pd.DataFrame({m: F[m].rolling(60, min_periods=24).apply(
+            lambda x: (x < x.iloc[-1]).mean(), raw=False) for m in mem})
+        comp = P.mean(axis=1).dropna()
+        if comp.empty:
+            continue
+        cur = float(comp.iloc[-1])
+        composites.append({"key": c.get("key"), "name": c.get("name"),
+                           "note": c.get("note", ""), "pct": cur,
+                           "hist_pct": float((comp < cur).mean()),
+                           "min5y": float(comp.tail(60).min()),
+                           "max5y": float(comp.tail(60).max()),
+                           "flag": flag(cur)})
+
+    # 内部 vs 表层（分化）
+    dv = cm.get("divergence", {})
+    gap = None
+    if dv:
+        def avg_of(lst):
+            vals = [pctile(x)[1] for x in lst if x in F.columns and pctile(x)[1] is not None]
+            return float(np.mean(vals)) if vals else None
+        internal = avg_of(dv.get("internal", []))
+        surface = avg_of(dv.get("surface", []))
+        if internal is not None and surface is not None:
+            gap = {"internal": internal, "surface": surface,
+                   "gap": internal - surface,
+                   "triggered": (internal - surface) >= float(dv.get("gap_threshold", 0.25))}
+
+    # 结论：合成指标与「内部分化」分开判定（分化不等于危机）
+    lead = next((c for c in composites if c["key"] == "lead5"), None)
+    us = next((c for c in composites if c["key"] == "us_all"), None)
+    cn = next((c for c in composites if c["key"] == "cn_all"), None)
+    comp_verdict = "calm"
+    if any(x["flag"] == "danger" for x in composites):
+        comp_verdict = "danger"
+    elif any(x["flag"] == "alert" for x in composites):
+        comp_verdict = "alert"
+    elif any(x["flag"] == "watch" for x in composites):
+        comp_verdict = "watch"
+    div_triggered = bool(gap and gap["triggered"])
+
+    return {"asof": str(F.index[-1].date()), "groups": groups,
+            "composites": composites, "divergence": gap,
+            "composite_verdict": comp_verdict,
+            "divergence_warning": div_triggered,
+            "verdict": comp_verdict,
+            "lead5": lead["pct"] if lead else None,
+            "us_all": us["pct"] if us else None,
+            "cn_all": cn["pct"] if cn else None,
+            "thresholds": TH, "total_indicators": len(F.columns)}
+
+
 def gold_switch_signal(cfg: dict, asof: str) -> dict | None:
     """实物黄金 → 红利ETF 分层换仓信号（v5 规则）
 
@@ -1110,7 +1232,46 @@ def main() -> int:
     _gd = gold_dashboard(cfg, asof)
     # ── 黄金换红利信号（v5 两层闸门）
     _gsw = gold_switch_signal(cfg, asof)
-    L.append("## 三、黄金换红利信号（分层闸门）")
+    # ── 危机信号仪表盘
+    _cm = crisis_monitor_data(cfg, asof)
+    L.append("## 三、危机信号仪表盘（25 指标库 · 精选 15 + 3 合成）")
+    L.append("")
+    if _cm:
+        _F = {"calm": "🟢 平静", "watch": "🟡 关注", "alert": "🟠 警惕", "danger": "🔴 危险"}
+        L.append("> **这一节不能预测危机**（那做不到）。它是**体检报告**：告诉你「身体哪一部分先出问题」。")
+        L.append("")
+        L.append("| 合成指标 | 当前 | 历史分位 | 近 5 年区间 | 状态 |")
+        L.append("|---|---|---|---|---|")
+        for _c in _cm["composites"]:
+            L.append(f"| **{_c['name']}** | **{_c['pct']:.0%}** | {_c['hist_pct']:.0%} | "
+                     f"{_c['min5y']:.0%} – {_c['max5y']:.0%} | {_F.get(_c['flag'],'—')} |")
+        L.append("")
+        _dv = _cm["divergence"]
+        if _dv:
+            L.append(f"**内部 vs 表层**：内部 {_dv['internal']:.0%} ｜ 表层 {_dv['surface']:.0%} ｜ "
+                     f"差 **{_dv['gap']:+.0%}** "
+                     + ("→ ⚠️ **已分化（内部先坏、表层仍平静）**" if _dv["triggered"] else "→ 基本同步"))
+            L.append("")
+        L.append("| 分组 | 指标 | 当前值 | 历史分位 | 状态 |")
+        L.append("|---|---|---|---|---|")
+        for _g in _cm["groups"]:
+            for _k, _it in enumerate(_g["items"]):
+                _gn = f"**{_g['name']}**" if _k == 0 else ""
+                _v = "—" if _it["value"] is None else f"{_it['value']:.1f}"
+                _pv = "—" if _it["pct"] is None else f"{_it['pct']:.0%}"
+                L.append(f"| {_gn} | {_it['name']} | {_v} | **{_pv}** | {_F.get(_it['flag'],'—')} |")
+        L.append("")
+        L.append("> **为什么不能当预警用（25 指标 × 10 次危机实测）**：领先期只有 **2–4 个月**；"
+                 "危机前 6 个月分位普遍仅 **26%–75%**（接近抛硬币）；"
+                 "所有合成指标触发时 **A股已平均跌 30%–42%**。")
+        L.append(">")
+        L.append("> **正确用法**：把「内部指标」（周期vs防御、金融股、垃圾债动能）当**早期体征**，"
+                 "「表层指标」（信用利差、波动率）当**确认**。两者同时走高才行动。")
+        L.append("")
+    else:
+        L.append("_未启用或指标库缺失（先跑 scripts/build_crisis_indicators.py）_")
+        L.append("")
+    L.append("## 四、黄金换红利信号（分层闸门）")
     L.append("")
     if _gsw:
         _g = _gsw["gate"]; _s = _gsw["signal"]
@@ -1193,7 +1354,7 @@ def main() -> int:
     else:
         L.append("_未启用或取数失败_")
         L.append("")
-    L.append("## 四、实物黄金监控看板")
+    L.append("## 五、实物黄金监控看板")
     L.append("")
     if _gd:
         L.append("> **用途**：你已配置实物黄金长期持有。这一节只帮你判断「贵不贵、急不急」，"
@@ -1255,7 +1416,7 @@ def main() -> int:
     else:
         L.append("_未启用或取数失败_")
         L.append("")
-    L.append("## 五、持仓行业集中度（2026Q2 实测，季度复核）")
+    L.append("## 六、持仓行业集中度（2026Q2 实测，季度复核）")
     L.append("")
     L.append("| 代码 | 名称 | 权重 | 前三大行业 | 银行占比 | 判定 |")
     L.append("|---|---|---|---|---|---|")
@@ -1282,7 +1443,7 @@ def main() -> int:
     L.append(f"| **加权** | — | 100% | **{wt3:.1%}** | **{wbk:.1%}** | {'✅' if wt3 < 0.5 else '⚠️'} |")
     L.append("")
 
-    L.append("## 六、ETF 最新价")
+    L.append("## 七、ETF 最新价")
     L.append("")
     L.append(f"数据来源：{price_src}")
     L.append("")
@@ -1296,7 +1457,7 @@ def main() -> int:
         L.append("_行情取数失败（网络或接口问题），**不影响信号判断**_")
     L.append("")
 
-    L.append("## 七、建仓进度")
+    L.append("## 八、建仓进度")
     if not progress:
         L.append("")
         L.append("**未启动** —— `config/pension_plan.yaml` 的 `entry.start_date` 还是 null。")
@@ -1322,7 +1483,7 @@ def main() -> int:
     # ── 银行强弱监测（只追踪，不自动调仓）
     bst = bank_strength(cfg)
     if bst:
-        L.append("## 八、银行强弱监测（只追踪，不自动调仓）")
+        L.append("## 九、银行强弱监测（只追踪，不自动调仓）")
         L.append("")
         L.append(f"> 中证银行 vs 红利低波，滚动 {bst['window_years']:.0f} 年"
                  f"（{bst['start']} 起算）")
@@ -1350,7 +1511,7 @@ def main() -> int:
     # ── 建仓期回本参考
     bes = entry_breakeven_stats(cfg)
     if bes:
-        L.append("## 九、建仓期回本参考（历史统计）")
+        L.append("## 十、建仓期回本参考（历史统计）")
         L.append("")
         L.append(f"> 模拟「{ent.get('immediate_amount', 0):,} 元分 {ent.get('immediate_months', 3)} 个月 + "
                  f"{ent.get('wait_amount', 0):,} 元第 {ent.get('wait_deadline_months', 12)} 个月投完」，"
@@ -1394,7 +1555,7 @@ def main() -> int:
     # ── 股息率绝对值（交叉验证分位）
     dl = dividend_level(cfg)
     if dl:
-        L.append("## 十、股息率历史位置（20 年分布）")
+        L.append("## 十一、股息率历史位置（20 年分布）")
         L.append("")
         L.append(f"> 分位会随窗口漂移，绝对值不会。两者一起看更可靠。"
                  f"（样本 {dl['n']} 个交易日）")
@@ -1415,7 +1576,7 @@ def main() -> int:
     # ── 信号历史战绩（是否失效）
     strk = signal_track_record(cfg)
     if strk:
-        L.append("## 十一、信号历史战绩（防失效）")
+        L.append("## 十二、信号历史战绩（防失效）")
         L.append("")
         L.append(f"> 每次信号触发后 {strk['horizon']} 个月，红利低波全收益的实际涨跌。"
                  f"共 {strk['n_total']} 次触发。")
@@ -1440,7 +1601,7 @@ def main() -> int:
 
     # ── 价格异常报警
     alerts = price_alerts(cfg, asof)
-    L.append("## 十二、异常报警")
+    L.append("## 十三、异常报警")
     L.append("")
     if alerts:
         for a, b in alerts:
@@ -1454,7 +1615,7 @@ def main() -> int:
 
     # ── 持仓健康（现金池 / 权重漂移 / 提款购买力）
     ph = portfolio_health(cfg, asof)
-    L.append("## 十三、持仓健康（需填 config/portfolio_state.yaml）")
+    L.append("## 十四、持仓健康（需填 config/portfolio_state.yaml）")
     L.append("")
     if not ph:
         L.append("**未填写持仓数据** —— `config/portfolio_state.yaml` 里的 `holdings` 和 `cash` 都是空的。")

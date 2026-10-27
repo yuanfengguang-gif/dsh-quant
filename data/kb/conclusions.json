@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-27T11:49:46",
+ "exported_at": "2026-10-27T13:09:00",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-27T11:49:46"
+    "value": "2026-10-27T13:09:00"
    },
    {
     "key": "description",
@@ -1174,6 +1174,24 @@
     "verdict": "CONFIRMED",
     "rid": "v3.1",
     "data_pointer": "config/pension_plan.yaml"
+   },
+   {
+    "fid": "F105",
+    "category": "信号",
+    "statement": "指标库扩充到 25 个（19 美股 + 6 A股本土）后，领先期仍只有 2–4 个月，危机前 6 个月分位仅 26%–75%",
+    "evidence": "月频实测 10 次危机：最强领先为垃圾债vs国债(-4月/67%)、新兴vs美股(-3月/70%)、波动率分位(-2月/70%)、美元动量(-2月/60%)、信用利差(-2月/50%)。所有合成指标触发时A股已平均跌30%–42%，领先5合成触发前6月A股还涨+8.8%~+25.4% → 指标在市场见顶后才升高，不是顶部预警",
+    "verdict": "CONFIRMED",
+    "rid": "R177-R179",
+    "data_pointer": "logs/_r178_rank_indicators.py"
+   },
+   {
+    "fid": "F106",
+    "category": "信号",
+    "statement": "加美股信号的真实价值在「内部分化」：当前内部 81% vs 表层 13%（差 68pp），是晚期周期特征",
+    "evidence": "美股结构指标（周期vs防御92%、金融股71%、垃圾债动能81%）已恶化，而表层指标（信用利差5%、波动率21%、垃圾债vs国债30%）极松。2026-10-31 合成：领先5=34%、美股综合=44%、A股综合=40%（均平静）",
+    "verdict": "CONFIRMED",
+    "rid": "R179",
+    "data_pointer": "scripts/build_crisis_indicators.py"
    },
    {
     "fid": "F030",

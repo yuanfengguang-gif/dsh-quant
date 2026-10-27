@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-27 11:49:46
+-- 导出时间：2026-10-27 13:09:00
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-27T11:49:46');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-27T13:09:00');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -162,6 +162,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F102','数据','单一数据源会因单日缺失而「部分成功」：通达信包未发布时必须与腾讯合并补缺，不能只取第一个成功的结果','10-23 通达信包 404（未发布），若只用它则 10-21/10-22 两天返回后被当成成功，10-23 静默丢失；改为「通达信优先 + 腾讯补缺、同日以通达信为准」后三天全齐','CONFIRMED','R158','scripts/paper_trade.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F103','策略','黄金换红利应按「便宜程度」分层：接近高点时必须等信号，已跌≥25%则立即买','209个月末起点、60个月持有回测：接近高点(>-5%)时，现在买终值1.37/最坏浮亏-63.7%，等信号1.96/-29.9%（改善33.8pp、终值+43%）；已跌≤-25%时两者相同(2.10 vs 2.05)。闸门阈值-10%~-40%各档最坏浮亏全为-34.5%，中位终值仅1.64~1.69 → 真正起作用的是等S5信号，闸门只是可选提前许可','CONFIRMED','R172-R176','logs/_r175_bucket2.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F104','策略','黄金换红利最终规则已落地系统：两层闸门 + 100万/12月 + 保留44万黄金 + 不强制兜底','第1层估值闸门(H30269距高点≤-25%)；第2层危机信号(沪深300跌≥20%且反弹≥15%)；兜底36个月不强制买入。当前(2026-10-26)闸门-6.3%未开、信号不满足(最深-17.6%/反弹0.0%)、阶段S3→继续持金。已写入 config/gold_switch、monitor 第三节、/pension 面板第三节','CONFIRMED','v3.1','config/pension_plan.yaml');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F105','信号','指标库扩充到 25 个（19 美股 + 6 A股本土）后，领先期仍只有 2–4 个月，危机前 6 个月分位仅 26%–75%','月频实测 10 次危机：最强领先为垃圾债vs国债(-4月/67%)、新兴vs美股(-3月/70%)、波动率分位(-2月/70%)、美元动量(-2月/60%)、信用利差(-2月/50%)。所有合成指标触发时A股已平均跌30%–42%，领先5合成触发前6月A股还涨+8.8%~+25.4% → 指标在市场见顶后才升高，不是顶部预警','CONFIRMED','R177-R179','logs/_r178_rank_indicators.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F106','信号','加美股信号的真实价值在「内部分化」：当前内部 81% vs 表层 13%（差 68pp），是晚期周期特征','美股结构指标（周期vs防御92%、金融股71%、垃圾债动能81%）已恶化，而表层指标（信用利差5%、波动率21%、垃圾债vs国债30%）极松。2026-10-31 合成：领先5=34%、美股综合=44%、A股综合=40%（均平静）','CONFIRMED','R179','scripts/build_crisis_indicators.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
