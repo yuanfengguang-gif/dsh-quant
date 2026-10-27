@@ -339,6 +339,153 @@ def portfolio_health(cfg: dict, asof: str) -> dict | None:
     }
 
 
+def gold_switch_signal(cfg: dict, asof: str) -> dict | None:
+    """实物黄金 → 红利ETF 分层换仓信号（v5 规则）
+
+    第 1 层 估值闸门：红利价格指数（H30269）距历史高点 ≤ 阈值（默认 -25%）
+                      → 已深度便宜，立即开始分 12 个月换
+    第 2 层 危机信号：沪深300 自本轮高点回撤 ≥ 20% 且 自最低点反弹 ≥ 15%
+                      → 触发后分 12 个月换
+    兜底：不强制买入（用户 2026-10-26 决定）
+
+    回测依据见 logs/_r175_bucket2.py 与 logs/_r176_gate.py
+    """
+    gs = cfg.get("gold_switch", {})
+    if not gs.get("enabled"):
+        return None
+    asof_ts = pd.Timestamp(asof)
+
+    # ── 第 1 层：估值闸门（红利价格指数）
+    gate_cfg = gs.get("gate", {})
+    gate = {"enabled": bool(gate_cfg.get("enabled")), "open": False,
+            "code": gate_cfg.get("index_code", "H30269"),
+            "name": gate_cfg.get("index_name", "红利低波价格指数"),
+            "threshold": float(gate_cfg.get("threshold", -0.25)),
+            "level": None, "high": None, "high_date": None, "dd": None}
+    try:
+        c = sqlite3.connect(f"file:{(BASE / 'data' / 'cache' / 'dividend_research.db').as_posix()}"
+                            f"?mode=ro", uri=True, timeout=30)
+        d = pd.read_sql_query(
+            "SELECT date,close FROM idx_daily WHERE code=? AND close IS NOT NULL ORDER BY date",
+            c, params=(gate["code"],))
+        c.close()
+        d["date"] = pd.to_datetime(d["date"])
+        s = d.set_index("date")["close"].astype(float)
+        s = s[s.index <= asof_ts]
+        if len(s) > 250:
+            gate["level"] = float(s.iloc[-1])
+            gate["high"] = float(s.max())
+            gate["high_date"] = str(s.idxmax())[:10]
+            gate["dd"] = float(s.iloc[-1] / s.max() - 1)
+            gate["open"] = bool(gate["dd"] <= gate["threshold"])
+    except Exception:
+        pass
+
+    # ── 第 2 层：危机信号（沪深300）
+    sig_cfg = gs.get("signal", {})
+    ref_win = int(sig_cfg.get("ref_window_months", 36))
+    dd_th = float(sig_cfg.get("drawdown_threshold", -0.20))
+    bo_th = float(sig_cfg.get("bounce_threshold", 0.15))
+    sig = {"ref_win": ref_win, "dd_th": dd_th, "bo_th": bo_th, "cond1": False,
+           "cond2": False, "anchor": None, "peak": None, "low": None,
+           "low_date": None, "deep": None, "bounce": None, "px": None, "stage": "?"}
+    try:
+        hs = None
+        pc = sqlite3.connect(f"file:{(BASE / 'data' / 'cache' / 'paper.db').as_posix()}?mode=ro",
+                             uri=True, timeout=15)
+        # 不依赖 paper.db，直接用 crisis 缓存或网络
+        pc.close()
+    except Exception:
+        pass
+    try:
+        f = BASE / "data" / "cache" / "crisis" / "cn_sh000300.csv"
+        if f.exists():
+            hs = pd.read_csv(f, parse_dates=["date"]).set_index("date")["close"].astype(float)
+        else:
+            import akshare as ak
+            df = ak.stock_zh_index_daily(symbol="sh000300")
+            df.columns = [str(c) for c in df.columns]
+            df["date"] = pd.to_datetime(df["date"])
+            hs = df.set_index("date")["close"].astype(float)
+            f.parent.mkdir(parents=True, exist_ok=True)
+            hs.to_frame("close").to_csv(f)
+        hs = hs[hs.index <= asof_ts].sort_index()
+    except Exception:
+        hs = None
+
+    if hs is not None and len(hs) > 400:
+        m = hs.resample("ME").last().dropna()
+        m.index = m.index.to_period("M").to_timestamp("M")
+        ref = m.rolling(ref_win, min_periods=12).max()
+        dd_m = m / ref - 1
+        near = dd_m[dd_m > -0.05]
+        anchor = near.index[-1] if len(near) else m.index[0]
+        seg = m.loc[anchor:]
+        peak = float(seg.max()); low = float(seg.min()); low_d = seg.idxmin()
+        px = float(m.iloc[-1])
+        deep = low / peak - 1
+        bounce = px / low - 1
+        dd_now = float(dd_m.iloc[-1])
+        stage = ("S6" if dd_now > -0.10 else "S5") if (deep <= -0.20 and bounce >= 0.15) \
+            else ("S1" if dd_now > -0.05 else "S2" if dd_now > -0.10
+                  else "S3" if dd_now > -0.20 else "S4")
+        sig.update({"anchor": str(anchor.date()), "peak": round(peak, 1),
+                    "low": round(low, 1), "low_date": str(low_d.date()),
+                    "deep": deep, "bounce": bounce, "px": round(px, 1),
+                    "cond1": bool(deep <= dd_th), "cond2": bool(bounce >= bo_th),
+                    "stage": stage, "dd_now": dd_now})
+
+    # ── 结论
+    if gate["open"]:
+        verdict, reason = "convert", "估值闸门已开（红利已深度便宜），立即分 12 个月换仓"
+    elif sig["cond1"] and sig["cond2"]:
+        verdict, reason = "convert", "危机信号已触发，分 12 个月换仓"
+    else:
+        verdict, reason = "wait", "两层条件都未满足，继续持有黄金等待"
+
+    # ── 执行清单
+    conv = float(gs.get("convert_amount", 1_000_000))
+    tranches = int(gs.get("tranches", 12))
+    per = conv / max(tranches, 1)
+    targets = gs.get("targets", [])
+    tot_ratio = sum(float(x.get("ratio", 1)) for x in targets) or 1.0
+    plan = []
+    for x in targets:
+        code = str(x["code"])
+        px_, dt_ = None, None
+        try:
+            pc = sqlite3.connect(f"file:{(BASE / 'data' / 'cache' / 'paper.db').as_posix()}"
+                                 f"?mode=ro", uri=True, timeout=15)
+            r = pc.execute("SELECT date,close FROM etf_daily WHERE code=? ORDER BY date DESC LIMIT 1",
+                           (code,)).fetchone()
+            pc.close()
+            if r:
+                dt_, px_ = r[0], float(r[1])
+        except Exception:
+            pass
+        amt = per * float(x.get("ratio", 1)) / tot_ratio
+        plan.append({"code": code, "name": x.get("name", ""), "price": px_, "price_date": dt_,
+                     "monthly_amount": amt,
+                     "monthly_shares": (amt / px_) if px_ else None,
+                     "total_shares": (amt / px_ * tranches) if px_ else None})
+
+    div_yr = conv * 0.056
+    return {"enabled": True, "verdict": verdict, "reason": reason,
+            "gate": gate, "signal": sig,
+            "convert_amount": conv, "keep_gold": float(gs.get("keep_gold", 0)),
+            "total_assets": float(gs.get("total_assets", 0)),
+            "physical_gold": float(gs.get("physical_gold", 0)),
+            "cash": float(gs.get("cash", 0)),
+            "monthly_need": float(gs.get("monthly_need", 5000)),
+            "tranches": tranches, "monthly_total": per, "plan": plan,
+            "div_per_year": div_yr, "div_per_month": div_yr / 12,
+            "coverage": div_yr / 12 / float(gs.get("monthly_need", 5000)),
+            "fallback_months": int(gs.get("fallback", {}).get("months", 36)),
+            "fallback_force": bool(gs.get("fallback", {}).get("force_buy", False)),
+            "spread": [float(gs.get("cost", {}).get("gold_spread_low", 0.01)),
+                       float(gs.get("cost", {}).get("gold_spread_high", 0.02))]}
+
+
 def gold_dashboard(cfg: dict, asof: str) -> dict | None:
     """实物黄金监控看板 —— 只描述环境，不产生交易指令
 
@@ -961,7 +1108,92 @@ def main() -> int:
     _gt = gold_timing_signal(cfg, asof)
     # ── 实物黄金监控看板（只描述环境，不产生交易指令）
     _gd = gold_dashboard(cfg, asof)
-    L.append("## 三、实物黄金监控看板")
+    # ── 黄金换红利信号（v5 两层闸门）
+    _gsw = gold_switch_signal(cfg, asof)
+    L.append("## 三、黄金换红利信号（分层闸门）")
+    L.append("")
+    if _gsw:
+        _g = _gsw["gate"]; _s = _gsw["signal"]
+        L.append(f"> **用途**：你有 {_gsw['physical_gold']/10000:.0f} 万实物黄金、"
+                 f"{_gsw['cash']/10000:.0f} 万现金，无其他收入。这一节判断"
+                 f"「什么时候把黄金换成能生股息的红利ETF」——"
+                 f"**不买在高点等暴跌**。")
+        L.append("")
+        L.append("### 第 1 层：估值闸门（先看贵不贵）")
+        L.append("")
+        L.append("| 项目 | 数值 |")
+        L.append("|---|---|")
+        L.append(f"| 指数 | {_g['code']} {_g['name']} |")
+        if _g["level"] is not None:
+            L.append(f"| 当前 | {_g['level']:.1f} |")
+            L.append(f"| 历史最高 | {_g['high']:.1f}（{_g['high_date']}） |")
+            L.append(f"| 距高点 | **{_g['dd']:.1%}** |")
+            L.append(f"| 阈值 | {_g['threshold']:.0%} |")
+            L.append(f"| **判定** | **{'✅ 已开（深度便宜，可立即开始）' if _g['open'] else '❌ 未开（继续等第 2 层）'}** |")
+        else:
+            L.append("| 判定 | ⚠️ 取数失败 |")
+        L.append("")
+        L.append("### 第 2 层：危机信号（两个都要满足）")
+        L.append("")
+        L.append("| 条件 | 当前 | 判定 |")
+        L.append("|---|---|---|")
+        if _s["peak"] is not None:
+            L.append(f"| ① 沪深300 自本轮高点跌 ≥ {abs(_s['dd_th']):.0%} | "
+                     f"高点 {_s['peak']:.0f}（{_s['anchor']}）→ 最低 {_s['low']:.0f}"
+                     f"（{_s['low_date']}），最深 {_s['deep']:.1%} | "
+                     f"{'✅ 满足' if _s['cond1'] else '❌ 不满足'} |")
+            L.append(f"| ② 自最低点反弹 ≥ {_s['bo_th']:.0%} | "
+                     f"现在 {_s['px']:.0f}，反弹 {_s['bounce']:.1%} | "
+                     f"{'✅ 满足' if _s['cond2'] else '❌ 不满足'} |")
+            L.append(f"| 当前阶段 | {_s['stage']}（沪深300 距高点 {_s.get('dd_now', 0):.1%}） | — |")
+        else:
+            L.append("| ① / ② | ⚠️ 取数失败 | — |")
+        L.append("")
+        _v = _gsw["verdict"]
+        L.append(f"### 结论：**{'🟢 可以换仓' if _v == 'convert' else '⚪ 继续持金等待'}**")
+        L.append("")
+        L.append(f"{_gsw['reason']}。")
+        L.append("")
+        if _v != "convert":
+            if _s["peak"] is not None and not _s["cond1"]:
+                L.append(f"- 条件①还需：沪深300 跌到 **{_s['peak']*0.80:.0f}** 以下（现在 {_s['px']:.0f}）")
+            if _s["peak"] is not None and _s["cond1"] and not _s["cond2"]:
+                L.append(f"- 条件②还需：沪深300 反弹到 **{_s['low']*1.15:.0f}** 以上（现在 {_s['px']:.0f}）")
+            if _g["high"] is not None:
+                L.append(f"- 或估值闸门：{_g['code']} 跌到 **{_g['high']*0.75:.1f}** 以下"
+                         f"（现在 {_g['level']:.1f}）")
+            L.append(f"- **兜底**：{_gsw['fallback_months']} 个月仍未触发 → "
+                     f"{'强制开始' if _gsw['fallback_force'] else '**不强制买入**，继续卖金条生活'}")
+            L.append("")
+        L.append("### 触发后的执行清单")
+        L.append("")
+        L.append(f"换仓 **{_gsw['convert_amount']:,.0f} 元**（保留黄金 {_gsw['keep_gold']:,.0f} 元），"
+                 f"分 {_gsw['tranches']} 个月，每月 **{_gsw['monthly_total']:,.0f} 元**。")
+        L.append("")
+        L.append("| 代码 | 名称 | 最新价 | 每月金额 | 每月份额 | 12 月累计份额 |")
+        L.append("|---|---|---|---|---|---|")
+        for _p in _gsw["plan"]:
+            if _p["price"]:
+                L.append(f"| {_p['code']} | {_p['name']} | {_p['price']:.3f} | "
+                         f"{_p['monthly_amount']:,.0f} | {_p['monthly_shares']:,.0f} | "
+                         f"{_p['total_shares']:,.0f} |")
+            else:
+                L.append(f"| {_p['code']} | {_p['name']} | — | {_p['monthly_amount']:,.0f} | — | — |")
+        L.append("")
+        L.append(f"- 换完年股息 **{_gsw['div_per_year']:,.0f} 元 = 每月 {_gsw['div_per_month']:,.0f} 元**，"
+                 f"覆盖 {_gsw['monthly_need']:,.0f} 元开支的 **{_gsw['coverage']:.0%}**")
+        L.append(f"- 实物金条变现成本（{_gsw['spread'][0]:.0%}–{_gsw['spread'][1]:.0%}）："
+                 f"**{_gsw['convert_amount']*_gsw['spread'][0]:,.0f} – "
+                 f"{_gsw['convert_amount']*_gsw['spread'][1]:,.0f} 元**")
+        L.append("")
+        L.append("> **回测依据**（209 个历史月末起点，60 个月持有）：红利接近高点时买入，"
+                 "最坏浮亏 **−63.7%**；等信号再买，最坏浮亏 **−29.9%**，终值反而更高（1.96 vs 1.37）。"
+                 "已深度便宜（跌 ≥25%）时等信号无额外好处，所以设估值闸门允许提前行动。")
+        L.append("")
+    else:
+        L.append("_未启用或取数失败_")
+        L.append("")
+    L.append("## 四、实物黄金监控看板")
     L.append("")
     if _gd:
         L.append("> **用途**：你已配置实物黄金长期持有。这一节只帮你判断「贵不贵、急不急」，"
@@ -1023,7 +1255,7 @@ def main() -> int:
     else:
         L.append("_未启用或取数失败_")
         L.append("")
-    L.append("## 四、持仓行业集中度（2026Q2 实测，季度复核）")
+    L.append("## 五、持仓行业集中度（2026Q2 实测，季度复核）")
     L.append("")
     L.append("| 代码 | 名称 | 权重 | 前三大行业 | 银行占比 | 判定 |")
     L.append("|---|---|---|---|---|---|")
@@ -1050,7 +1282,7 @@ def main() -> int:
     L.append(f"| **加权** | — | 100% | **{wt3:.1%}** | **{wbk:.1%}** | {'✅' if wt3 < 0.5 else '⚠️'} |")
     L.append("")
 
-    L.append("## 五、ETF 最新价")
+    L.append("## 六、ETF 最新价")
     L.append("")
     L.append(f"数据来源：{price_src}")
     L.append("")
@@ -1064,7 +1296,7 @@ def main() -> int:
         L.append("_行情取数失败（网络或接口问题），**不影响信号判断**_")
     L.append("")
 
-    L.append("## 六、建仓进度")
+    L.append("## 七、建仓进度")
     if not progress:
         L.append("")
         L.append("**未启动** —— `config/pension_plan.yaml` 的 `entry.start_date` 还是 null。")
@@ -1090,7 +1322,7 @@ def main() -> int:
     # ── 银行强弱监测（只追踪，不自动调仓）
     bst = bank_strength(cfg)
     if bst:
-        L.append("## 六、银行强弱监测（只追踪，不自动调仓）")
+        L.append("## 八、银行强弱监测（只追踪，不自动调仓）")
         L.append("")
         L.append(f"> 中证银行 vs 红利低波，滚动 {bst['window_years']:.0f} 年"
                  f"（{bst['start']} 起算）")
@@ -1118,7 +1350,7 @@ def main() -> int:
     # ── 建仓期回本参考
     bes = entry_breakeven_stats(cfg)
     if bes:
-        L.append("## 七、建仓期回本参考（历史统计）")
+        L.append("## 九、建仓期回本参考（历史统计）")
         L.append("")
         L.append(f"> 模拟「{ent.get('immediate_amount', 0):,} 元分 {ent.get('immediate_months', 3)} 个月 + "
                  f"{ent.get('wait_amount', 0):,} 元第 {ent.get('wait_deadline_months', 12)} 个月投完」，"
@@ -1162,7 +1394,7 @@ def main() -> int:
     # ── 股息率绝对值（交叉验证分位）
     dl = dividend_level(cfg)
     if dl:
-        L.append("## 九、股息率历史位置（20 年分布）")
+        L.append("## 十、股息率历史位置（20 年分布）")
         L.append("")
         L.append(f"> 分位会随窗口漂移，绝对值不会。两者一起看更可靠。"
                  f"（样本 {dl['n']} 个交易日）")
@@ -1183,7 +1415,7 @@ def main() -> int:
     # ── 信号历史战绩（是否失效）
     strk = signal_track_record(cfg)
     if strk:
-        L.append("## 十、信号历史战绩（防失效）")
+        L.append("## 十一、信号历史战绩（防失效）")
         L.append("")
         L.append(f"> 每次信号触发后 {strk['horizon']} 个月，红利低波全收益的实际涨跌。"
                  f"共 {strk['n_total']} 次触发。")

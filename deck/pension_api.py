@@ -85,6 +85,13 @@ def pension_data(asof: str | None = None) -> dict:
     except Exception as e:
         out["signal"] = {"error": f"{type(e).__name__}: {e}"}
 
+    # 黄金换红利信号（v5 两层闸门，用户 2026-10-26 确认）
+    try:
+        out["gold_switch"] = mp.gold_switch_signal(cfg, asof)
+    except Exception as e:
+        out["gold_switch"] = None
+        out["gold_switch_error"] = f"{type(e).__name__}: {e}"
+
     # 实物黄金监控看板（v3.0：黄金已移出组合，只保留看板）
     try:
         out["gold_dashboard"] = mp.gold_dashboard(cfg, asof)

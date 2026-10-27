@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-10-23 16:11:42
+-- 导出时间：2026-10-27 11:49:46
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-23T16:11:41');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-10-27T11:49:46');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -160,6 +160,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F100','数据','A股/ETF 数据源优先级：通达信盘后包 → 腾讯 K 线 → 新浪 → 东财（东财最差，10-22/10-23 连续 RemoteDisconnected）','通达信官网盘后包 https://www.tdx.com.cn/products/data/data/g4day/{ymd}.zip，每交易日一个全市场包约2.6MB，含昨收/开高低收/量/额；字段偏移 block[4:12]昨收 [12:20]开 [20:28]高 [28:36]低 [36:44]收（务必用36:44，误用28:36会拿到最低价）。实测 10-22 四只ETF收盘价与腾讯一分不差；当日包通常数小时后才发布，未发布时404需由腾讯补缺','CONFIRMED','R157-R158','scripts/paper_trade.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F101','数据','央行中间价比美股晚 1 天：美股折人民币时必须用最近可用汇率前值延续，否则整行被 dropna 删掉','usdcny.csv 最新 10-21、QQQ 有 10-22 时，reindex 后汇率 NaN，原代码 dropna() 把整行删掉 → 美股价格永远更新不进来。修复：fxs.fillna(最后一个可用汇率)','CONFIRMED','R157','scripts/paper_trade.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F102','数据','单一数据源会因单日缺失而「部分成功」：通达信包未发布时必须与腾讯合并补缺，不能只取第一个成功的结果','10-23 通达信包 404（未发布），若只用它则 10-21/10-22 两天返回后被当成成功，10-23 静默丢失；改为「通达信优先 + 腾讯补缺、同日以通达信为准」后三天全齐','CONFIRMED','R158','scripts/paper_trade.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F103','策略','黄金换红利应按「便宜程度」分层：接近高点时必须等信号，已跌≥25%则立即买','209个月末起点、60个月持有回测：接近高点(>-5%)时，现在买终值1.37/最坏浮亏-63.7%，等信号1.96/-29.9%（改善33.8pp、终值+43%）；已跌≤-25%时两者相同(2.10 vs 2.05)。闸门阈值-10%~-40%各档最坏浮亏全为-34.5%，中位终值仅1.64~1.69 → 真正起作用的是等S5信号，闸门只是可选提前许可','CONFIRMED','R172-R176','logs/_r175_bucket2.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F104','策略','黄金换红利最终规则已落地系统：两层闸门 + 100万/12月 + 保留44万黄金 + 不强制兜底','第1层估值闸门(H30269距高点≤-25%)；第2层危机信号(沪深300跌≥20%且反弹≥15%)；兜底36个月不强制买入。当前(2026-10-26)闸门-6.3%未开、信号不满足(最深-17.6%/反弹0.0%)、阶段S3→继续持金。已写入 config/gold_switch、monitor 第三节、/pension 面板第三节','CONFIRMED','v3.1','config/pension_plan.yaml');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──

@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-10-23T16:11:42",
+ "exported_at": "2026-10-27T11:49:46",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-10-23T16:11:41"
+    "value": "2026-10-27T11:49:46"
    },
    {
     "key": "description",
@@ -1156,6 +1156,24 @@
     "verdict": "CONFIRMED",
     "rid": "R158",
     "data_pointer": "scripts/paper_trade.py"
+   },
+   {
+    "fid": "F103",
+    "category": "策略",
+    "statement": "黄金换红利应按「便宜程度」分层：接近高点时必须等信号，已跌≥25%则立即买",
+    "evidence": "209个月末起点、60个月持有回测：接近高点(>-5%)时，现在买终值1.37/最坏浮亏-63.7%，等信号1.96/-29.9%（改善33.8pp、终值+43%）；已跌≤-25%时两者相同(2.10 vs 2.05)。闸门阈值-10%~-40%各档最坏浮亏全为-34.5%，中位终值仅1.64~1.69 → 真正起作用的是等S5信号，闸门只是可选提前许可",
+    "verdict": "CONFIRMED",
+    "rid": "R172-R176",
+    "data_pointer": "logs/_r175_bucket2.py"
+   },
+   {
+    "fid": "F104",
+    "category": "策略",
+    "statement": "黄金换红利最终规则已落地系统：两层闸门 + 100万/12月 + 保留44万黄金 + 不强制兜底",
+    "evidence": "第1层估值闸门(H30269距高点≤-25%)；第2层危机信号(沪深300跌≥20%且反弹≥15%)；兜底36个月不强制买入。当前(2026-10-26)闸门-6.3%未开、信号不满足(最深-17.6%/反弹0.0%)、阶段S3→继续持金。已写入 config/gold_switch、monitor 第三节、/pension 面板第三节",
+    "verdict": "CONFIRMED",
+    "rid": "v3.1",
+    "data_pointer": "config/pension_plan.yaml"
    },
    {
     "fid": "F030",
