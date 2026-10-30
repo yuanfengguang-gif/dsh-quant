@@ -198,7 +198,20 @@
       $('pn-signal').innerHTML = '<div class="pn-none">加载失败：'+(d&&d.error?d.error:'未知')+'</div>';
       return;
     }
-    $('pn-asof').textContent = '数据截止 ' + (d.signal && d.signal.last_date ? d.signal.last_date : d.asof);
+    // 页头日期：不能只用卫星信号的日期当整页日期，会误导（卫星股息率更新慢于其他数据）
+      (function(){
+        var parts = [];
+        if (d.asof) parts.push('页面 ' + d.asof);
+        if (d.signal && d.signal.last_date && d.signal.last_date !== d.asof)
+          parts.push('卫星股息率 ' + d.signal.last_date);
+        var gs2 = d.gold_switch;
+        if (gs2 && gs2.plan && gs2.plan[0] && gs2.plan[0].price_date)
+          parts.push('ETF ' + gs2.plan[0].price_date);
+        var cm2 = d.crisis_monitor;
+        if (cm2 && cm2.asof) parts.push('指标库 ' + cm2.asof);
+        $('pn-asof').textContent = '数据 ' + parts.join(' · ');
+        $('pn-asof').title = '各数据源更新频率不同，分别列出，避免误以为全部同步';
+      })();
 
     // 报警
     var al = d.alerts || [];
