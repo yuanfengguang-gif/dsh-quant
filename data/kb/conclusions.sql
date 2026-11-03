@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-03 15:52:23
+-- 导出时间：2026-11-03 16:39:15
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T15:52:23');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T16:39:14');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -176,6 +176,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F116','策略','「在股市顶部卖黄金」平均错过后续 24.2% 上涨（最差 41.8%）','以股市顶为卖点，之后24个月黄金最高：2008 +41.8%、2011 +21.1%、2015 +15.9%、2020 +27.7%、2022 +14.4%，平均 +24.2%。换算 100 万黄金 → 平均少赚 24.2 万','CONFIRMED','S1','logs/vid_卖高买低检验.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F117','策略','最优时点：等股市S5(反弹15%)才卖金买股 —— 黄金卖在前高95%、股票买在底部+15~18%','S5触发日卖金：占此前12月最高价 2008 91%/2011 92%/2015 98%/2020 97%/2022 95%，平均 95%。同一天买股：买价/底价 1.15~1.18，之后1年 +9.9%~+51.1% 全部为正。S5 触发率 5/6=83%。-> 「卖金高」与「买股低」在同一个时刻实现，因为危机中黄金与股票反向','CONFIRMED','S1','logs/vid_S5时金价位置.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F118','策略','四条路径对比：等S5(1.27) > 分批(1.22) > 顶卖金(1.18) > 一直持金(1.00)','以危机顶为起点持有24个月，相对一直持金的倍数中位数：A顶卖再买股 1.18（最差1.11）、C等S5 1.27（最差1.19）、D分批(RSI+S5) 1.22（最差1.16）。C 在中位与最差两个维度都最优。分批的价值不是更高收益，而是执行保险（避免犹豫错过）','CONFIRMED','S1','logs/vid_路径对比.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F119','信号','买入加「红利距自己低点<=20%」过滤器：24月最差从0.73提到0.88，中位不变1.25','沪深300 S5(反弹15%)单独用 vs 加红利过滤(距自己本轮低点<=20%): 24月中位 1.25 vs 1.25（不变）、最差 0.73 vs 0.88；36月最差 0.79 vs 0.86。原因：红利在A股熊市是避险资产会提前见底 —— 2022那场红利低波2022-10-31见底，沪深300拖到2024-09-13，早22个月，等沪深300 S5触发时红利已涨26%→买了后续36月只涨0.1%。过滤器选择「不买」是对的','CONFIRMED','S1','logs/vid_s5_filter.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F120','信号','红利低波与沪深300 的底部：6场里4场同日，只有2022差22个月','底部日期对比：2008 同日(2008-11-04)、2011 同日(2012-12-03)、2015 同日(2016-01-28)、2020 同日(2020-03-23)、2018 红利早3月(2018-10-18 vs 2019-01-03)、2022 红利早22月(2022-10-31 vs 2024-09-13)。-> 沪深300 作为红利ETF 的择时信号在多数情形有效，但「红利避险化」年份会失效','CONFIRMED','S1','logs/vid_红利vs沪深300底部.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
