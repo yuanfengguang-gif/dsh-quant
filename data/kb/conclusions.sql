@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-03 15:38:55
+-- 导出时间：2026-11-03 15:52:23
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T15:38:55');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T15:52:23');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -172,6 +172,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F112','数据','纳指QDII 513100/159941 均有份额拆分，禁用单位净值算收益','513100 纳指ETF国泰 2022-01-13 单位净值单日 -80.56%；159941 纳指100ETF广发 2022-07-04 -74.93%。直接用单位净值会算出「年化 -1.81%、回撤 -86%、分红率37.59%」等荒谬结果。正确口径：日增长率复利 -> 513100 年化 +17.94%、8.8年总收益 +329%；159941 +17.54%、+316%','CONFIRMED','V01-V10','_video_research/verify_qqq.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F113','信号','澄清：危机指标「领先底部2-4个月」= 「滞后顶部4-9个月」，不能用于逃顶','同一峰值日对两个参照点有两种描述：2008 波动率分位峰 2008-04-30，距顶(2007-10-16) +6.5月、距底(2008-11-04) -6月，当时市场已跌 30.4%。因一轮下跌本身走 6-15 个月，「领先底部」必然等于「滞后顶部」。实测所有合成指标触发时 A股已平均跌 30-42%。-> 这些指标只能辅助判断「接近底部」（用于买入），不能用于「顶部卖出」','CONFIRMED','R183','_video_research/verify_v01b.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F114','策略','纳指QDII vs 红利ETF：收益更高但风险调整后更差','同区间 2020-10~2026-10：513100 纳指ETF国泰 年化15.38%/波动22.5%/回撤-30.0%/收益波动比0.68；515100 10.04%/14.4%/-13.9%/0.70；515450 11.78%/14.2%/-14.2%/0.83。-> 纳指年化高 3.6-5.3pp 但波动回撤是红利 1.6-2.2 倍，应放在更深的档位(S4/S5)买入','CONFIRMED','V01','_video_research/verify_qqq.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F115','信号','黄金从不在股市见顶之前见顶：5 场危机实测 0/5，最晚晚 51 个月','GLD(2004起) 与 SPX/HS300 实测：2008 股市顶 2007-10-09 黄金峰 2011-08-22(+46月)；2011 +4月；2015 A股 顶 2015-06-08 黄金峰 2019-09-04(+51月)；2020 +6月；2022 顶 2022-01-03 黄金峰 2026-01-29(+49月)。-> 「危机来临前卖黄金」方向是反的：黄金是避险资产，危机中反而涨','CONFIRMED','S1','logs/vid_卖高买低检验.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F116','策略','「在股市顶部卖黄金」平均错过后续 24.2% 上涨（最差 41.8%）','以股市顶为卖点，之后24个月黄金最高：2008 +41.8%、2011 +21.1%、2015 +15.9%、2020 +27.7%、2022 +14.4%，平均 +24.2%。换算 100 万黄金 → 平均少赚 24.2 万','CONFIRMED','S1','logs/vid_卖高买低检验.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F117','策略','最优时点：等股市S5(反弹15%)才卖金买股 —— 黄金卖在前高95%、股票买在底部+15~18%','S5触发日卖金：占此前12月最高价 2008 91%/2011 92%/2015 98%/2020 97%/2022 95%，平均 95%。同一天买股：买价/底价 1.15~1.18，之后1年 +9.9%~+51.1% 全部为正。S5 触发率 5/6=83%。-> 「卖金高」与「买股低」在同一个时刻实现，因为危机中黄金与股票反向','CONFIRMED','S1','logs/vid_S5时金价位置.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F118','策略','四条路径对比：等S5(1.27) > 分批(1.22) > 顶卖金(1.18) > 一直持金(1.00)','以危机顶为起点持有24个月，相对一直持金的倍数中位数：A顶卖再买股 1.18（最差1.11）、C等S5 1.27（最差1.19）、D分批(RSI+S5) 1.22（最差1.16）。C 在中位与最差两个维度都最优。分批的价值不是更高收益，而是执行保险（避免犹豫错过）','CONFIRMED','S1','logs/vid_路径对比.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
