@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-03 16:39:15
+-- 导出时间：2026-11-03 17:17:59
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T16:39:14');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T17:17:59');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -178,6 +178,10 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F118','策略','四条路径对比：等S5(1.27) > 分批(1.22) > 顶卖金(1.18) > 一直持金(1.00)','以危机顶为起点持有24个月，相对一直持金的倍数中位数：A顶卖再买股 1.18（最差1.11）、C等S5 1.27（最差1.19）、D分批(RSI+S5) 1.22（最差1.16）。C 在中位与最差两个维度都最优。分批的价值不是更高收益，而是执行保险（避免犹豫错过）','CONFIRMED','S1','logs/vid_路径对比.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F119','信号','买入加「红利距自己低点<=20%」过滤器：24月最差从0.73提到0.88，中位不变1.25','沪深300 S5(反弹15%)单独用 vs 加红利过滤(距自己本轮低点<=20%): 24月中位 1.25 vs 1.25（不变）、最差 0.73 vs 0.88；36月最差 0.79 vs 0.86。原因：红利在A股熊市是避险资产会提前见底 —— 2022那场红利低波2022-10-31见底，沪深300拖到2024-09-13，早22个月，等沪深300 S5触发时红利已涨26%→买了后续36月只涨0.1%。过滤器选择「不买」是对的','CONFIRMED','S1','logs/vid_s5_filter.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F120','信号','红利低波与沪深300 的底部：6场里4场同日，只有2022差22个月','底部日期对比：2008 同日(2008-11-04)、2011 同日(2012-12-03)、2015 同日(2016-01-28)、2020 同日(2020-03-23)、2018 红利早3月(2018-10-18 vs 2019-01-03)、2022 红利早22月(2022-10-31 vs 2024-09-13)。-> 沪深300 作为红利ETF 的择时信号在多数情形有效，但「红利避险化」年份会失效','CONFIRMED','S1','logs/vid_红利vs沪深300底部.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F121','信号','「从低点反弹15%」是未来函数：改成滚动最低点后 21 年触发 57 次、2008 买价恶化到 2.32 倍','事后版(用 seg.idxmin 找底) 2008 买在底部 1.15 倍；因果版(滚动最低点) 触发日提前 203 天、买在底部 2.32 倍，21 年共 57 次触发。2015 早 356 天(1.49倍)、2022 早 826 天。原因：真实交易不知道底，只能看至今最低点，而该点持续刷新导致反弹条件反复触发。-> 任何信号必须能用当天收盘可得的量写出表达式，否则不得进方案','CONFIRMED','S1','logs/vid_causal_signal.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F122','策略','因果回撤分档：阈值越深越好（-20% 1.04 < -25% 1.12 < -30% 1.20），档数越多反而不优','590 个「市场距高点>=-10%」起点、等3年：-20%一次性 中位1.04/最差0.56/买价1.44；-25% 1.12/0.61/1.33；-30% 1.20/0.69/1.23；三档(-15/-25/-35) 1.11/0.64/1.31；四档 1.13/0.64/1.32；深跌档(-30%半+-40%半) 1.17/最差0.71/买价1.14。等10年深跌档中位1.83。-> 分档价值是保证参与+买价更低，不是更高收益','CONFIRMED','S1','logs/vid_causal_rolling.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F123','策略','黄金提款率3.75% < 黄金年化10.12%，「不换仓只卖金条」本身永久可持续','GLD 2004-11~2026-10 年化 10.12%；160万提6万/年 = 3.75%；模拟21年后仍剩 5.14 倍。-> 「黄金不生息所以要换仓」的理由不成立；换仓的真实理由是分散集中度（90%单一资产）','CONFIRMED','S1','logs/vid_keep_gold_sizing.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F124','数据','515100+515450 逐年分红率：6年均值4.66%、中位2.69%、最差3年年均仅2.62%','组合(40:35)逐年：2021 2.53%、2022 2.10%、2023 15.47%、2024 4.30%、2025 2.84%、2026 0.70%。滚动3年年均最差2.62%(2024-2026)。515100 六年半仅分红2次(2023-12-21 占净值34.43%、2025-12-23 7.33%)。-> 现金流规划必须按2.62%做，不能按长期口径5.55%做','CONFIRMED','V10','logs/vid分红时点.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
