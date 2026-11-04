@@ -199,19 +199,34 @@ def gold_switch_data(preview_stage: int | None = None) -> dict:
         hi = float(roll_max.iloc[-1])
         dd = cur / hi - 1
         tranches = []
+        # ★ 2026-11-04 修复：原实现用「当前回撤是否 <= -阈值」判断触发（状态口径），
+        #   导致「已经跌到 -28% 触发过、后来反弹到 -20%」时又显示成「未触发、还差 5%」，
+        #   等于让已经该买的人错过执行。买入是一次性事件，所以改为「回溯期内是否曾穿越」。
+        lookback = int(pc.get("cross_lookback_days", 756))   # 默认回看 36 个月
         for t in pc["tranches"]:
             lv = float(t["level"])
-            trig = dd <= -lv
+            cur_hit = dd <= -lv
+            # ★ 必须先在全序列上算 36 月滚动高点，再切回看窗口；
+            #   若先切片再 rolling，会把切片之前的高点丢掉（2025-01 那次就会被漏掉）
+            full_rm = hs.rolling(int(pc["window_days"]), min_periods=int(pc["min_periods"])).max()
+            full_dd = hs / full_rm - 1
+            win = full_dd.iloc[-lookback:] if len(full_dd) > lookback else full_dd
+            crossed = win[win <= -lv]
+            crossed_date = crossed.index[0].strftime("%Y-%m-%d") if len(crossed) else None
+            last_cross = crossed.index[-1].strftime("%Y-%m-%d") if len(crossed) else None
+            ever = crossed_date is not None
             # 进度：从 0（距高点 0%）到 1（达到阈值）
-            prog = 0.0 if not trig else 1.0
-            if not trig:
-                prog = max(0.0, min(1.0, abs(dd) / lv))
+            prog = 1.0 if ever else max(0.0, min(1.0, abs(dd) / lv))
             tranches.append({
                 "level_pct": _pct(lv), "label": t.get("label", f"-{lv:.0%}"),
                 "amount_wan": t.get("amount_wan"),
                 "action": t.get("action"),
-                "triggered": bool(trig),
-                "gap_pct": None if trig else _pct(lv - abs(dd)),
+                # triggered = 曾触发过（事件口径）；currently = 当前是否仍在阈值下方（状态口径）
+                "triggered": bool(ever),
+                "currently": bool(cur_hit),
+                "crossed_date": crossed_date,
+                "last_cross_date": last_cross,
+                "gap_pct": None if ever else _pct(lv - abs(dd)),
                 "progress": round(prog * 100, 1),
             })
         primary = {

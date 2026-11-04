@@ -23,6 +23,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pandas as pd
+
 BASE = Path(__file__).resolve().parents[1]
 
 DEFAULTS = {
@@ -63,6 +65,9 @@ def _cfg() -> dict:
     for k in ("assets", "periods"):
         if isinstance(cfg.get(k), list) and cfg[k]:
             out[k] = cfg[k]
+    # ★ 2026-11-04 修：markers 段原先没被透传，导致标注标签回退成 key（crisis_start 等英文）
+    if isinstance(cfg.get("markers"), dict):
+        out["markers"] = cfg["markers"]
     return out
 
 
@@ -157,6 +162,114 @@ def _downsample(s, max_points: int):
             idx.append(n - 1)
     vals = s.to_numpy()
     return [s.index[i] for i in idx], [float(vals[i]) for i in idx]
+
+
+# ══════════════════════════════════════════════════════════════════
+# 标注计算（危机开始/结束 + 模型换仓触发日）
+#   全部从数据实时算出，不写死日期。
+# ══════════════════════════════════════════════════════════════════
+def _hs300_series(data_dir: Path):
+    """优先东财全球指数（较新），否则研究库"""
+    s, _ = _load_em_global(data_dir, "em_global_hs300.csv")
+    if s is not None:
+        return s
+    s2, _ = _load_db("000300")
+    return s2
+
+
+def _compute_markers(cfg: dict, data_dir: Path, period: dict, kind: str):
+    """返回 (markers, note)
+    kind = "crisis" → 四根竖线；kind = "all" → 只返回 None（改用 bands）
+    """
+    hs = _hs300_series(data_dir)
+    if hs is None or len(hs) < 300:
+        return [], "沪深300 缺失，无法计算标注"
+
+    win_days = 756
+    minp = 250
+    for a in cfg.get("assets", []):
+        if a.get("key") == "hs300":
+            pass
+    # 优先用 primary 配置（若存在）
+    try:
+        import yaml
+        gcfg = yaml.safe_load((BASE / "config" / "gold_switch_signal.yaml").read_text(encoding="utf-8"))
+        win_days = int(gcfg["primary"].get("window_days", win_days))
+        minp = int(gcfg["primary"].get("min_periods", minp))
+    except Exception:
+        pass
+
+    full_rm = hs.rolling(win_days, min_periods=minp).max()
+    full_dd = hs / full_rm - 1
+
+    t0 = pd.Timestamp(period.get("start", "2005-01-01"))
+    t1_raw = period.get("end", "latest")
+    t1 = hs.index[-1] if str(t1_raw) == "latest" else pd.Timestamp(t1_raw)
+
+    seg = hs[(hs.index >= t0) & (hs.index <= t1)].dropna()
+    if len(seg) < 30:
+        return [], "区间数据不足，无法计算危机起止"
+
+    trough = seg.idxmin()
+    top = seg[seg.index <= trough].idxmax()
+
+    markers = []
+    markers.append({"key": "crisis_start", "date": top.strftime("%Y-%m-%d"),
+                    "value": round(float(seg.loc[top]), 2)})
+    markers.append({"key": "crisis_end", "date": trough.strftime("%Y-%m-%d"),
+                    "value": round(float(seg.loc[trough]), 2)})
+
+    w_dd = full_dd[(full_dd.index >= t0) & (full_dd.index <= t1)]
+    for lv, key in ((0.25, "switch_1"), (0.35, "switch_2")):
+        hit = w_dd[w_dd <= -lv]
+        if len(hit):
+            d0 = hit.index[0]
+            markers.append({"key": key, "date": d0.strftime("%Y-%m-%d"),
+                            "value": round(float(hs.loc[d0]), 2),
+                            "dd_pct": round(float(full_dd.loc[d0]) * 100, 2)})
+
+    # 提前/滞后说明
+    note_bits = []
+    for m in markers:
+        if m["key"].startswith("switch"):
+            dt = pd.Timestamp(m["date"])
+            lead = (trough - dt).days
+            m["lead_days_before_trough"] = int(lead)
+            note_bits.append(f"{'第1档' if m['key']=='switch_1' else '第2档'} {m['date']}"
+                             + (f"（比见底早 {lead//30} 个月）" if lead > 0 else f"（比见底晚 {-lead//30} 个月）"))
+    note = "；".join(note_bits) if note_bits else "该区间模型未触发换仓（沪深300 回撤未达 -25%）"
+    return markers, note
+
+
+def _compute_bands(cfg: dict, data_dir: Path):
+    """全历史视图：六场危机各画一条浅色区间带（危机开始 → 危机结束）"""
+    hs = _hs300_series(data_dir)
+    if hs is None:
+        return []
+    win_days, minp = 756, 250
+    try:
+        import yaml
+        gcfg = yaml.safe_load((BASE / "config" / "gold_switch_signal.yaml").read_text(encoding="utf-8"))
+        win_days = int(gcfg["primary"].get("window_days", win_days))
+        minp = int(gcfg["primary"].get("min_periods", minp))
+    except Exception:
+        pass
+    bands = []
+    for per in cfg.get("periods", []):
+        if per.get("key") == "all":
+            continue
+        t0 = pd.Timestamp(per.get("start"))
+        t1_raw = per.get("end", "latest")
+        t1 = hs.index[-1] if str(t1_raw) == "latest" else pd.Timestamp(t1_raw)
+        seg = hs[(hs.index >= t0) & (hs.index <= t1)].dropna()
+        if len(seg) < 30:
+            continue
+        trough = seg.idxmin()
+        top = seg[seg.index <= trough].idxmax()
+        bands.append({"label": per.get("label"),
+                      "start": top.strftime("%Y-%m-%d"),
+                      "end": trough.strftime("%Y-%m-%d")})
+    return bands
 
 
 def asset_compare_data(period: str | None = None) -> dict:
@@ -300,6 +413,30 @@ def asset_compare_data(period: str | None = None) -> dict:
             "base_date": first_date.strftime("%Y-%m-%d"),
         })
         out["assets"].append(item)
+
+    # ── 标注（危机开始/结束 + 模型换仓触发日）
+    mk_cfg = cfg.get("markers", {}) or {}
+    if mk_cfg.get("enabled", True):
+        defs = {d.get("key"): d for d in mk_cfg.get("defs", [])}
+        if pk == "all":
+            out["bands"] = _compute_bands(cfg, data_dir)
+            out["markers"] = []
+            out["marker_note"] = "全历史视图：六场危机以浅色区间带显示（危机开始→结束）"
+        else:
+            mks, mnote = _compute_markers(cfg, data_dir, per, pk)
+            SHORT = {"crisis_start": "危机开始", "crisis_end": "危机结束",
+                     "switch_1": "换仓第1档", "switch_2": "换仓第2档"}
+            for m in mks:
+                d = defs.get(m["key"], {})
+                m["label"] = d.get("label", m["key"])
+                m["short"] = d.get("short", SHORT.get(m["key"], m["key"]))
+                m["color"] = d.get("color", "#9ca3af")
+                m["dash"] = d.get("dash", [5, 5])
+            out["markers"] = mks
+            out["marker_note"] = mnote
+            out["bands"] = []
+    else:
+        out["markers"], out["bands"], out["marker_note"] = [], [], ""
 
     ok_items = [a for a in out["assets"] if a.get("ok") and a.get("ret_pct") is not None]
     if ok_items:

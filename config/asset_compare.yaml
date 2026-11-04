@@ -104,6 +104,38 @@ periods:
     start: "2022-01-01"
     end: "2024-06-30"
 
+# ★ 竖线标注（危机开始/结束 + 模型换仓触发）
+#   crisis_start = 沪深300 区间内的最高点（危机开始）
+#   crisis_end   = 沪深300 区间内的最低点（危机结束）
+#   switch_1     = 沪深300 距滚动36月高点回撤首次 ≤ -25%（模型第1档）
+#   switch_2     = 同上首次 ≤ -35%（模型第2档）
+markers:
+  enabled: true
+  # 全部日期由代码从数据实时计算，此处只定义显示样式
+  defs:
+    - key: "crisis_start"
+      label: "危机开始（股市顶）"
+      short: "危机开始"
+      color: "#ef4444"
+      dash: [6, 5]
+    - key: "crisis_end"
+      label: "危机结束（股市底）"
+      short: "危机结束"
+      color: "#22c55e"
+      dash: [6, 5]
+    - key: "switch_1"
+      label: "模型换仓·第1档（沪深300回撤-25%）"
+      short: "换仓第1档"
+      color: "#f59e0b"
+      dash: [2, 4]
+    - key: "switch_2"
+      label: "模型换仓·第2档（沪深300回撤-35%）"
+      short: "换仓第2档"
+      color: "#a855f7"
+      dash: [2, 4]
+  # 全历史视图：把六场危机画成浅色区间带
+  show_bands_on_all: true
+
 # 展示
 ui:
   title: "组合资产走势对比"

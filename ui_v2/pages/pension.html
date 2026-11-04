@@ -871,6 +871,29 @@ function acRender(d){
   tb.innerHTML = html;
 
   /* ── 提示 ── */
+  /* 标注说明 */
+  var mnote = document.getElementById('ac-markers');
+  if(!mnote){
+    mnote = document.createElement('div');
+    mnote.id = 'ac-markers';
+    mnote.style.cssText = 'margin-top:8px;font-size:12px;display:flex;flex-wrap:wrap;gap:6px 14px';
+    document.getElementById('ac-legend').parentNode.insertBefore(mnote, document.getElementById('ac-tbl').parentNode);
+  }
+  var mh = '';
+  if((d.markers || []).length){
+    d.markers.forEach(function(m){
+      mh += '<span style="display:inline-flex;align-items:center;gap:5px">'
+         + '<span style="display:inline-block;width:14px;height:0;border-top:2px dashed ' + m.color + '"></span>'
+         + '<span>' + (m.label || '') + ' ' + m.date + '</span></span>';
+    });
+  } else if((d.bands || []).length){
+    mh = '<span style="color:#9ca3af">浅红区间带 = 六场危机（危机开始 → 危机结束），共 ' + d.bands.length + ' 段</span>';
+  }
+  if(d.marker_note){
+    mh += '<span style="width:100%;color:#f59e0b">' + d.marker_note + '</span>';
+  }
+  mnote.innerHTML = mh;
+
   var ws = (d.warnings || []).slice();
   ws.push('区间 ' + d.start + ' ~ ' + d.end + '，共 ' + (d.assets.filter(function(x){return x.ok}).length) + ' 个资产');
   document.getElementById('ac-warn').textContent = ws.join(' ｜ ');
@@ -951,6 +974,12 @@ function acDraw(){
     ctx.fillText(lab, x, pad.t+ih+8);
   }
 
+  /* ★ 先画危机区间带（全历史视图） */
+  acDrawBands(ctx, X, pad, iw, ih);
+
+  /* ★ 再画竖线标注（危机开始/结束 + 模型换仓触发） */
+  acDrawMarkers(ctx, X, pad, iw, ih);
+
   /* 折线 */
   vis.forEach(function(a){
     ctx.beginPath();
@@ -971,6 +1000,67 @@ function acDraw(){
     ctx.font = 'bold 11px Microsoft YaHei';
     var txt = (a.ret_pct>=0?'+':'') + a.ret_pct.toFixed(0) + '%';
     ctx.fillText(txt, lx+7, ly);
+  });
+}
+
+
+/* ── 危机区间带（全历史）：浅色竖向区块 ── */
+function acDrawBands(ctx, X, pad, iw, ih){
+  var d = AC.data;
+  if(!d || !d.bands || !d.bands.length) return;
+  d.bands.forEach(function(b){
+    var x1 = X(b.start), x2 = X(b.end);
+    if(!isFinite(x1) || !isFinite(x2)) return;
+    if(x2 < x1){ var tmp=x1; x1=x2; x2=tmp; }
+    if(x2 < pad.l || x1 > pad.l+iw) return;   // 完全在视野外
+    x1 = Math.max(pad.l, x1); x2 = Math.min(pad.l+iw, x2);
+    ctx.save();
+    ctx.fillStyle = 'rgba(239,68,68,.13)';
+    ctx.fillRect(x1, pad.t, Math.max(1, x2-x1), ih);
+    ctx.strokeStyle = 'rgba(239,68,68,.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, pad.t); ctx.lineTo(x1, pad.t+ih); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, pad.t); ctx.lineTo(x2, pad.t+ih); ctx.stroke();
+    ctx.restore();
+  });
+}
+
+/* ── 竖线标注：危机开始/结束 + 模型换仓触发 ── */
+function acDrawMarkers(ctx, X, pad, iw, ih){
+  var d = AC.data;
+  if(!d || !d.markers || !d.markers.length) return;
+  /* 按日期排序，标签高低交错避免重叠 */
+  var ms = d.markers.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  var levels = [0, 1, 2, 3];       // 4 个标签层级
+  ms.forEach(function(m, i){
+    var x = X(m.date);
+    if(!isFinite(x) || x < pad.l-2 || x > pad.l+iw+2) return;
+    ctx.save();
+    /* 虚线竖线 */
+    ctx.strokeStyle = m.color || '#9ca3af';
+    ctx.lineWidth = (m.key || '').indexOf('switch') === 0 ? 1.6 : 2;
+    ctx.setLineDash(m.dash || [5,5]);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t+ih); ctx.stroke();
+    ctx.setLineDash([]);
+    /* 小三角标记在顶部 */
+    ctx.fillStyle = m.color || '#9ca3af';
+    ctx.beginPath();
+    ctx.moveTo(x, pad.t); ctx.lineTo(x-4, pad.t-7); ctx.lineTo(x+4, pad.t-7);
+    ctx.closePath(); ctx.fill();
+    /* 标签（错层） */
+    var lv = levels[i % levels.length];
+    var ty = pad.t + 10 + lv * 13;
+    var txt = (m.short || m.label || '') + ' ' + (m.date || '').slice(2).replace(/-/g,'/');
+    ctx.font = '10.5px Microsoft YaHei';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    var w = ctx.measureText(txt).width;
+    var bx = Math.min(x + 4, pad.l + iw - w - 6);
+    if(bx < pad.l) bx = x + 4;
+    ctx.fillStyle = 'rgba(10,12,20,.78)';
+    ctx.fillRect(bx, ty-7, w+6, 14);
+    ctx.fillStyle = m.color || '#9ca3af';
+    ctx.fillText(txt, bx+3, ty);
+    ctx.restore();
   });
 }
 
