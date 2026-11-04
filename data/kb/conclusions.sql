@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-04 09:47:52
+-- 导出时间：2026-11-04 10:27:20
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-04T09:47:52');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-04T10:27:20');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -187,6 +187,8 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F127','信号','金银比回落有效但只在2-3年维度：阈值8%时持3年超额+20.2%(胜率62%)，1年全为负','金银比峰值滞后黄金谷底中位 +33 天（13 次中仅 5 次在谷底前）-> 是确认不是预测。回落阈值 5%/8%/12% 的1年超额 -6.2%/-5.7%/-7.1%；2年 +9.9%/+13.2%/+1.5%；3年 +0.8%/+20.2%/-5.5%。回落越深买后1年胜率越高：3%→61%、5%→64%、8%→73%、12%→75%','CONFIRMED','V11','scripts/research_video/vid11_combined.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F128','策略','金银比回落≥8%后用红利ETF替代黄金：3年最差仅-4.6%，而持金最差-34.0%','触发后绝对收益中位：红利ETF 1年+12.4%/2年+25.7%/3年+38.8%；黄金 +11.8%/+17.3%/+10.7%。最差情况：红利ETF -42.5%/-18.1%/-4.6%；黄金 -15.4%/-28.3%/-34.0%。-> 长期(3年)红利ETF 收益更高且尾部风险远小，是「卖金买红利」的可验证辅助时点','CONFIRMED','V11','scripts/research_video/vid11_combined.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F129','信号','美联储转向降息后1年黄金4/4正收益（均值+24.5%），但样本仅4次且不是精确底部信号','2007-09-19 +15.9%、2019-08-01 +35.9%、2020-04-30 +4.3%、2024-09-19 +41.8%。与黄金谷底关系不一致（2次在谷底后350天、2次在谷底前312/665天）-> 是趋势确认而非底部预测','CONFIRMED','V11','scripts/research_video/vid11_indicators.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F130','信号','金银比「峰值」不能确定黄金谷底：滞后中位33天、8/13在谷底之后、等峰值错过平均+8.6%','13 次黄金谷底：金银比峰值在谷底之后 8 次、之前 5 次，中位 +33 天。等峰值才买比谷底买平均贵 +8.6%（中位 +9.8%），2008 典型：谷底 73.1 → 峰值日 83.2（+13.9%）。峰在谷底前的 5 次按峰值买，之后黄金平均再跌 -6.9%（最差 -10.6%）。且「峰值」事后才能确认。-> 「峰值确定谷底」不成立','CONFIRMED','V11','scripts/research_video/vid11_gsr_peak.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F131','信号','金银比正确用法：看「从250日高点回落」而非「峰值」，回落15%以上时3年胜率94%','回落阈值 vs 买后3年：5% -> 21.1%/胜率76%；8% -> 18.2%/77%；12% -> 24.4%/80%；15% -> 36.6%/94%（17次）；20% -> 41.2%/88%（9次）。回落越深越可靠。-> 2026-11-04 配置 trigger_fall 从 0.08 上调到 0.15','CONFIRMED','V11','scripts/research_video/vid11_gsr_peak.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──
