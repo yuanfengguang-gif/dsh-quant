@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-11-04T10:37:29",
+ "exported_at": "2026-11-04T11:21:17",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-11-04T10:37:29"
+    "value": "2026-11-04T11:21:17"
    },
    {
     "key": "description",
@@ -1426,6 +1426,24 @@
     "verdict": "CONFIRMED",
     "rid": "V11",
     "data_pointer": "deck/gold_switch_api.py"
+   },
+   {
+    "fid": "F133",
+    "category": "数据",
+    "statement": "纳指100(QQQ)本环境只有2011-04起连续数据，2008/2011区间须用纳斯达克综合替代",
+    "evidence": "us_QQQ.csv 有 2307 天空洞（2001-01-02 直接跳到 2011-04-26），akshare 重抓同样缺失；新浪 .NDX 只有 2014-02 起；东财「纳斯达克」实为综合指数 IXIC（与新浪 .IXIC 相关性 0.9996、涨幅完全一致）。-> 用 IXIC 替代（与 QQQ 日收益相关性 0.988），并在图表标注",
+    "verdict": "CONFIRMED",
+    "rid": "UI",
+    "data_pointer": "deck/asset_compare_api.py"
+   },
+   {
+    "fid": "F134",
+    "category": "数据",
+    "statement": "红利低波 H30269 库里 2005 年仅 1 行，五资产共同起点是 2006-01-04",
+    "evidence": "idx_daily H30269：2005 年只有 2005-01-01 一行，下一条是 2006-01-04（368 天空洞）。000300 同期无空洞（最大 12 天）。-> 走势对比图全历史区间起点设 2006-01-04",
+    "verdict": "CONFIRMED",
+    "rid": "UI",
+    "data_pointer": "deck/asset_compare_api.py"
    },
    {
     "fid": "F030",

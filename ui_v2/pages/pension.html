@@ -128,6 +128,23 @@
       <div class="pn-note" id="gs-note" style="margin-top:8px"></div>
     </div>
   </div>
+
+<div class="v2-card anim-fade-in-up d1" style="margin-top:14px;border-color:rgba(59,130,246,.4)">
+    <h2>五·二、组合资产走势对比 <span class="tag">区间起点=100 · 归一化可比 · 含历次危机</span></h2>
+    <div style="margin-top:8px">
+      <div class="pn-note" id="ac-note" style="border-left-color:#3b82f6">
+        这一张图把你策略组合里的<b>全部目标资产</b>放在一起比：<b>红利低波</b>（底仓）、<b>黄金</b>（底仓）、<b>纳指100/QQQ</b>（卫星），
+        外加<b>沪深300</b>与<b>标普500</b>作对比基准。全部归一化到区间起点 = 100，所以看的是<b>涨跌幅</b>不是绝对价格。
+      </div>
+      <div id="ac-periods" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">加载中…</div>
+      <div style="margin-top:12px;position:relative">
+        <canvas id="ac-canvas" style="display:block;width:100%;height:400px"></canvas>
+      </div>
+      <div id="ac-legend" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12.5px"></div>
+      <div style="overflow-x:auto;margin-top:12px"><table class="pn-tbl" id="ac-tbl"></table></div>
+      <div class="pn-note" id="ac-warn" style="margin-top:8px;font-size:12px"></div>
+    </div>
+  </div>
 <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
     <h2>五、实物黄金监控 <span class="tag">只描述环境 · 不产生买卖指令 · 不影响组合</span></h2>
     <div style="margin-top:8px">
@@ -772,6 +789,200 @@ var _gsUrl = '/api/gold_switch' + (_gsPv ? ('?preview_stage=' + _gsPv) : '');
 LW.api.get(_gsUrl).then(renderGoldSwitch).catch(function(e){
   document.getElementById('gs-stage').textContent = '接口失败：' + e;
 });
+
+
+/* ══════════════════════════════════════════════════════════
+   五·二、组合资产走势对比（纯 Canvas，无第三方库）
+   ══════════════════════════════════════════════════════════ */
+window.AC = { data: null, period: null, hidden: new Set() };
+
+function acFetch(period){
+  AC.period = period || AC.period;
+  var url = '/api/asset_compare' + (AC.period ? ('?period=' + encodeURIComponent(AC.period)) : '');
+  LW.api.get(url).then(acRender).catch(function(e){
+    document.getElementById('ac-note').textContent = '接口失败：' + e;
+  });
+}
+
+function acRender(d){
+  AC.data = d;
+  if(!d || !d.ok){
+    document.getElementById('ac-note').textContent = '加载失败：' + ((d && d.error) || '无数据');
+    return;
+  }
+
+  /* ── 区间按钮 ── */
+  var pb = document.getElementById('ac-periods');
+  pb.innerHTML = '';
+  (d.periods || []).forEach(function(p){
+    var on = (p.key === d.period);
+    var b = document.createElement('button');
+    b.textContent = p.label;
+    b.style.cssText = 'font-size:12.5px;padding:4px 10px;border-radius:7px;cursor:pointer;'
+      + 'border:1px solid ' + (on ? '#3b82f6' : 'rgba(255,255,255,.18)') + ';'
+      + 'background:' + (on ? 'rgba(59,130,246,.22)' : 'rgba(255,255,255,.04)') + ';'
+      + 'color:' + (on ? '#93c5fd' : '#cbd5e1') + ';font-weight:' + (on ? '700' : '400');
+    b.onclick = function(){ AC.hidden = new Set(); acFetch(p.key); };
+    pb.appendChild(b);
+  });
+
+  /* ── 图例 ── */
+  var lg = document.getElementById('ac-legend');
+  lg.innerHTML = '';
+  d.assets.forEach(function(a){
+    var ok = a.ok;
+    var off = AC.hidden.has(a.key);
+    var item = document.createElement('span');
+    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px;cursor:'
+      + (ok ? 'pointer' : 'default') + ';opacity:' + (ok ? (off ? .38 : 1) : .45)
+      + ';text-decoration:' + (ok && off ? 'line-through' : 'none');
+    var sw = '<span style="display:inline-block;width:14px;height:3px;border-radius:2px;background:'
+      + a.color + '"></span>';
+    var rt = ok ? ('<b style="color:' + (a.ret_pct >= 0 ? '#22c55e' : '#ef4444') + '">'
+                   + (a.ret_pct >= 0 ? '+' : '') + a.ret_pct.toFixed(1) + '%</b>')
+                : '<span style="color:#6b7280">无数据</span>';
+    item.innerHTML = sw + '<span>' + a.label + '</span>' + rt;
+    if(ok){
+      item.onclick = function(){
+        if(AC.hidden.has(a.key)) AC.hidden.delete(a.key); else AC.hidden.add(a.key);
+        acRender(AC.data);
+      };
+    }
+    lg.appendChild(item);
+  });
+
+  /* ── 涨跌幅表 ── */
+  var tb = document.getElementById('ac-tbl');
+  var html = '<tr><th>资产</th><th>区间涨跌幅</th><th>起点价</th><th>终点价</th><th>基准日</th><th>说明</th></tr>';
+  d.assets.forEach(function(a){
+    var cls = a.ret_pct >= 0 ? 'color:#22c55e' : 'color:#ef4444';
+    html += '<tr>'
+      + '<td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + a.color + ';margin-right:6px"></span>' + a.label + '</td>'
+      + '<td style="' + (a.ok ? cls + ';font-weight:700' : 'color:#6b7280') + '">'
+        + (a.ok ? ((a.ret_pct >= 0 ? '+' : '') + a.ret_pct.toFixed(2) + '%') : '—') + '</td>'
+      + '<td>' + (a.ok ? a.start_price : '—') + '</td>'
+      + '<td>' + (a.ok ? a.end_price : '—') + '</td>'
+      + '<td>' + (a.ok ? (a.base_date || d.base_date) : '—') + '</td>'
+      + '<td style="font-size:11.5px;color:#9ca3af">'
+        + (a.ok ? (a.substituted ? '已用纳斯达克综合替代（纳指100本环境仅2011+）' : (a.note || ''))
+                : (a.error || '')) + '</td>'
+      + '</tr>';
+  });
+  tb.innerHTML = html;
+
+  /* ── 提示 ── */
+  var ws = (d.warnings || []).slice();
+  ws.push('区间 ' + d.start + ' ~ ' + d.end + '，共 ' + (d.assets.filter(function(x){return x.ok}).length) + ' 个资产');
+  document.getElementById('ac-warn').textContent = ws.join(' ｜ ');
+
+  acDraw();
+}
+
+function acDraw(){
+  var d = AC.data;
+  var cv = document.getElementById('ac-canvas');
+  if(!d || !d.ok || !cv) return;
+
+  var wrapW = cv.parentElement.clientWidth || 900;
+  var W = Math.max(360, wrapW);
+  var H = 400;
+  var dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  var ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  var vis = d.assets.filter(function(a){ return a.ok && !AC.hidden.has(a.key) && a.values && a.values.length; });
+  if(!vis.length){
+    ctx.fillStyle = '#6b7280'; ctx.font = '13px Microsoft YaHei';
+    ctx.fillText('没有可显示的资产（可能全部被隐藏或数据缺失）', 20, 40);
+    return;
+  }
+
+  var pad = { l: 62, r: 104, t: 18, b: 36 };
+  var iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+
+  /* y 范围 */
+  var lo = Infinity, hi = -Infinity;
+  vis.forEach(function(a){ a.values.forEach(function(v){ if(v<lo)lo=v; if(v>hi)hi=v; }); });
+  lo = Math.min(lo, 100); hi = Math.max(hi, 100);
+  var span = hi - lo || 10;
+  /* ★ 归一化值是正数（起点=100 的倍数），Y 轴下界不能为负，否则会出现 -29 这种无意义刻度 */
+  lo = Math.max(0, lo - span * 0.06);
+  hi += span * 0.08;
+
+  /* x：按日期映射（各资产点位未必对齐） */
+  var tmin = Infinity, tmax = -Infinity;
+  vis.forEach(function(a){
+    var f = Date.parse(a.dates[0]), l = Date.parse(a.dates[a.dates.length-1]);
+    if(f<tmin) tmin=f; if(l>tmax) tmax=l;
+  });
+  if(!(tmax>tmin)) { tmax = tmin + 86400000; }
+  function X(dt){ return pad.l + (Date.parse(dt)-tmin)/(tmax-tmin)*iw; }
+  function Y(v){ return pad.t + (hi-v)/(hi-lo)*ih; }
+
+  /* 网格 + y 轴刻度 */
+  ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '11px Microsoft YaHei';
+  ctx.lineWidth = 1;
+  var ticks = 5;
+  for(var i=0;i<=ticks;i++){
+    var v = lo + (hi-lo)*i/ticks;
+    var y = Y(v);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l+iw, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(v.toFixed(0), pad.l-8, y);
+  }
+  /* 100 基准线加粗 */
+  ctx.strokeStyle = 'rgba(255,255,255,.28)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad.l, Y(100)); ctx.lineTo(pad.l+iw, Y(100)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* x 轴刻度（6 个） */
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for(var k=0;k<=6;k++){
+    var tv = tmin + (tmax-tmin)*k/6;
+    var x = pad.l + iw*k/6;
+    var dd = new Date(tv);
+    var lab = dd.getFullYear() + '/' + String(dd.getMonth()+1).padStart(2,'0');
+    ctx.fillText(lab, x, pad.t+ih+8);
+  }
+
+  /* 折线 */
+  vis.forEach(function(a){
+    ctx.beginPath();
+    ctx.strokeStyle = a.color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    for(var i=0;i<a.values.length;i++){
+      var x = X(a.dates[i]), y = Y(a.values[i]);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    /* 末端标注 */
+    var lx = X(a.dates[a.dates.length-1]), ly = Y(a.values[a.values.length-1]);
+    ctx.fillStyle = a.color;
+    ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI*2); ctx.fill();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 11px Microsoft YaHei';
+    var txt = (a.ret_pct>=0?'+':'') + a.ret_pct.toFixed(0) + '%';
+    ctx.fillText(txt, lx+7, ly);
+  });
+}
+
+/* 窗口尺寸变化重绘 */
+var _acTimer = null;
+window.addEventListener('resize', function(){
+  clearTimeout(_acTimer);
+  _acTimer = setTimeout(function(){ if(AC.data) acDraw(); }, 180);
+});
+
+/* 首屏加载 */
+acFetch(null);
 
 </script>
 </body>

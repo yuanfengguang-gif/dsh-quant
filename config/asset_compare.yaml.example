@@ -1,0 +1,113 @@
+# config/asset_compare.yaml
+# 组合资产走势对比图（/pension 页「五·二、组合资产走势对比」）
+#
+# 目的：一张图看清「我策略组合里的所有目标资产」在历次金融危机中以及全历史的价格走向。
+# 口径：全部归一化到区间起点 = 100，便于横向比较涨跌幅（不是绝对价格）。
+# 铁律：资产清单、颜色、区间全部在此配置，代码只读不算写死。
+
+version: 1
+
+# 归一化基准
+normalize:
+  base: 100
+  # 降采样：每个区间最多取多少个点（前端 canvas 够用，避免传输过大）
+  max_points: 260
+  # ★ 归一化基准日必须对所有资产一致，否则「涨跌幅」不可比。
+  #   各资产在其起点后 base_tolerance_days 个自然日内必须有数据，否则判为「起点缺失」。
+  base_tolerance_days: 15
+
+# 组合里的目标资产（按你方案的持仓）
+assets:
+  - key: "hs300"
+    label: "沪深300"
+    code: "000300"
+    source: "em_global"            # em_global_hs300.csv（较新）
+    file: "em_global_hs300.csv"
+    color: "#2563eb"
+    note: "A股大盘参考（非持仓，作对比基准）"
+    in_portfolio: false
+
+  - key: "dividend"
+    label: "红利低波（515450 跟踪）"
+    code: "H30269"
+    source: "db"                   # dividend_research.db 的 idx_daily
+    color: "#16a34a"
+    note: "你的红利 ETF 底仓（515100 同底）"
+    in_portfolio: true
+
+  - key: "gold"
+    label: "黄金（GLD）"
+    code: "GLD"
+    source: "us_csv"
+    file: "us_GLD.csv"
+    color: "#d97706"
+    note: "你的实物黄金底仓（GLD 为代理）"
+    in_portfolio: true
+
+  - key: "qqq"
+    label: "纳斯达克100（QQQ）"
+    code: "QQQ"
+    source: "us_csv"
+    file: "us_QQQ.csv"
+    color: "#7c3aed"
+    note: "你的纳指持仓（美股真实标的）"
+    in_portfolio: true
+    # ★ 本环境 QQQ 数据只从 2011-04-26 起连续（akshare 源缺 2001-2011）。
+    #   若某区间起点无 QQQ 数据，自动用「纳斯达克综合 IXIC」替代并在图上标注，
+    #   两者日收益相关性 0.988（已实测）。
+    fallback:
+      key: "ixic"
+      label: "纳斯达克综合（IXIC，替代）"
+      code: "IXIC"
+      source: "us_csv"
+      file: "us_IXIC_ok.csv"
+
+  - key: "spy"
+    label: "标普500（SPY）"
+    code: "SPY"
+    source: "us_csv"
+    file: "us_SPY.csv"
+    color: "#dc2626"
+    note: "美股大盘参考（非持仓，作对比基准）"
+    in_portfolio: false
+
+# 可选区间：全历史 + 六场危机
+periods:
+  - key: "all"
+    label: "全历史"
+    # ★ 起点 2006-01-04：红利低波 H30269 在库里 2005 年只有 1 行，实际从 2006-01-04 才有连续数据。
+    #   五个资产的共同起点就是这一天，用更早的日期会导致红利被判定「起点缺失」。
+    start: "2006-01-04"
+    end: "latest"
+  - key: "c2008"
+    label: "2008 次贷"
+    start: "2007-06-01"
+    end: "2010-06-30"
+  - key: "c2011"
+    label: "2011 欧债"
+    start: "2011-04-01"
+    end: "2013-06-30"
+  - key: "c2015"
+    label: "2015 A股股灾"
+    start: "2015-04-01"
+    end: "2017-06-30"
+  - key: "c2018"
+    label: "2018 Q4"
+    start: "2018-09-01"
+    end: "2019-12-31"
+  - key: "c2020"
+    label: "2020 COVID"
+    start: "2020-01-01"
+    end: "2021-06-30"
+  - key: "c2022"
+    label: "2022 加息"
+    start: "2022-01-01"
+    end: "2024-06-30"
+
+# 展示
+ui:
+  title: "组合资产走势对比"
+  subtitle: "区间起点 = 100，便于横向比较；包含持仓与对比基准"
+  default_period: "all"
+  show_return_table: true         # 图下方显示各资产区间涨跌幅
+  data_dir: "data/cache/crisis"

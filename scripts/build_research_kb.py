@@ -672,6 +672,15 @@ FINDINGS = [
      "现改为：代码判定 squeeze / not_squeeze_and_not_cleared / cleared_or_fed_cut / primary_hit 四个布尔量，"
      "label 与 desc 全部来自配置。另加 ?preview_stage=1|2|3 供 UI 验证三阶段显示（响应 preview=true）",
      "CONFIRMED", "V11", "deck/gold_switch_api.py"),
+    ("F133", "数据", "纳指100(QQQ)本环境只有2011-04起连续数据，2008/2011区间须用纳斯达克综合替代",
+     "us_QQQ.csv 有 2307 天空洞（2001-01-02 直接跳到 2011-04-26），akshare 重抓同样缺失；"
+     "新浪 .NDX 只有 2014-02 起；东财「纳斯达克」实为综合指数 IXIC（与新浪 .IXIC 相关性 0.9996、涨幅完全一致）。"
+     "-> 用 IXIC 替代（与 QQQ 日收益相关性 0.988），并在图表标注",
+     "CONFIRMED", "UI", "deck/asset_compare_api.py"),
+    ("F134", "数据", "红利低波 H30269 库里 2005 年仅 1 行，五资产共同起点是 2006-01-04",
+     "idx_daily H30269：2005 年只有 2005-01-01 一行，下一条是 2006-01-04（368 天空洞）。"
+     "000300 同期无空洞（最大 12 天）。-> 走势对比图全历史区间起点设 2006-01-04",
+     "CONFIRMED", "UI", "deck/asset_compare_api.py"),
     ("F030", "认知", "博主给的数据基本可信，但指标解释常出错",
      "柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现",
      "PARTIAL", "R31", "reports/R31_第三个视频验证_柒明东东.md"),

@@ -277,6 +277,19 @@ class Handler(BaseHTTPRequestHandler):
             return self._v2_page("pension.html", "pension missing")
         if path == "/pitchtrack" or path == "/pitchtrack.html":   # ★2026-08-15 主观多池远期（5 池对比 + 牛散决策者分组）
             return self._v2_page("pitchtrack.html", "pitchtrack missing")
+        if path == "/api/asset_compare":   # 2026-11-04 组合资产走势对比（config/asset_compare.yaml 驱动）
+            try:
+                sys.path.insert(0, str(BASE))
+                from deck.asset_compare_api import asset_compare_data
+                _qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+                _q = {}
+                for _kv in _qs.split("&"):
+                    if "=" in _kv:
+                        _k, _v = _kv.split("=", 1)
+                        _q[_k] = _v
+                return self._send_json(asset_compare_data(period=_q.get("period")))
+            except Exception as e:
+                return self._send_json({"ok": False, "error": f"{type(e).__name__}: {e}"})
         if path == "/api/gold_switch":   # 2026-11-03 黄金→红利ETF 换仓信号（config/gold_switch_signal.yaml 驱动）
             try:
                 sys.path.insert(0, str(BASE))
