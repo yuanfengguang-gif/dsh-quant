@@ -177,13 +177,14 @@ def _pct(x) -> float | None:
     return None if x is None else round(float(x) * 100, 2)
 
 
-def gold_switch_data() -> dict:
+def gold_switch_data(preview_stage: int | None = None) -> dict:
     import pandas as pd
 
     cfg = _cfg()
     data_dir = BASE / cfg["data_dir"]
 
     out: dict = {"ok": True, "generated_at": pd.Timestamp.now().isoformat(timespec="seconds"),
+                 "preview": bool(preview_stage in (1, 2, 3)),
                  "missing": [], "config_version": cfg.get("version", 1)}
 
     # ── 主信号：沪深300 距 36 月高点
@@ -349,18 +350,54 @@ def gold_switch_data() -> dict:
     total = len(flags)
     need = int(comp.get("min_signals_to_act", 2))
 
-    # 阶段判定（配置驱动；默认用金银比+缺钱期）
-    stage = {"id": None, "label": "数据不足", "desc": ""}
-    if warn is not None and aux is not None:
-        if warn["squeeze"]:
-            stage = {"id": 1, "label": "阶段1 · 杀流动性",
-                     "desc": "机构抢美元现金，黄金与股票一起被抛售 —— 视频说这时别抄底"}
-        elif not aux["triggered"]:
-            stage = {"id": 2, "label": "阶段2 · 杀基本面",
-                     "desc": "缺钱期已过，但抛售尚未出清，仍在探底"}
-        else:
-            stage = {"id": 3, "label": "阶段3 · 主权信用重估",
-                     "desc": "抛售出清、印钞预期升温，黄金与股票一起反弹，是换仓窗口"}
+    # 阶段判定（★ 2026-11-04 改为配置驱动：文案与条件都来自 config 的 stage_rules）
+    #   之前版本把「阶段1 · 杀流动性」等文案硬编码在代码里，配置里的 stage_rules 完全没被读取，
+    #   违反 AGENTS.md「全部模块动态化」，且配置改成 15% 后 when 字段还写着 ≥8%（双重不一致）。
+    #   现在：代码只负责判定 condition 代码，文案一律从配置取。
+    stage_ctx = {
+        "squeeze": bool(warn["squeeze"]) if warn is not None else None,
+        "cleared": bool(aux["triggered"]) if aux is not None else None,
+        "fed_cut": bool(conf["turned_down"]) if conf is not None else None,
+        "primary_hit": bool(any(t["triggered"] for t in primary["tranches"])) if primary else None,
+    }
+
+    def _cond_ok(code):
+        """把配置里的 condition 代码翻译成布尔判断。返回 None 表示数据不足。"""
+        c = str(code or "").strip()
+        if c == "squeeze":                      # 缺钱期 = 是
+            return stage_ctx["squeeze"]
+        if c == "not_squeeze_and_not_cleared":  # 缺钱期已过，但抛售未出清
+            if stage_ctx["squeeze"] is None or stage_ctx["cleared"] is None:
+                return None
+            return (not stage_ctx["squeeze"]) and (not stage_ctx["cleared"])
+        if c == "cleared_or_fed_cut":           # 抛售出清 或 美联储降息
+            if stage_ctx["cleared"] is None and stage_ctx["fed_cut"] is None:
+                return None
+            return bool(stage_ctx["cleared"]) or bool(stage_ctx["fed_cut"])
+        if c == "primary_hit":                  # 主信号触发（回撤到档位）
+            return stage_ctx["primary_hit"]
+        return None
+
+    stage = {"id": 0, "label": "数据不足", "desc": "关键数据缺失，无法判定阶段"}
+    rules = comp.get("stage_rules") or []
+    for rule in rules:
+        if _cond_ok(rule.get("condition")) is True:
+            stage = {"id": int(rule.get("stage", 0)),
+                     "label": rule.get("label", ""),
+                     "desc": rule.get("desc", "")}
+            break
+    else:
+        # 一条都不满足：说明缺钱期已过、金银比已出清但…（理论上被条件覆盖），给兜底
+        if rules and stage_ctx["squeeze"] is False:
+            stage = {"id": 0, "label": "条件未覆盖",
+                     "desc": "当前状态不落在任何配置阶段内，检查 config 的 stage_rules"}
+
+    # ── 预览模式（仅供 UI 验证：?preview_stage=N 强制显示某阶段，响应里标记 preview=true）
+    if preview_stage in (1, 2, 3):
+        hit = next((r for r in rules if int(r.get("stage", 0)) == preview_stage), None)
+        if hit:
+            stage = {"id": int(hit.get("stage", 0)), "label": hit.get("label", ""),
+                     "desc": hit.get("desc", ""), "preview": True}
 
     can_act = satisfied >= need
     if can_act:
@@ -369,6 +406,7 @@ def gold_switch_data() -> dict:
         verdict = f"满足 {satisfied}/{total} 项 → **仍在阶段1（缺钱期），继续持金等待**"
     else:
         verdict = f"满足 {satisfied}/{total} 项 → **继续观望**（需至少 {need} 项）"
+
 
     out["composite"] = {
         "satisfied": satisfied, "total": total, "need": need, "can_act": bool(can_act),

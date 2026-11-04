@@ -281,7 +281,18 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 sys.path.insert(0, str(BASE))
                 from deck.gold_switch_api import gold_switch_data
-                return self._send_json(gold_switch_data())
+                # 支持 ?preview_stage=1|2|3 预览各阶段显示（仅 UI 验证用）
+                # ★ L223 已把 self.path 的 query 剥掉（path = self.path.split("?")[0]），
+                #   所以这里必须从 self.path 取原始串，不能从 path 取。
+                _qs = self.path.split("?", 1)[1] if "?" in self.path else ""
+                _q = {}
+                for _kv in _qs.split("&"):
+                    if "=" in _kv:
+                        _k, _v = _kv.split("=", 1)
+                        _q[_k] = _v
+                _pv = _q.get("preview_stage")
+                _pv = int(_pv) if _pv in ("1", "2", "3") else None
+                return self._send_json(gold_switch_data(preview_stage=_pv))
             except Exception as e:
                 return self._send_json({"ok": False, "error": f"{type(e).__name__}: {e}"})
         if path == "/api/pension":   # 2026-10-20 养老方案数据（config/pension_plan.yaml 驱动，实时计算）

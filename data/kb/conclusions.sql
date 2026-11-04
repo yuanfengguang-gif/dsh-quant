@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-04 10:27:20
+-- 导出时间：2026-11-04 10:37:29
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-04T10:27:20');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-04T10:37:29');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -189,6 +189,7 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F129','信号','美联储转向降息后1年黄金4/4正收益（均值+24.5%），但样本仅4次且不是精确底部信号','2007-09-19 +15.9%、2019-08-01 +35.9%、2020-04-30 +4.3%、2024-09-19 +41.8%。与黄金谷底关系不一致（2次在谷底后350天、2次在谷底前312/665天）-> 是趋势确认而非底部预测','CONFIRMED','V11','scripts/research_video/vid11_indicators.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F130','信号','金银比「峰值」不能确定黄金谷底：滞后中位33天、8/13在谷底之后、等峰值错过平均+8.6%','13 次黄金谷底：金银比峰值在谷底之后 8 次、之前 5 次，中位 +33 天。等峰值才买比谷底买平均贵 +8.6%（中位 +9.8%），2008 典型：谷底 73.1 → 峰值日 83.2（+13.9%）。峰在谷底前的 5 次按峰值买，之后黄金平均再跌 -6.9%（最差 -10.6%）。且「峰值」事后才能确认。-> 「峰值确定谷底」不成立','CONFIRMED','V11','scripts/research_video/vid11_gsr_peak.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F131','信号','金银比正确用法：看「从250日高点回落」而非「峰值」，回落15%以上时3年胜率94%','回落阈值 vs 买后3年：5% -> 21.1%/胜率76%；8% -> 18.2%/77%；12% -> 24.4%/80%；15% -> 36.6%/94%（17次）；20% -> 41.2%/88%（9次）。回落越深越可靠。-> 2026-11-04 配置 trigger_fall 从 0.08 上调到 0.15','CONFIRMED','V11','scripts/research_video/vid11_gsr_peak.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F132','工程','黄金换仓信号的阶段判定已改为配置驱动（代码只判定condition，文案从yaml读）','原实现把「阶段1·杀流动性」等文案硬编码在 deck/gold_switch_api.py，配置里的 stage_rules 从未被读取，且配置 when 写「≥8%」而阈值早已改 15%（双重不一致，见 AGENTS.md E20）。现改为：代码判定 squeeze / not_squeeze_and_not_cleared / cleared_or_fed_cut / primary_hit 四个布尔量，label 与 desc 全部来自配置。另加 ?preview_stage=1|2|3 供 UI 验证三阶段显示（响应 preview=true）','CONFIRMED','V11','deck/gold_switch_api.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──

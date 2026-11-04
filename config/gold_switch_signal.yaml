@@ -63,19 +63,24 @@ confirm:
 # 综合判断
 composite:
   min_signals_to_act: 2       # 至少满足 2 项才建议行动
+  # ★ 阶段文案全部在此配置，代码只读不写死（AGENTS.md「全部模块动态化」）
+  #   condition 是机器可读代码，when 只是给人看的说明，两者必须一致
   stage_rules:
     - stage: 1
       label: "阶段1 · 杀流动性"
-      desc: "风险资产爆雷，机构抢美元现金，黄金和股票一起被抛售"
-      when: "缺钱期 = 是"
+      desc: "机构抢美元现金，黄金与股票一起被抛售 —— 视频说这时别抄底"
+      condition: "squeeze"
+      when: "缺钱期 = 是（10Y与美元60日同升）"
     - stage: 2
       label: "阶段2 · 杀基本面"
-      desc: "紧缩政策把实体或巨头搞出问题，市场仍在探底"
-      when: "缺钱期 = 否 且 金银比尚未回落 ≥8%"
+      desc: "缺钱期已过，但抛售尚未出清，市场仍在探底"
+      condition: "not_squeeze_and_not_cleared"
+      when: "缺钱期 = 否 且 金银比回落未达阈值（当前 15%）"
     - stage: 3
       label: "阶段3 · 主权信用重估"
-      desc: "印钞开始，黄金与股票一起反弹，是换仓窗口"
-      when: "金银比回落 ≥8% 或 美联储转向降息"
+      desc: "抛售出清、印钞预期升温，黄金与股票一起反弹，是换仓窗口"
+      condition: "cleared_or_fed_cut"
+      when: "金银比回落 ≥15%（配置的 trigger_fall）或 美联储转向降息"
 
 # 数据目录（相对项目根）
 data_dir: "data/cache/crisis"

@@ -1,5 +1,5 @@
 {
- "exported_at": "2026-11-04T10:27:20",
+ "exported_at": "2026-11-04T10:37:29",
  "source": "research_kb.db",
  "tables": {
   "meta": [
@@ -9,7 +9,7 @@
    },
    {
     "key": "built_at",
-    "value": "2026-11-04T10:27:20"
+    "value": "2026-11-04T10:37:29"
    },
    {
     "key": "description",
@@ -1417,6 +1417,15 @@
     "verdict": "CONFIRMED",
     "rid": "V11",
     "data_pointer": "scripts/research_video/vid11_gsr_peak.py"
+   },
+   {
+    "fid": "F132",
+    "category": "工程",
+    "statement": "黄金换仓信号的阶段判定已改为配置驱动（代码只判定condition，文案从yaml读）",
+    "evidence": "原实现把「阶段1·杀流动性」等文案硬编码在 deck/gold_switch_api.py，配置里的 stage_rules 从未被读取，且配置 when 写「≥8%」而阈值早已改 15%（双重不一致，见 AGENTS.md E20）。现改为：代码判定 squeeze / not_squeeze_and_not_cleared / cleared_or_fed_cut / primary_hit 四个布尔量，label 与 desc 全部来自配置。另加 ?preview_stage=1|2|3 供 UI 验证三阶段显示（响应 preview=true）",
+    "verdict": "CONFIRMED",
+    "rid": "V11",
+    "data_pointer": "deck/gold_switch_api.py"
    },
    {
     "fid": "F030",

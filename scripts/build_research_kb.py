@@ -666,6 +666,12 @@ FINDINGS = [
      "15% -> 36.6%/94%（17次）；20% -> 41.2%/88%（9次）。回落越深越可靠。"
      "-> 2026-11-04 配置 trigger_fall 从 0.08 上调到 0.15",
      "CONFIRMED", "V11", "scripts/research_video/vid11_gsr_peak.py"),
+    ("F132", "工程", "黄金换仓信号的阶段判定已改为配置驱动（代码只判定condition，文案从yaml读）",
+     "原实现把「阶段1·杀流动性」等文案硬编码在 deck/gold_switch_api.py，配置里的 stage_rules 从未被读取，"
+     "且配置 when 写「≥8%」而阈值早已改 15%（双重不一致，见 AGENTS.md E20）。"
+     "现改为：代码判定 squeeze / not_squeeze_and_not_cleared / cleared_or_fed_cut / primary_hit 四个布尔量，"
+     "label 与 desc 全部来自配置。另加 ?preview_stage=1|2|3 供 UI 验证三阶段显示（响应 preview=true）",
+     "CONFIRMED", "V11", "deck/gold_switch_api.py"),
     ("F030", "认知", "博主给的数据基本可信，但指标解释常出错",
      "柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现",
      "PARTIAL", "R31", "reports/R31_第三个视频验证_柒明东东.md"),
