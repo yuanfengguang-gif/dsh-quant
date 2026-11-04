@@ -1,0 +1,84 @@
+# config/gold_switch_signal.yaml
+# 黄金→红利ETF 换仓信号（买卖点 + 进度追踪）
+#
+# 依据：
+#   · 主信号（沪深300 回撤分档）—— 方案 v3.0，已验证因果可用
+#   · 辅助信号（金银比回落）—— 七剑财说视频，2026-11-03 实证：持 2-3 年有效（3 年超额 +20.2%，胜率 62%），1 年无效
+#   · 警告信号（10Y 美债 + 美元同升 = 缺钱期）—— 视频指标，实证：有信息量（缺钱期黄金年化 -8.5% vs 其他 +20.1%）
+#     但做成择时规则无效（Calmar 0.201 < 买入持有 0.217），故【只做警告，不做买卖】
+#   · 确认信号（美联储转向降息）—— 视频指标，实证：降息后 1 年黄金 4/4 正收益，平均 +24.5%（样本仅 4 次）
+#
+# 所有阈值都对应「当天收盘可算的量」，无未来函数。
+
+version: 1
+
+# 主信号：沪深300 距滚动 36 个月高点的回撤，分两档换仓
+primary:
+  name: "沪深300 回撤分档（主信号）"
+  index_code: "000300"
+  window_days: 756            # 36 个月 × 21 交易日
+  min_periods: 250
+  tranches:
+    - level: 0.25             # 回撤 ≥25% 触发第 1 档
+      label: "第1档"
+      action: "卖 36 万金 → 买 14.4万 515100 + 12.6万 515450 + 9万 513300"
+      amount_wan: 36
+    - level: 0.35             # 回撤 ≥35% 触发第 2 档
+      label: "第2档"
+      action: "卖 36 万金 → 买 14.4万 515100 + 12.6万 515450 + 9万 513300"
+      amount_wan: 36
+
+# 辅助信号：金银比从滚动高点回落
+auxiliary:
+  name: "金银比回落（抛售出清）"
+  gold_series: "us_GLD.csv"
+  silver_series: "us_SLV.csv"
+  ratio_scale: 9.91           # GLD/SLV 校准到真实金银比的系数（2020-2026 COMEX 中位）
+  window_days: 250
+  min_periods: 120
+  trigger_fall: 0.08          # 从 250 日高点回落 ≥8% 视为抛售出清
+  note: "实证：触发后持红利ETF 3 年中位 +38.8%（最差 -4.6%），持金 +10.7%（最差 -34.0%）；但 1 年无效"
+
+# 警告信号：缺钱期（只提示，不产生买卖）
+warning:
+  name: "缺钱期（10Y美债 + 美元同升）"
+  bond10_file: "us_10y_东财.csv"
+  bond10_col_hint: "美国国债收益率10年"
+  dollar_file: "us_UUP.csv"
+  lookback_days: 60
+  squeeze_annual_gold: -0.085   # 实证：缺钱期黄金年化
+  normal_annual_gold: 0.201     # 实证：非缺钱期黄金年化
+  tradeable: false             # ★ 实证结论：不可单独做择时
+
+# 确认信号：美联储转向降息
+confirm:
+  name: "美联储转向降息"
+  rate_file: "macro_bank_usa_interest_rate.csv"
+  history_months: 12
+  note: "实证：降息后 1 年黄金 4/4 正收益（+15.9%/+35.9%/+4.3%/+41.8%，均值 +24.5%），样本仅 4 次"
+
+# 综合判断
+composite:
+  min_signals_to_act: 2       # 至少满足 2 项才建议行动
+  stage_rules:
+    - stage: 1
+      label: "阶段1 · 杀流动性"
+      desc: "风险资产爆雷，机构抢美元现金，黄金和股票一起被抛售"
+      when: "缺钱期 = 是"
+    - stage: 2
+      label: "阶段2 · 杀基本面"
+      desc: "紧缩政策把实体或巨头搞出问题，市场仍在探底"
+      when: "缺钱期 = 否 且 金银比尚未回落 ≥8%"
+    - stage: 3
+      label: "阶段3 · 主权信用重估"
+      desc: "印钞开始，黄金与股票一起反弹，是换仓窗口"
+      when: "金银比回落 ≥8% 或 美联储转向降息"
+
+# 数据目录（相对项目根）
+data_dir: "data/cache/crisis"
+
+# 面板展示
+ui:
+  title: "黄金→红利ETF 换仓信号"
+  show_progress: true         # 显示「距离触发还差多少」进度条
+  refresh_hint: "每天收盘后更新；指标只用到当日收盘可算的量"

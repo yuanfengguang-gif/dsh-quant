@@ -1,5 +1,5 @@
 -- 红利低波养老方案 · 研究结论层（不含第三方行情数据）
--- 导出时间：2026-11-03 17:17:59
+-- 导出时间：2026-11-04 09:47:52
 -- 来源：research_kb.db（本地全量库）
 -- 重建行情层：python scripts/build_research_kb.py
 
@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS [meta];
 CREATE TABLE meta(
   key TEXT PRIMARY KEY, value TEXT);
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('schema_version','1.0');
-INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-03T17:17:59');
+INSERT OR REPLACE INTO [meta] (key,value) VALUES('built_at','2026-11-04T09:47:52');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('description','红利低波养老方案研究知识库（结论层 + 行情层）');
 INSERT OR REPLACE INTO [meta] (key,value) VALUES('source_repo','deepseek-harness-quant');
 
@@ -182,6 +182,11 @@ INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,da
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F122','策略','因果回撤分档：阈值越深越好（-20% 1.04 < -25% 1.12 < -30% 1.20），档数越多反而不优','590 个「市场距高点>=-10%」起点、等3年：-20%一次性 中位1.04/最差0.56/买价1.44；-25% 1.12/0.61/1.33；-30% 1.20/0.69/1.23；三档(-15/-25/-35) 1.11/0.64/1.31；四档 1.13/0.64/1.32；深跌档(-30%半+-40%半) 1.17/最差0.71/买价1.14。等10年深跌档中位1.83。-> 分档价值是保证参与+买价更低，不是更高收益','CONFIRMED','S1','logs/vid_causal_rolling.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F123','策略','黄金提款率3.75% < 黄金年化10.12%，「不换仓只卖金条」本身永久可持续','GLD 2004-11~2026-10 年化 10.12%；160万提6万/年 = 3.75%；模拟21年后仍剩 5.14 倍。-> 「黄金不生息所以要换仓」的理由不成立；换仓的真实理由是分散集中度（90%单一资产）','CONFIRMED','S1','logs/vid_keep_gold_sizing.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F124','数据','515100+515450 逐年分红率：6年均值4.66%、中位2.69%、最差3年年均仅2.62%','组合(40:35)逐年：2021 2.53%、2022 2.10%、2023 15.47%、2024 4.30%、2025 2.84%、2026 0.70%。滚动3年年均最差2.62%(2024-2026)。515100 六年半仅分红2次(2023-12-21 占净值34.43%、2025-12-23 7.33%)。-> 现金流规划必须按2.62%做，不能按长期口径5.55%做','CONFIRMED','V10','logs/vid分红时点.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F125','信号','视频三阶段框架成立：危机第一阶段黄金跟股票一起跌，且跌得更多（-21.0% vs -12.3%）','以黄金自身谷底为界（5 场危机）：谷前黄金中位 -21.0%、股票 -12.3%、美元 +9.1%；谷后黄金中位 +23.8%、股票 +46.2%。2008 谷前黄金 -29.4%/谷后 +117.1%，2022 谷前 -21.0%/谷后 +101.6%。-> 「黄金不是避险失效，是危机第一阶段」成立，且黄金跌幅大于股票','CONFIRMED','V11','scripts/research_video/vid11_claims.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F126','信号','指标「10Y美债+美元同升(缺钱期)」有信息量但不可做择时：Calmar 0.201 < 持有 0.217','缺钱期 1422 天黄金年化 -8.5%，非缺钱期 4094 天 +20.1%（差 28.6pp）；但做成择时规则后年化 8.92%/回撤 -44.4%/Calmar 0.201，反而劣于买入持有 9.89%/-45.6%/0.217。谷底前60天两者同升命中仅 7/13=54%。-> 只做警告提示，不产生买卖','CONFIRMED','V11','scripts/research_video/vid11_indicators.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F127','信号','金银比回落有效但只在2-3年维度：阈值8%时持3年超额+20.2%(胜率62%)，1年全为负','金银比峰值滞后黄金谷底中位 +33 天（13 次中仅 5 次在谷底前）-> 是确认不是预测。回落阈值 5%/8%/12% 的1年超额 -6.2%/-5.7%/-7.1%；2年 +9.9%/+13.2%/+1.5%；3年 +0.8%/+20.2%/-5.5%。回落越深买后1年胜率越高：3%→61%、5%→64%、8%→73%、12%→75%','CONFIRMED','V11','scripts/research_video/vid11_combined.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F128','策略','金银比回落≥8%后用红利ETF替代黄金：3年最差仅-4.6%，而持金最差-34.0%','触发后绝对收益中位：红利ETF 1年+12.4%/2年+25.7%/3年+38.8%；黄金 +11.8%/+17.3%/+10.7%。最差情况：红利ETF -42.5%/-18.1%/-4.6%；黄金 -15.4%/-28.3%/-34.0%。-> 长期(3年)红利ETF 收益更高且尾部风险远小，是「卖金买红利」的可验证辅助时点','CONFIRMED','V11','scripts/research_video/vid11_combined.py');
+INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F129','信号','美联储转向降息后1年黄金4/4正收益（均值+24.5%），但样本仅4次且不是精确底部信号','2007-09-19 +15.9%、2019-08-01 +35.9%、2020-04-30 +4.3%、2024-09-19 +41.8%。与黄金谷底关系不一致（2次在谷底后350天、2次在谷底前312/665天）-> 是趋势确认而非底部预测','CONFIRMED','V11','scripts/research_video/vid11_indicators.py');
 INSERT OR REPLACE INTO [finding] (fid,category,statement,evidence,verdict,rid,data_pointer) VALUES('F030','认知','博主给的数据基本可信，但指标解释常出错','柒明东东：股息率 4.42%/10Y 1.76%/差 4.78pp 均核对一致；但股债比阈值、PE 分位 54.51% 无法复现','PARTIAL','R31','reports/R31_第三个视频验证_柒明东东.md');
 
 -- ── signal ──

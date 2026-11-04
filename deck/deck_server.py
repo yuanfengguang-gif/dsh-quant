@@ -277,6 +277,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._v2_page("pension.html", "pension missing")
         if path == "/pitchtrack" or path == "/pitchtrack.html":   # ★2026-08-15 主观多池远期（5 池对比 + 牛散决策者分组）
             return self._v2_page("pitchtrack.html", "pitchtrack missing")
+        if path == "/api/gold_switch":   # 2026-11-03 黄金→红利ETF 换仓信号（config/gold_switch_signal.yaml 驱动）
+            try:
+                sys.path.insert(0, str(BASE))
+                from deck.gold_switch_api import gold_switch_data
+                return self._send_json(gold_switch_data())
+            except Exception as e:
+                return self._send_json({"ok": False, "error": f"{type(e).__name__}: {e}"})
         if path == "/api/pension":   # 2026-10-20 养老方案数据（config/pension_plan.yaml 驱动，实时计算）
             try:
                 sys.path.insert(0, str(BASE))

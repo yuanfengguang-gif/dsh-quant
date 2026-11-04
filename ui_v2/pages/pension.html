@@ -117,6 +117,17 @@
     </div>
   </div>
 
+
+<div class="v2-card anim-fade-in-up d1" style="margin-top:14px;border-color:rgba(239,68,68,.4)">
+    <h2>四·二、换仓时机进度条 <span class="tag">七剑财说三指标 · 已实证 · 全部当天收盘可算</span></h2>
+    <div style="margin-top:8px">
+      <div class="pn-note" id="gs-stage" style="border-left-color:#ef4444">加载中…</div>
+      <div id="gs-progress" style="margin-top:14px">加载中…</div>
+      <div class="pn-note" id="gs-verdict" style="margin-top:6px"></div>
+      <div style="overflow-x:auto;margin-top:10px"><table class="pn-tbl" id="gs-tbl"></table></div>
+      <div class="pn-note" id="gs-note" style="margin-top:8px"></div>
+    </div>
+  </div>
 <div class="v2-card anim-fade-in-up d1" style="margin-top:14px">
     <h2>五、实物黄金监控 <span class="tag">只描述环境 · 不产生买卖指令 · 不影响组合</span></h2>
     <div style="margin-top:8px">
@@ -646,6 +657,116 @@
     $('pn-signal').innerHTML = '<div class="pn-none">请求失败：'+e+'</div>';
   });
 })();
+
+/* ═══ 换仓时机进度条（视频三指标，配置驱动）═══ */
+function gsBar(name, curTxt, thrTxt, gapTxt, progress, color, note){
+  var pct = Math.max(0, Math.min(100, progress));
+  var gapHtml = gapTxt === null
+      ? '<span style="color:#22c55e;font-weight:700">✅ 已触发</span>'
+      : '<span style="color:#f59e0b;font-weight:700">还差 ' + gapTxt + '</span>';
+  return '<div style="margin-bottom:16px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:5px">'
+    +   '<span><b>' + name + '</b> <span style="color:#9ca3af;margin-left:6px">' + curTxt + ' / 阈值 ' + thrTxt + '</span></span>'
+    +   gapHtml
+    + '</div>'
+    + '<div style="height:10px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden">'
+    +   '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:5px;transition:width .5s"></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-top:4px">进度 ' + pct.toFixed(1) + '%' + (note ? ' · ' + note : '') + '</div>'
+    + '</div>';
+}
+
+function renderGoldSwitch(d){
+  if(!d || !d.ok){ document.getElementById('gs-stage').textContent = '加载失败：' + (d && d.error || '无数据'); return; }
+  var st = d.stage || {}, co = d.composite || {};
+
+  // 阶段横幅
+  var stageColor = st.id === 1 ? '#ef4444' : (st.id === 2 ? '#f59e0b' : '#22c55e');
+  document.getElementById('gs-stage').innerHTML =
+      '<b style="color:' + stageColor + ';font-size:15px">' + (st.label || '—') + '</b>'
+    + '<div style="margin-top:4px;color:#d1d5db">' + (st.desc || '') + '</div>';
+
+  // 进度条
+  var html = '';
+  var p = d.primary;
+  if(p && p.tranches){
+    p.tranches.forEach(function(tr){
+      html += gsBar(
+        '主信号 · 沪深300 回撤 ' + tr.label,
+        '当前 ' + p.drawdown_pct + '%',
+        '-' + tr.level_pct + '%',
+        tr.triggered ? null : (tr.gap_pct + ' 个百分点'),
+        tr.progress,
+        tr.triggered ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#3b82f6,#f59e0b)',
+        tr.amount_wan ? ('触发后卖金 ' + tr.amount_wan + ' 万') : ''
+      );
+    });
+  }
+  var a = d.auxiliary;
+  if(a){
+    html += gsBar(
+      '辅助信号 · 金银比回落',
+      '当前 ' + a.ratio + '（距250日高点 ' + a.fall_pct + '%）',
+      '-' + a.trigger_fall_pct + '%',
+      a.triggered ? null : (a.gap_pct + ' 个百分点'),
+      a.progress,
+      a.triggered ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#8b5cf6,#f59e0b)',
+      '历史分位 ' + a.percentile + '%'
+    );
+  }
+  var w = d.warning;
+  if(w){
+    html += '<div style="margin-bottom:16px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">'
+      +   '<span><b>警告信号 · 缺钱期（10Y + 美元同升）</b></span>'
+      +   (w.squeeze ? '<span style="color:#ef4444;font-weight:700">⚠️ 仍在缺钱期</span>'
+                      : '<span style="color:#22c55e;font-weight:700">✅ 已解除</span>')
+      + '</div>'
+      + '<div style="font-size:12px;color:#9ca3af">'
+      +   '10Y美债 ' + w.bond10 + '%（60日 ' + (w.bond10_change_pp>0?'+':'') + w.bond10_change_pp + 'pp）'
+      +   ' · 美元指数 ' + w.dollar + (w.dollar_is_dxy ? '' : '(UUP)') + '（60日 ' + (w.dollar_change_pct>0?'+':'') + w.dollar_change_pct + '%）'
+      + '</div>'
+      + (w.squeeze ? '<div style="font-size:11px;color:#6b7280;margin-top:4px">实证：缺钱期黄金年化 ' + w.squeeze_annual + '%，非缺钱期 ' + w.normal_annual + '%。<b>只做警告，不产生买卖</b>（择时实测 Calmar 反而下降）</div>' : '')
+      + '</div>';
+  }
+  var c = d.confirm;
+  if(c){
+    var dirTxt = c.direction === 'down' ? '↓ 降息' : (c.direction === 'up' ? '↑ 加息' : '→ 持平');
+    html += '<div style="margin-bottom:16px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">'
+      +   '<span><b>确认信号 · 美联储转向降息</b> <span style="color:#9ca3af">当前 ' + c.rate + '% ' + dirTxt + '</span></span>'
+      +   (c.turned_down ? '<span style="color:#22c55e;font-weight:700">✅ 已转向</span>' : '<span style="color:#f59e0b;font-weight:700">尚未转向</span>')
+      + '</div>'
+      + '<div style="font-size:11px;color:#6b7280">最近决议 ' + c.last_date + ' · 实证：降息后 1 年黄金 4/4 正收益（均值 +24.5%，样本仅 4 次）</div>'
+      + '</div>';
+  }
+  document.getElementById('gs-progress').innerHTML = html;
+
+  // 综合判断
+  var vb = document.getElementById('gs-verdict');
+  vb.innerHTML = '<b style="font-size:15px;color:' + (co.can_act ? '#22c55e' : '#f59e0b') + '">'
+    + (co.can_act ? '✅ ' : '⏸ ') + (co.verdict || '') + '</b>';
+  vb.style.borderLeftColor = co.can_act ? '#22c55e' : '#f59e0b';
+
+  // 明细表
+  var rows = '<tr><th>信号</th><th>是否满足</th></tr>';
+  (co.flags || []).forEach(function(f){
+    rows += '<tr><td>' + f.name + '</td><td>' + (f.ok ? '<span style="color:#22c55e">✅ 满足</span>' : '<span style="color:#9ca3af">— 未满足</span>') + '</td></tr>';
+  });
+  document.getElementById('gs-tbl').innerHTML = rows;
+
+  // 脚注
+  var notes = [];
+  if(a && a.note) notes.push('金银比：' + a.note);
+  if(d.missing && d.missing.length) notes.push('数据缺失：' + d.missing.join('、'));
+  notes.push('刷新时间 ' + (d.generated_at || '') + ' · 指标只用到当日收盘可算的量（无未来函数）');
+  document.getElementById('gs-note').textContent = notes.join(' ｜ ');
+}
+
+LW.api.get('/api/gold_switch').then(renderGoldSwitch).catch(function(e){
+  document.getElementById('gs-stage').textContent = '接口失败：' + e;
+});
+
 </script>
 </body>
 </html>
